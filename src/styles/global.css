@@ -1,0 +1,5 @@
+@import "tailwindcss";
+
+@theme {
+  /* Tokens fluidos (rem + clamp) — se completan en Etapa 2 */
+}
