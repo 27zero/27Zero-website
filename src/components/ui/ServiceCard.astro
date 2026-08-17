@@ -1,0 +1,55 @@
+---
+/**
+ * Service Card — 27zero
+ * Portado 1:1 de `/components/service-card` del repo vanilla. Sin JS: hover CSS puro.
+ *
+ * Fondo transparente por default: la página que la use debe tener fondo oscuro
+ * (`#101010`). Todo el color interno se resuelve con `currentColor`, así que el
+ * hover de la card recolorea título, ícono y flecha con una sola regla.
+ *
+ * El ícono es intercambiable: va por `<slot name="icon">`, con el asterisco del
+ * vanilla como fallback. Debe usar `fill`/`stroke="currentColor"`.
+ *
+ * Props genéricas, sin acoplar al schema de Sanity (Etapa 5).
+ */
+interface Props {
+  href: string;
+  title: string;
+}
+
+const { href, title } = Astro.props;
+---
+
+<a
+  href={href}
+  class="service-card flex size-[clamp(10.6875rem,8.9911rem_+_8.4821vw,16.625rem)] cursor-pointer flex-col justify-between rounded-[clamp(0.3994rem,0.336rem_+_0.317vw,0.6212rem)] border-[0.0625rem] border-white bg-transparent p-[clamp(1.0069rem,0.8471rem_+_0.7991vw,1.5663rem)] text-white no-underline transition-[background-color,border-color,color] duration-200 ease-in-out hover:border-purple hover:bg-purple hover:text-black"
+>
+  <h3
+    class="service-card-title font-lora text-[clamp(1.3125rem,1.3929rem_-_0.0893vw,1.375rem)] leading-[1.23] font-medium tracking-normal text-current"
+  >
+    {title}
+  </h3>
+
+  <div class="service-card-footer flex items-end justify-between gap-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)]">
+    <div
+      class="service-card-icon text-current [&_svg]:block [&_svg]:size-[clamp(3.9375rem,3.8125rem_+_0.625vw,4.375rem)]"
+    >
+      <slot name="icon">
+        <svg width="87" height="87" viewBox="0 0 87 87" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path
+            d="M44.85 85.96L41.32 86.31L40.78 54.4L28.49 83.89L25.15 82.27L36.21 53.6C27.52 60.85 21.19 67.7 13.93 75.03L11.42 72.36L33.39 49.8L3.99 61.62L2.73 58.34L32.62 45.38L0 44.9L0.03 41.5L32.54 41.16L2.48 28.68L3.54 25.37L33.39 36.74L11.36 14L13.49 11.86C13.94 11.41 15.28 12.82 15.74 13.27L36.16 32.99L25.55 6.58C25.3 5.96 24.98 4.63 24.94 4.08C24.88 3.36 27.38 2.91 27.94 3.09L40.75 32.37L41.29 0H44.92L45.23 32.05L57.44 2.88C57.86 2.98 60.19 3.97 60.72 4.28L49.23 33.91L71.34 12.14C72.1 11.74 73.81 12.89 74.69 14.15L53.89 35.95L81.97 24.74C82.29 25.38 82.96 27.81 82.91 28.3L52.9 41.17L86.13 41.54L85.94 44.93L54.01 45.49L83.29 57.58L82.99 61.24L53.44 49.92C59.85 58.28 67.24 64.57 74.67 72.26L72.21 74.98L50.12 53.62L61.57 82.33L58.19 83.51L45.16 53.77L44.83 85.95L44.85 85.96Z"
+            fill="currentColor"></path>
+        </svg>
+      </slot>
+    </div>
+
+    <div
+      class="service-card-arrow flex size-icon-btn shrink-0 items-center justify-center rounded-full border-[0.0875rem] border-current bg-transparent text-current transition-all duration-200 ease-in-out hover:border-black hover:bg-black hover:text-white"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <line x1="7" y1="17" x2="17" y2="7"></line>
+        <polyline points="7 7 17 7 17 17"></polyline>
+      </svg>
+    </div>
+  </div>
+</a>

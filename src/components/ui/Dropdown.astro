@@ -1,0 +1,93 @@
+---
+/**
+ * Dropdown (FAQ) — 27zero
+ * Portado 1:1 de `/components/dropdown` del repo vanilla (html + css + js).
+ *
+ * Sin fondo propio: vive siempre sobre el `#101010` de la página.
+ * `width: 100%` — el ancho real lo define el wrapper de cada página.
+ * Múltiples instancias por página son independientes: abrir una no cierra las
+ * demás (decisión explícita, no es acordeón).
+ *
+ * El contenido va por `<slot>` y puede ser cualquier cosa; el único elemento con
+ * estilo garantizado es `<p>` (Inter 400 / 16px desktop / 13px mobile — coincide
+ * exacto con el token `--text-button`, por eso se reusa `text-button`).
+ */
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<div class="dropdown group/dropdown w-full">
+  <button
+    class="dropdown-toggle flex w-full cursor-pointer items-center justify-between gap-sm border-0 border-t border-t-[#FFFFFF1A] bg-transparent py-[clamp(1.2038rem,1.0127rem_+_0.9554vw,1.8725rem)] text-left"
+    aria-expanded="false"
+  >
+    <span
+      class="dropdown-title font-lora text-[clamp(0.9619rem,0.8092rem_+_0.7634vw,1.4962rem)] leading-[1.25] font-medium tracking-[-0.24px] text-purple"
+      >{title}</span
+    >
+    <span
+      class="dropdown-arrow flex shrink-0 items-center justify-center text-purple transition-transform duration-300 ease-in-out group-[.is-open]/dropdown:rotate-180"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    </span>
+  </button>
+
+  <div class="dropdown-content h-0 overflow-hidden transition-[height] duration-300 ease-in-out">
+    <div
+      class="dropdown-content-inner flex w-[90%] flex-col pb-[clamp(1.0069rem,0.8471rem_+_0.7991vw,1.5663rem)] [&_p]:font-inter [&_p]:text-button [&_p]:leading-[1.6] [&_p]:font-normal [&_p]:tracking-normal [&_p]:text-white"
+    >
+      <slot />
+    </div>
+  </div>
+</div>
+
+<script>
+  // ============================
+  // Dropdown (FAQ) — 27zero
+  // Múltiples dropdowns por página, cada uno independiente — abrir uno
+  // NO cierra los demás.
+  //
+  // Animación de altura: height 0 -> Xpx (medido con scrollHeight) -> auto.
+  // Al terminar de abrir, pasa a height:auto para adaptarse solo si el
+  // contenido cambia después (ej. contenido dinámico). Al cerrar, primero
+  // fija la altura actual en px (no se puede transicionar desde 'auto'),
+  // fuerza reflow, y recién ahí anima a 0.
+  // ============================
+
+  document.querySelectorAll<HTMLElement>('.dropdown').forEach((dropdown) => {
+    const toggle = dropdown.querySelector<HTMLElement>('.dropdown-toggle');
+    const content = dropdown.querySelector<HTMLElement>('.dropdown-content');
+    if (!toggle || !content) return;
+
+    toggle.addEventListener('click', () => {
+      const isOpen = dropdown.classList.contains('is-open');
+
+      if (!isOpen) {
+        // Abrir: 0 -> altura real medida
+        dropdown.classList.add('is-open');
+        toggle.setAttribute('aria-expanded', 'true');
+        content.style.height = content.scrollHeight + 'px';
+
+        content.addEventListener('transitionend', function onOpen(e) {
+          if (e.propertyName !== 'height') return;
+          if (dropdown.classList.contains('is-open')) {
+            content.style.height = 'auto';
+          }
+          content.removeEventListener('transitionend', onOpen);
+        });
+      } else {
+        // Cerrar: altura actual (fijada en px) -> 0
+        content.style.height = content.scrollHeight + 'px';
+        content.offsetHeight; // fuerza reflow, necesario para animar desde este valor
+        dropdown.classList.remove('is-open');
+        toggle.setAttribute('aria-expanded', 'false');
+        content.style.height = '0px';
+      }
+    });
+  });
+</script>

@@ -1,0 +1,251 @@
+---
+/**
+ * Shapes Slider — 27zero
+ * Portado 1:1 de `/components/shapes-slider` del repo vanilla (html + css + js).
+ *
+ * Ya NO es un slider en desktop: es un bloque fijo de 3 shapes que nunca se mueven.
+ * Las flechas solo cambian cuál está activa (scale 1 vs 0.9, cíclico) y reescriben
+ * el título/texto del bloque "Execution that Scales".
+ * En mobile (<=768px) sí hay desplazamiento: scroll-snap horizontal con spacers
+ * reales a los lados, sin flechas, navegable por swipe o tap en los extremos.
+ *
+ * Contenido y comportamiento idénticos en todas las páginas donde se usa, así que
+ * van hardcodeados (etapa3.md). El copy sale tal cual del vanilla — incluidos los
+ * dos textos placeholder que todavía no tienen copy final.
+ *
+ * Diferencia con el vanilla: las 3 shapes se renderizan en el markup de Astro en vez
+ * de inyectarse con `innerHTML`. El DOM resultante es el mismo, pero queda en el HTML
+ * estático (SEO/no-JS). El JS conserva 1:1 la lógica de interacción.
+ */
+import Button from '../ui/Button.astro';
+
+const SHAPES = [
+  {
+    modifier: 'apart-shape--purple',
+    src: '/assets/research-enhanced.png',
+    alt: 'Research Enhanced',
+    title: 'Research Enhanced Insights',
+    text: 'Lorem ipsum is simply dummy text of the printing and typesetting industry standard, used here as placeholder copy.',
+  },
+  {
+    modifier: 'apart-shape--indigo',
+    src: '/assets/execution.png',
+    alt: 'Execution',
+    title: 'Execution that Scales',
+    text: 'We deliver the complete capability of a full-service agency with the focus of a boutique partner — with regional expertise in North America and Europe, and agile production in Latin America.',
+  },
+  {
+    modifier: 'apart-shape--black',
+    src: '/assets/creativity.png',
+    alt: 'Creativity',
+    title: 'Creativity Without Limits',
+    text: 'Lorem ipsum is simply dummy text of the printing and typesetting industry standard, used here as placeholder copy.',
+  },
+];
+
+/** Shape activa por default: la del centro. */
+const DEFAULT_INDEX = 1;
+
+const CONTAINER =
+  'container mx-auto flex w-full max-w-(--container-max-width) flex-col items-center gap-[clamp(1.0069rem,0.8471rem_+_0.7991vw,1.5663rem)] px-container-x';
+
+const SLIDER_ARROW =
+  'apart-slider-arrow flex size-slider-arrow shrink-0 cursor-pointer items-center justify-center rounded-full border-[0.0625rem] border-black bg-white text-black transition-all duration-200 ease-in-out enabled:hover:bg-black enabled:hover:text-white disabled:cursor-not-allowed disabled:opacity-30 max-md:hidden';
+
+const NAV_ZONE =
+  'apart-shapes-nav-zone absolute top-0 bottom-0 z-[2] hidden w-[20%] cursor-pointer border-0 bg-transparent p-0 max-md:block';
+---
+
+<section
+  class="shapes-slider section section--apart-home bg-white pt-[clamp(2.4131rem,1.8526rem_+_2.8027vw,4.375rem)] pb-[clamp(2.4131rem,1.4951rem_+_4.5902vw,5.6262rem)] text-center"
+>
+  <div class:list={[CONTAINER, 'apart-home-container']}>
+    <h2 class="font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px]">What sets 27zero apart.</h2>
+    <p class="text-body--sm font-inter text-body-sm leading-[1.6] font-normal tracking-normal">
+      Our foundations connect insight, creativity, and efficient execution — helping EdTech brands turn purpose into
+      lasting impact.
+    </p>
+    <Button href="/services" variant="dark" class="mt-xs">Our services</Button>
+  </div>
+
+  <div
+    class="apart-slider mx-auto flex max-w-(--container-max-width) items-center gap-gap px-container-x pt-[clamp(3.4144rem,2.9624rem_+_2.2598vw,4.9962rem)] pb-0 max-md:gap-0 max-md:px-0"
+  >
+    <button class={SLIDER_ARROW} data-dir="prev" aria-label="Previous">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+    </button>
+
+    <div class="apart-shapes-wrap relative flex min-w-0 flex-1">
+      <div
+        class="apart-shapes flex min-w-0 flex-1 items-center justify-center gap-gap [scrollbar-width:none] max-md:justify-start max-md:gap-[0.5625rem] max-md:overflow-x-auto max-md:[scroll-snap-type:x_mandatory] [&::-webkit-scrollbar]:hidden"
+        id="apartShapes"
+      >
+        <div class="apart-shapes-spacer hidden max-md:block max-md:flex-[0_0_15%]" aria-hidden="true"></div>
+        {
+          SHAPES.map((shape, i) => (
+            <div
+              class:list={[
+                'apart-shape relative flex flex-1 origin-center items-center justify-center transition-transform duration-300 ease-in-out max-md:flex-[0_0_70%] max-md:[scroll-snap-align:center]',
+                shape.modifier,
+              ]}
+              style={`transform: scale(${i === DEFAULT_INDEX ? 1 : 0.9})`}
+              data-shape-title={shape.title}
+              data-shape-text={shape.text}
+            >
+              <img
+                src={shape.src}
+                alt={shape.alt}
+                class="block h-auto w-full max-w-[clamp(12.375rem,10.4107rem_+_9.8214vw,19.25rem)] max-md:max-w-full"
+              />
+            </div>
+          ))
+        }
+        <div class="apart-shapes-spacer hidden max-md:block max-md:flex-[0_0_15%]" aria-hidden="true"></div>
+      </div>
+      <button class:list={[NAV_ZONE, 'apart-shapes-nav-zone--prev left-0']} data-dir="prev" aria-label="Previous"></button>
+      <button class:list={[NAV_ZONE, 'apart-shapes-nav-zone--next right-0']} data-dir="next" aria-label="Next"></button>
+    </div>
+
+    <button class={SLIDER_ARROW} data-dir="next" aria-label="Next">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+        <polyline points="12 5 19 12 12 19"></polyline>
+      </svg>
+    </button>
+  </div>
+
+  <div
+    class:list={[CONTAINER, 'apart-home-scales pt-[clamp(2.4131rem,2.1201rem_+_1.4652vw,3.4388rem)] pb-0']}
+  >
+    <h3
+      id="apartScalesTitle"
+      class="text-center font-lora text-[clamp(1.3125rem,1.26rem_+_0.2625vw,1.4962rem)] leading-[1.25] font-medium tracking-[-0.24px]"
+    >
+      {SHAPES[DEFAULT_INDEX].title}
+    </h3>
+    <p
+      id="apartScalesText"
+      class="text-body--sm max-w-[clamp(25.3125rem,21.2946rem_+_20.0893vw,39.375rem)] font-inter text-body-sm leading-[1.6] font-normal tracking-normal"
+    >
+      {SHAPES[DEFAULT_INDEX].text}
+    </p>
+  </div>
+</section>
+
+<script>
+  // ============================
+  // Shapes Slider — 27zero
+  // Desktop: bloque fijo de 3 shapes, nada se mueve — las flechas solo
+  // cambian el scale (activa = 1, inactivas = 0.9).
+  // Mobile (<=768px): sin flechas. La shape activa queda centrada con
+  // "peeks" de las de los lados (scroll-snap horizontal) — se navega
+  // con swipe o con tap en las zonas invisibles de los extremos.
+  // En ambos casos, el texto de .apart-home-scales cambia según la shape activa.
+  // ============================
+
+  const MOBILE_QUERY = '(max-width: 768px)';
+  const isMobile = () => window.matchMedia(MOBILE_QUERY).matches;
+
+  function initApartShapes() {
+    const shapesWrap = document.getElementById('apartShapes');
+    const titleEl = document.getElementById('apartScalesTitle');
+    const textEl = document.getElementById('apartScalesText');
+    if (!shapesWrap) return;
+
+    // Las shapes ya vienen renderizadas desde Astro; el copy de cada una viaja
+    // en data-attributes en vez de un array duplicado en el cliente.
+    const shapeEls = Array.from(shapesWrap.querySelectorAll<HTMLElement>('.apart-shape'));
+    if (!shapeEls.length) return;
+
+    const prevBtn = document.querySelector<HTMLElement>('.apart-slider-arrow[data-dir="prev"]');
+    const nextBtn = document.querySelector<HTMLElement>('.apart-slider-arrow[data-dir="next"]');
+    const prevZone = document.querySelector<HTMLElement>('.apart-shapes-nav-zone--prev');
+    const nextZone = document.querySelector<HTMLElement>('.apart-shapes-nav-zone--next');
+
+    // Default: la del centro (index 1) activa, las otras dos en 0.9
+    let activeIndex = 1;
+
+    function render() {
+      shapeEls.forEach((shape, i) => {
+        shape.style.transform = `scale(${i === activeIndex ? 1 : 0.9})`;
+      });
+
+      const active = shapeEls[activeIndex];
+      if (titleEl) titleEl.textContent = active.dataset.shapeTitle ?? '';
+      if (textEl) textEl.textContent = active.dataset.shapeText ?? '';
+    }
+
+    // ===== Desktop: flechas cambian el índice directo, sin scroll =====
+    function goTo(index: number) {
+      activeIndex = (index + shapeEls.length) % shapeEls.length;
+      render();
+      if (isMobile()) scrollToActive('smooth');
+    }
+
+    if (prevBtn) prevBtn.addEventListener('click', () => goTo(activeIndex - 1));
+    if (nextBtn) nextBtn.addEventListener('click', () => goTo(activeIndex + 1));
+
+    // ===== Mobile: swipe (scroll-snap) + tap en las zonas invisibles =====
+    function scrollToActive(behavior: ScrollBehavior = 'smooth') {
+      const el = shapeEls[activeIndex];
+      if (!el) return;
+      el.scrollIntoView({ behavior, inline: 'center', block: 'nearest' });
+    }
+
+    function closestIndexToCenter() {
+      const wrapRect = shapesWrap!.getBoundingClientRect();
+      const centerX = wrapRect.left + wrapRect.width / 2;
+      let closest = 0;
+      let minDist = Infinity;
+      shapeEls.forEach((el, i) => {
+        const r = el.getBoundingClientRect();
+        const dist = Math.abs(r.left + r.width / 2 - centerX);
+        if (dist < minDist) {
+          minDist = dist;
+          closest = i;
+        }
+      });
+      return closest;
+    }
+
+    if (prevZone) prevZone.addEventListener('click', () => goTo(activeIndex - 1));
+    if (nextZone) nextZone.addEventListener('click', () => goTo(activeIndex + 1));
+
+    // Al terminar un swipe, detecta cuál shape quedó centrada y actualiza texto/scale
+    let scrollTimeout: ReturnType<typeof setTimeout>;
+    shapesWrap.addEventListener('scroll', () => {
+      if (!isMobile()) return;
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        const idx = closestIndexToCenter();
+        if (idx !== activeIndex) {
+          activeIndex = idx;
+          render();
+        }
+      }, 100);
+    });
+
+    render();
+
+    // Centra la shape default (Execution) al cargar en mobile, sin animación
+    if (isMobile()) {
+      requestAnimationFrame(() => scrollToActive('auto'));
+    }
+
+    // Si cambia de mobile a desktop (o viceversa) por resize/rotación,
+    // vuelve a centrar la shape activa en el nuevo layout
+    let wasMobile = isMobile();
+    window.addEventListener('resize', () => {
+      const nowMobile = isMobile();
+      if (nowMobile && !wasMobile) {
+        requestAnimationFrame(() => scrollToActive('auto'));
+      }
+      wasMobile = nowMobile;
+    });
+  }
+
+  initApartShapes();
+</script>

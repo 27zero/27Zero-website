@@ -1,0 +1,77 @@
+---
+/**
+ * Practices Card — 27zero
+ * Portado 1:1 de `/components/practices-card` del repo vanilla. Sin JS: hover CSS puro.
+ *
+ * El ícono es intercambiable (así está documentado en design-system-components.md):
+ * va por `<slot name="icon">`, con el ícono de 3 rombos del vanilla como fallback.
+ * "Explore the practice" es un label fijo de UI, por eso queda hardcodeado
+ * (CLAUDE.md §4 — labels de UI siempre estáticos).
+ *
+ * Props genéricas, sin acoplar al schema de Sanity (Etapa 5).
+ */
+interface Props {
+  href: string;
+  title: string;
+  body?: string;
+  image?: { src: string; alt: string };
+}
+
+const { href, title, body, image } = Astro.props;
+---
+
+<a
+  href={href}
+  class="practices-card group/card relative flex w-full cursor-pointer flex-col justify-between gap-[clamp(5.625rem,4.7321rem_+_4.4643vw,8.75rem)] overflow-hidden rounded-card bg-gray px-[clamp(1.0463rem,0.8802rem_+_0.8304vw,1.6275rem)] py-[clamp(1.6087rem,1.3534rem_+_1.2768vw,2.5025rem)] text-black no-underline"
+>
+  <div class="practices-card-bg absolute inset-0 z-0 flex items-center justify-center bg-gray">
+    {image && <img src={image.src} alt={image.alt} class="size-full object-cover" />}
+  </div>
+
+  <div
+    class="practices-card-block practices-card-block--intro relative z-[1] flex flex-col gap-[clamp(2.4131rem,2.0301rem_+_1.9152vw,3.7538rem)]"
+  >
+    <div
+      class="practices-card-icon [&_svg]:block [&_svg]:h-[clamp(1.5694rem,1.3203rem_+_1.2455vw,2.4413rem)] [&_svg]:w-[clamp(2.3681rem,1.9922rem_+_1.8795vw,3.6837rem)]"
+    >
+      <slot name="icon">
+        <svg width="59" height="39" viewBox="0 0 59 39" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path
+            d="M38.87 38.86L38.55 24.46C35.42 33.03 28.46 38.75 19.35 38.86L19.06 25.09C15.51 33.29 9.14 38.7 0 38.87V-1.0866e-05C8.93 -0.0700109 15.41 5.42999 19.06 13.54L19.39 0.0299891C28.16 -0.140011 35.55 5.67999 38.5 14.47L38.8 0.00998913C49.45 -0.100011 58.13 8.57999 58.2 19.23C58.27 29.58 50.19 38.58 38.86 38.85L38.87 38.86Z"
+            fill="black"></path>
+        </svg>
+      </slot>
+    </div>
+    <div class="practices-card-text flex flex-col gap-[clamp(0.3994rem,0.336rem_+_0.317vw,0.6212rem)]">
+      <h3
+        class="practices-card-title font-lora text-[clamp(0.9619rem,0.8092rem_+_0.7634vw,1.4962rem)] leading-[1.4] font-medium tracking-normal text-black"
+      >
+        {title}
+      </h3>
+      {
+        body && (
+          <p class="practices-card-body font-inter text-body-sm leading-[1.6] font-normal tracking-normal text-black">
+            {body}
+          </p>
+        )
+      }
+    </div>
+  </div>
+
+  <div
+    class="practices-card-block practices-card-block--cta relative z-[1] flex items-center justify-between gap-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)]"
+  >
+    <span
+      class="practices-card-cta-text font-lora text-[clamp(0.6806rem,0.5726rem_+_0.5402vw,1.0587rem)] leading-[1.4] font-medium tracking-normal text-black"
+      >Explore the practice</span
+    >
+    <div
+      class="practices-card-arrow flex size-icon-btn shrink-0 items-center justify-center rounded-full border-[0.0875rem] border-black bg-transparent text-black transition-all duration-200 ease-in-out group-hover/card:bg-black group-hover/card:text-white"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <line x1="7" y1="17" x2="17" y2="7"></line>
+        <polyline points="7 7 17 7 17 17"></polyline>
+      </svg>
+    </div>
+  </div>
+</a>

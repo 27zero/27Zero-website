@@ -1,0 +1,75 @@
+---
+/**
+ * Footer — 27zero
+ * Portado 1:1 de `/components/footer` del repo vanilla. Markup puro, sin JS.
+ *
+ * Los links son estáticos: cambiarlos implica cambiar rutas, así que no van a
+ * `siteSettings` (CLAUDE.md §8). Se conservan exactamente los del vanilla,
+ * incluidos los placeholder (`/services`, `/careers`, `/privacy`).
+ */
+const LINK_COLUMNS = [
+  [
+    { href: '/', label: 'Home' },
+    { href: '/work', label: 'Work' },
+    { href: '/services', label: 'Services' },
+    { href: '/about', label: 'About' },
+  ],
+  [
+    { href: '/the-edtech-mentor', label: 'The EdTech Mentor' },
+    { href: '/careers', label: 'Careers' },
+    { href: '/contact', label: "Let's Talk!" },
+  ],
+  [{ href: 'https://linkedin.com', label: 'Linkedin', external: true }],
+];
+---
+
+<footer class="footer bg-black">
+  <div
+    class="footer-container mx-auto max-w-(--container-max-width) px-container-x pt-[clamp(1.9688rem,1.2813rem_+_3.4375vw,4.375rem)] pb-[clamp(1.125rem,-0.2686rem_+_6.9679vw,6.0025rem)]"
+  >
+    <div
+      class="footer-top mb-lg flex items-start justify-between gap-[clamp(1.125rem,0.6964rem_+_2.1429vw,2.625rem)] max-md:flex-col"
+    >
+      <a href="/" class="footer-logo block">
+        <img
+          src="/assets/logo-27zero.svg"
+          alt="27zero"
+          class="block h-auto w-[clamp(6.2269rem,5.2385rem_+_4.942vw,9.6863rem)] invert"
+        />
+      </a>
+
+      <nav class="footer-links flex gap-[clamp(1.4063rem,0.683rem_+_3.6161vw,3.9375rem)] max-md:flex-wrap">
+        {
+          LINK_COLUMNS.map((column) => (
+            <div class="footer-links-col flex flex-col gap-[clamp(0.9619rem,0.8092rem_+_0.7634vw,1.4962rem)]">
+              {column.map((link) => (
+                <a
+                  href={link.href}
+                  target={link.external ? '_blank' : undefined}
+                  rel={link.external ? 'noopener' : undefined}
+                  class="font-inter text-body-sm leading-[1.6] font-normal tracking-normal text-white no-underline transition-[font-weight] duration-200 hover:font-bold"
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          ))
+        }
+      </nav>
+    </div>
+
+    <div class="footer-divider mb-[clamp(1.2038rem,1.0127rem_+_0.9554vw,1.8725rem)] h-px bg-white/15"></div>
+
+    <div class="footer-bottom flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-[clamp(0.4219rem,0.3549rem_+_0.3348vw,0.6563rem)]">
+      <span class="footer-copy font-inter text-body-sm leading-[1.6] font-normal tracking-normal text-white/60">
+        2025 27zero. All rights reserved.
+      </span>
+      <a
+        href="/privacy"
+        class="footer-legal font-inter text-body-sm leading-[1.6] font-normal tracking-normal text-white/60 no-underline transition-colors duration-200 hover:text-white"
+      >
+        Privacy Security Policy
+      </a>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,137 @@
+---
+/**
+ * Cards Slider — 27zero
+ * Portado 1:1 de `/components/cards-slider` del repo vanilla (html + css + js).
+ *
+ * Agnóstico del tipo de slide: las cards entran por `<slot>` y solo se pide que
+ * cada una tenga la clase base `.card` (WorkCard, EdtechMentorCard, etc.), que es
+ * lo único que el JS mide para calcular el step de las flechas.
+ *
+ * Ocupa el ancho de la página: el track se alinea solo con
+ * `max(container-x, (99.5vw - max-width)/2 + container-x)`, sin depender de un
+ * `.container` externo. En mobile las flechas se ocultan — solo scroll/drag táctil.
+ */
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+
+const SLIDER_ARROW =
+  'slider-arrow flex size-slider-arrow cursor-pointer items-center justify-center rounded-full border-[0.0625rem] border-black bg-transparent text-black transition-all duration-200 ease-in-out enabled:hover:bg-black enabled:hover:text-white disabled:cursor-not-allowed disabled:opacity-30';
+---
+
+<div class="slider-block flex flex-col gap-sm">
+  <div class="slider-header mx-auto w-full max-w-(--container-max-width) px-container-x">
+    <h2
+      class="slider-title font-inter text-[clamp(1.25rem,1.2321rem_+_0.0893vw,1.3125rem)] leading-[1.5] font-medium tracking-normal"
+    >
+      {title}
+    </h2>
+  </div>
+
+  <div class="slider-track-wrap w-full">
+    <div
+      class="slider-track flex cursor-grab gap-sm overflow-x-auto scroll-smooth pr-container-x pl-[max(var(--spacing-container-x),calc((99.5vw_-_var(--container-max-width))/2_+_var(--spacing-container-x)))] select-none [scrollbar-width:none] [&.dragging]:cursor-grabbing [&.dragging]:scroll-auto [&::-webkit-scrollbar]:hidden"
+    >
+      <slot />
+    </div>
+  </div>
+
+  <div class="slider-footer mx-auto flex w-full max-w-(--container-max-width) justify-end px-container-x max-md:hidden">
+    <div class="slider-nav flex gap-[clamp(0.4219rem,0.3549rem_+_0.3348vw,0.6563rem)]">
+      <button class={SLIDER_ARROW} data-dir="prev" aria-label="Previous" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+      </button>
+      <button class={SLIDER_ARROW} data-dir="next" aria-label="Next">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <polyline points="12 5 19 12 12 19"></polyline>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ============================
+  // Cards Slider — 27zero
+  // Drag por pointer events + navegación con flechas.
+  // ============================
+
+  function enableSliderDrag(track: HTMLElement) {
+    let isDown = false;
+    let startX = 0;
+    let startSL = 0;
+
+    track.addEventListener('pointerdown', (e) => {
+      isDown = true;
+      track.classList.add('dragging');
+      startX = e.pageX;
+      startSL = track.scrollLeft;
+      track.setPointerCapture(e.pointerId);
+    });
+
+    track.addEventListener('pointermove', (e) => {
+      if (!isDown) return;
+      track.scrollLeft = startSL - (e.pageX - startX);
+    });
+
+    const stopDrag = () => {
+      isDown = false;
+      track.classList.remove('dragging');
+    };
+
+    track.addEventListener('pointerup', stopDrag);
+    track.addEventListener('pointerleave', stopDrag);
+    track.addEventListener('pointercancel', stopDrag);
+  }
+
+  function enableSliderArrows(footer: HTMLElement, track: HTMLElement) {
+    const prevBtn = footer.querySelector<HTMLButtonElement>('[data-dir="prev"]');
+    const nextBtn = footer.querySelector<HTMLButtonElement>('[data-dir="next"]');
+    if (!prevBtn || !nextBtn) return;
+
+    function getScrollStep() {
+      const card = track.querySelector('.card');
+      if (!card) return 320;
+      const gap = parseFloat(getComputedStyle(track).gap) || 0;
+      return (card.getBoundingClientRect().width + gap) * 2;
+    }
+
+    function updateArrows() {
+      const maxScroll = track.scrollWidth - track.clientWidth;
+      prevBtn!.disabled = track.scrollLeft <= 2;
+      nextBtn!.disabled = maxScroll <= 2 || track.scrollLeft >= maxScroll - 2;
+    }
+
+    prevBtn.addEventListener('click', () => {
+      track.scrollBy({ left: -getScrollStep(), behavior: 'smooth' });
+    });
+
+    nextBtn.addEventListener('click', () => {
+      track.scrollBy({ left: getScrollStep(), behavior: 'smooth' });
+    });
+
+    track.addEventListener('scroll', updateArrows);
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(updateArrows);
+    });
+
+    window.addEventListener('resize', updateArrows);
+  }
+
+  // ===== Init =====
+  // Soporta múltiples .slider-block en la misma página — cada uno con su propia instancia.
+  document.querySelectorAll<HTMLElement>('.slider-block').forEach((sliderBlock) => {
+    const track = sliderBlock.querySelector<HTMLElement>('.slider-track');
+    const footer = sliderBlock.querySelector<HTMLElement>('.slider-footer');
+    if (!track || !footer) return;
+    enableSliderDrag(track);
+    enableSliderArrows(footer, track);
+  });
+</script>

@@ -1,0 +1,115 @@
+---
+/**
+ * Marquee Logos — 27zero
+ * Portado 1:1 de `/components/marquee-logos` del repo vanilla (html + css + js).
+ *
+ * Carrusel infinito con WAAPI: el JS clona los logos hasta cubrir el viewport + un
+ * período y anima `translateX(0 → -período)`. Pausa en hover y respeta
+ * `prefers-reduced-motion`. Soporta múltiples `.marquee` por página.
+ *
+ * `logos` es prop para no atar el componente a un listado fijo; el default son
+ * exactamente los 5 logos del vanilla (contenido real, no data de ejemplo).
+ */
+interface Props {
+  logos?: { src: string; alt: string }[];
+  /** Velocidad del loop en píxeles por segundo. */
+  speed?: number;
+}
+
+const DEFAULT_LOGOS = [
+  { src: '/assets/logos/doctums.svg', alt: 'Doctums' },
+  { src: '/assets/logos/scholarship-magic.svg', alt: 'Scholarship Magic' },
+  { src: '/assets/logos/skillwell.svg', alt: 'Skillwell' },
+  { src: '/assets/logos/student-first.svg', alt: 'Student First' },
+  { src: '/assets/logos/world-learning.svg', alt: 'World Learning' },
+];
+
+const { logos = DEFAULT_LOGOS, speed = 60 } = Astro.props;
+---
+
+<div class="marquee w-full overflow-hidden" data-speed={speed}>
+  <div
+    class="marquee-track flex w-max shrink-0 items-center gap-[clamp(1.8056rem,1.519rem_+_1.433vw,2.8087rem)] will-change-transform"
+  >
+    {
+      logos.map((logo) => (
+        <img
+          class="marquee-logo max-h-[clamp(2.0081rem,1.6894rem_+_1.5938vw,3.1237rem)] w-auto shrink-0 object-contain"
+          src={logo.src}
+          alt={logo.alt}
+        />
+      ))
+    }
+  </div>
+</div>
+
+<script>
+  // ============================
+  // Marquee Logos — 27zero
+  // WAAPI: clona logos hasta cubrir viewport + un período, luego anima
+  // translateX(0 → -período) en loop infinito. Período = ancho de un set
+  // + un gap, garantizando que el primer clon queda justo donde empezó
+  // el set original — loop sin saltos ni espacios en blanco.
+  // ============================
+
+  function initMarquee(marquee: HTMLElement, pxPerSecond = 60) {
+    const track = marquee.querySelector<HTMLElement>('.marquee-track');
+    if (!track) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const origLogos = Array.from(track.querySelectorAll<HTMLElement>('.marquee-logo'));
+    let anim: Animation | null = null;
+
+    function setup() {
+      if (anim) {
+        anim.cancel();
+        anim = null;
+      }
+      track!.querySelectorAll('[aria-hidden="true"]').forEach((el) => el.remove());
+
+      const gapPx = parseFloat(getComputedStyle(track!).columnGap) || 0;
+      const oneSetWidth = track!.scrollWidth;
+      const period = oneSetWidth + gapPx;
+
+      if (period <= 0) return;
+
+      const needed = marquee.offsetWidth + period;
+      let added = 0;
+      while (added < needed) {
+        origLogos.forEach((logo) => {
+          const clone = logo.cloneNode(true) as HTMLElement;
+          clone.setAttribute('aria-hidden', 'true');
+          clone.setAttribute('alt', '');
+          track!.appendChild(clone);
+        });
+        added += period;
+      }
+
+      anim = track!.animate(
+        [{ transform: 'translateX(0)' }, { transform: `translateX(-${period}px)` }],
+        {
+          duration: (period / pxPerSecond) * 1000,
+          iterations: Infinity,
+          easing: 'linear',
+        }
+      );
+    }
+
+    marquee.addEventListener('mouseenter', () => {
+      if (anim) anim.pause();
+    });
+    marquee.addEventListener('mouseleave', () => {
+      if (anim) anim.play();
+    });
+
+    setup();
+    window.addEventListener('resize', setup);
+  }
+
+  window.addEventListener('load', () => {
+    document.querySelectorAll<HTMLElement>('.marquee').forEach((marquee) => {
+      const speed = Number(marquee.dataset.speed) || 60;
+      initMarquee(marquee, speed);
+    });
+  });
+</script>

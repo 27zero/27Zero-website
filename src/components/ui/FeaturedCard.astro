@@ -1,0 +1,86 @@
+---
+/**
+ * Featured Card — 27zero
+ * Portado 1:1 de `/components/featured-card` del repo vanilla. Sin JS: hover CSS puro.
+ *
+ * `width/height: 100%` — el tamaño real lo define el wrapper de cada página donde
+ * se usa (mismo patrón que `CardsSlider` con `WorkCard`).
+ *
+ * Props genéricas, sin acoplar al schema de Sanity (Etapa 5).
+ */
+interface Props {
+  href: string;
+  title: string;
+  tag?: string;
+  name?: string;
+  role?: string;
+  avatar?: { src: string; alt: string };
+  /** Alternativa al avatar: iniciales dentro del círculo. */
+  avatarInitials?: string;
+}
+
+const { href, title, tag, name, role, avatar, avatarInitials } = Astro.props;
+---
+
+<a
+  href={href}
+  class="card card--featured group/card relative flex size-full shrink-0 cursor-pointer flex-col justify-between overflow-hidden rounded-card bg-gray p-[clamp(0.9562rem,0.8045rem_+_0.7589vw,1.4875rem)] text-black no-underline max-md:gap-[3.6563rem]"
+>
+  {
+    tag && (
+      <span class="card-featured-tag font-inter text-card-tag leading-[1.5] font-normal tracking-normal text-black">
+        {tag}
+      </span>
+    )
+  }
+
+  <div class="card-featured-content flex flex-col gap-sm">
+    <div class="card-featured-meta flex items-center gap-[clamp(0.4838rem,0.407rem_+_0.3839vw,0.7525rem)]">
+      {
+        (avatar || avatarInitials) && (
+          <div class="card-featured-avatar flex size-card-avatar shrink-0 items-center justify-center overflow-hidden rounded-full bg-purple">
+            {avatar ? (
+              <img src={avatar.src} alt={avatar.alt} class="size-full object-cover" />
+            ) : (
+              <span class="font-inter text-[clamp(0.5231rem,0.4401rem_+_0.4152vw,0.8138rem)] font-bold text-indigo">
+                {avatarInitials}
+              </span>
+            )}
+          </div>
+        )
+      }
+      <div class="card-featured-meta-text flex flex-col gap-[clamp(0.0844rem,0.071rem_+_0.067vw,0.1313rem)]">
+        {
+          role && (
+            <span class="card-featured-role font-inter text-card-role leading-[1.4] font-medium tracking-normal text-black">
+              {role}
+            </span>
+          )
+        }
+        {
+          name && (
+            <span class="card-featured-name font-inter text-card-name leading-[1.4] font-medium tracking-normal text-black">
+              {name}
+            </span>
+          )
+        }
+      </div>
+    </div>
+
+    <div class="card-featured-footer flex items-end justify-between gap-sm max-md:flex-col max-md:items-start">
+      <h3
+        class="card-featured-title max-w-[clamp(15.75rem,13.25rem_+_12.5vw,24.5rem)] font-inter text-card-headline leading-[1.4] font-medium tracking-normal text-black max-md:max-w-full"
+      >
+        {title}
+      </h3>
+      <div
+        class="card-featured-arrow flex size-icon-btn shrink-0 items-center justify-center rounded-full border-[0.0875rem] border-black bg-transparent text-black transition-all duration-200 ease-in-out group-hover/card:bg-black group-hover/card:text-white"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <line x1="7" y1="17" x2="17" y2="7"></line>
+          <polyline points="7 7 17 7 17 17"></polyline>
+        </svg>
+      </div>
+    </div>
+  </div>
+</a>

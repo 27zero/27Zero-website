@@ -1,0 +1,57 @@
+---
+/**
+ * Button — 27zero
+ * Base `.btn` del design system global (design-system.md §4.1) + las variantes
+ * que consumen los componentes de la Etapa 3.
+ *
+ * Solo existen las variantes en uso hoy:
+ *  - `nav`     → `.btn-nav`, exclusiva del navbar: outline que hereda la variante
+ *                activa del `.nav` (white / black / scrolled) y se rellena en hover.
+ *                Depende del `group/nav` del Navbar, igual que en el vanilla, donde
+ *                `.btn-nav` se estilaba por descendencia de `.nav--*`.
+ *  - `dark`    → `.btn-dark`, fondo negro con texto purple, hover a outline negro.
+ *  - `outline` → outline negro fijo sobre fondo transparente, hover relleno negro
+ *                con texto blanco. Es el estado que `nav` toma sobre fondo blanco,
+ *                pero resuelto sin depender del `group/nav` ni de especificidad
+ *                heredada: se usa donde el fondo es siempre claro y el botón no
+ *                debe seguir la variante activa del nav (ej. el modal mobile).
+ *
+ * Las variantes `purple` y `white` del design system todavía no tienen uso — se
+ * agregan cuando alguna página las pida (Etapa 4), no antes.
+ */
+interface Props {
+  href: string;
+  variant: 'nav' | 'dark' | 'outline';
+  /**
+   * Tamaño de texto. `base` es el `.btn` del design system (fluido, 13→16px).
+   * `sm` es el 14px fijo que el vanilla usa para el botón del modal mobile.
+   * Va como prop y no como clase suelta del consumidor porque dos utilidades de
+   * `font-size` sobre el mismo elemento se resuelven por orden de emisión de
+   * Tailwind, no por especificidad: el override perdía en silencio.
+   */
+  size?: 'base' | 'sm';
+  /** Clases extra del contexto de uso (posicionamiento, layout). */
+  class?: string;
+}
+
+const { href, variant, size = 'base', class: className } = Astro.props;
+
+/* Sin font-size: lo aporta SIZES, para que solo haya una utilidad de font-size. */
+const BASE =
+  'inline-flex cursor-pointer items-center justify-center gap-xs rounded-full border border-solid px-[clamp(0.9562rem,0.8045rem_+_0.7589vw,1.4875rem)] py-[clamp(0.4781rem,0.4022rem_+_0.3795vw,0.7438rem)] text-center font-lora leading-[1.2] font-normal no-underline transition-all duration-200 ease-in-out';
+
+const SIZES = {
+  base: 'text-button',
+  sm: 'text-[0.875rem]',
+} as const;
+
+const VARIANTS = {
+  nav: 'group-[.nav--white]/nav:border-black group-[.nav--white]/nav:text-black group-[.nav--white]/nav:hover:bg-black group-[.nav--white]/nav:hover:text-white group-[.nav--black]/nav:border-white group-[.nav--black]/nav:text-white group-[.nav--black]/nav:hover:bg-white group-[.nav--black]/nav:hover:text-black group-[.nav--scrolled]/nav:border-white group-[.nav--scrolled]/nav:text-white group-[.nav--scrolled]/nav:hover:bg-white group-[.nav--scrolled]/nav:hover:text-indigo',
+  dark: 'border-black bg-black text-purple hover:border-black hover:bg-transparent hover:text-black',
+  outline: 'border-black bg-transparent text-black hover:border-black hover:bg-black hover:text-white',
+} as const;
+---
+
+<a href={href} class:list={['btn', `btn-${variant}`, BASE, SIZES[size], VARIANTS[variant], className]}>
+  <slot />
+</a>

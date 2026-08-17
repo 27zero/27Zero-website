@@ -1,0 +1,325 @@
+---
+/**
+ * Navbar — 27zero
+ * Portado 1:1 de `/components/navbar` del repo vanilla (html + css + js).
+ *
+ * Estados: `nav--white` / `nav--black` (variante inicial, la define cada página)
+ * y `nav--scrolled` (lo aplica el JS a partir de 50px de scroll).
+ * Los nombres de clase de estado se conservan tal cual porque el JS portado
+ * los togglea igual que en el vanilla.
+ *
+ * Breakpoint del menú mobile: 991px (`max-nav:`), intencionalmente distinto al
+ * global de 768px — ver design-system-components.md § Navbar > Mobile.
+ */
+import Button from '../ui/Button.astro';
+
+interface Props {
+  /** Variante inicial al tope de la página. Con scroll siempre pasa a indigo. */
+  variant?: 'white' | 'black';
+}
+
+const { variant = 'white' } = Astro.props;
+
+/* Dentro del modal mobile el fondo es siempre blanco, así que el botón no sigue la
+   variante activa del nav: usa la variante `outline` de Button, que no depende del
+   `group/nav`. Acá solo quedan clases de layout y el tamaño fijo del modal. */
+const BTN_NAV_MOBILE = 'self-start shrink-0';
+
+const NAV_LINKS = [
+  { href: '/edtech-marketing', label: 'Edtech Marketing' },
+  { href: '/the-edtech-mentor', label: 'The EdTech Mentor' },
+  { href: '/resources', label: 'Resources' },
+  { href: '/about', label: 'About' },
+];
+
+const LINK_BASE =
+  'text-button leading-[1.25] font-medium no-underline transition-[font-weight] duration-200 hover:font-bold';
+---
+
+<header
+  class:list={[
+    'nav',
+    'group/nav',
+    variant === 'black' ? 'nav--black' : 'nav--white',
+    'fixed inset-x-0 top-0 z-[100] mx-auto w-full max-w-(--container-max-width) px-[clamp(1.125rem,0.6339rem_+_2.4554vw,2.8438rem)] pt-0 transition-[top] duration-300 ease-in-out',
+  ]}
+>
+  <div
+    class="nav-container flex flex-row items-center justify-between gap-gap rounded-[clamp(0.7031rem,0.5915rem_+_0.558vw,1.0938rem)] px-[clamp(1.8281rem,1.5379rem_+_1.4509vw,2.8438rem)] py-[clamp(0.6469rem,0.5442rem_+_0.5134vw,1.0062rem)] transition-[background-color,color] duration-200 ease-in-out group-[.nav--black]/nav:bg-transparent group-[.nav--black]/nav:text-white group-[.nav--scrolled]/nav:bg-indigo group-[.nav--scrolled]/nav:text-white group-[.nav--white]/nav:bg-transparent group-[.nav--white]/nav:text-black"
+  >
+    <a href="/" class="nav-logo group-[.nav--scrolled]/nav:invert">
+      <img
+        src="/assets/logo-27zero.svg"
+        alt="27zero"
+        class="block h-[clamp(0.9619rem,0.8092rem_+_0.7634vw,1.4962rem)] w-auto transition-[filter] duration-200 ease-in-out"
+      />
+    </a>
+
+    <nav class="nav-links flex items-center gap-gap max-nav:hidden">
+      <div class="nav-dropdown group/dd relative">
+        <button
+          class="nav-dropdown-toggle m-0 flex cursor-pointer items-center gap-[clamp(0.1969rem,0.1656rem_+_0.1562vw,0.3062rem)] border-0 bg-transparent p-0 font-inter text-button leading-[1.25] font-medium text-current transition-[font-weight] duration-200 hover:font-bold"
+          aria-expanded="false"
+        >
+          Work
+          <svg
+            class="nav-dropdown-chevron size-[clamp(0.4219rem,0.3549rem_+_0.3348vw,0.6563rem)] shrink-0 transition-transform duration-200 ease-in-out group-[.is-open]/dd:rotate-180"
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+        <div
+          class="nav-dropdown-content pointer-events-none absolute top-full left-0 z-10 mt-[clamp(0.4781rem,0.4022rem_+_0.3795vw,0.7438rem)] flex min-w-[clamp(5.625rem,4.7321rem_+_4.4643vw,8.75rem)] -translate-y-[clamp(0.1969rem,0.1656rem_+_0.1562vw,0.3062rem)] flex-col gap-xs rounded-[clamp(0.3375rem,0.2839rem_+_0.2679vw,0.525rem)] border border-[#0000001a] bg-white p-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] opacity-0 shadow-[0_0.4375rem_1.3125rem_rgba(16,16,16,0.08)] transition-[opacity,transform] duration-200 ease-in-out group-[.is-open]/dd:pointer-events-auto group-[.is-open]/dd:translate-y-0 group-[.is-open]/dd:opacity-100"
+        >
+          <a
+            href="/work?view=projects"
+            class="nav-dropdown-link p-[clamp(0.1969rem,0.1656rem_+_0.1562vw,0.3062rem)] text-[clamp(0.5906rem,0.4969rem_+_0.4688vw,0.9188rem)] font-medium text-black no-underline transition-[font-weight] duration-200 hover:font-bold"
+            >by projects</a
+          >
+          <div class="nav-dropdown-divider h-px bg-[#0000001a]"></div>
+          <a
+            href="/work?view=clients"
+            class="nav-dropdown-link p-[clamp(0.1969rem,0.1656rem_+_0.1562vw,0.3062rem)] text-[clamp(0.5906rem,0.4969rem_+_0.4688vw,0.9188rem)] font-medium text-black no-underline transition-[font-weight] duration-200 hover:font-bold"
+            >by clients</a
+          >
+        </div>
+      </div>
+
+      {NAV_LINKS.map((link) => <a href={link.href} class={LINK_BASE}>{link.label}</a>)}
+    </nav>
+
+    <Button href="/contact" variant="nav" class="max-nav:hidden">Let's Talk!</Button>
+
+    <!-- Hamburger — solo visible en mobile (<=991px). Ícono estático, sin animación -->
+    <button
+      class="nav-hamburger hidden size-icon-btn cursor-pointer items-center justify-center border-0 bg-transparent p-0 max-nav:flex"
+      aria-label="Abrir menú"
+      aria-expanded="false"
+    >
+      <svg
+        class="nav-hamburger-icon size-sm text-current"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        aria-hidden="true"
+      >
+        <line x1="3" y1="7" x2="21" y2="7"></line>
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="17" x2="21" y2="17"></line>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Modal mobile fullscreen — siempre blanco, con su propio header (logo + close),
+       independiente del estado/posición del .nav (evita conflictos con nav--scrolled) -->
+  <div
+    class="nav-mobile-menu pointer-events-none fixed inset-0 z-[500] flex flex-col justify-between overflow-y-auto bg-white px-[clamp(2.9531rem,2.4844rem_+_2.3438vw,4.5938rem)] pt-[clamp(0.6469rem,0.5442rem_+_0.5134vw,1.0062rem)] pb-[clamp(1.8281rem,1.5379rem_+_1.4509vw,2.8438rem)] text-black opacity-0 transition-opacity duration-250 ease-in-out [&.is-open]:pointer-events-auto [&.is-open]:opacity-100"
+    id="navMobileMenu"
+  >
+    <div class="nav-mobile-header flex shrink-0 items-center justify-between">
+      <a href="/" class="nav-mobile-logo">
+        <img
+          src="/assets/logo-27zero.svg"
+          alt="27zero"
+          class="block h-[clamp(0.9619rem,0.8092rem_+_0.7634vw,1.4962rem)] w-auto"
+        />
+      </a>
+      <button
+        class="nav-mobile-close flex size-icon-btn cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-black"
+        aria-label="Cerrar menú"
+      >
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <line x1="3" y1="10" x2="17" y2="10" stroke="currentColor" stroke-width="2"></line>
+          <line x1="3" y1="10" x2="17" y2="10" stroke="currentColor" stroke-width="2" transform="rotate(45 10 10)"></line>
+          <line x1="3" y1="10" x2="17" y2="10" stroke="currentColor" stroke-width="2" transform="rotate(135 10 10)"></line>
+        </svg>
+      </button>
+    </div>
+
+    <nav class="nav-mobile-links flex flex-col">
+      <div class="nav-mobile-group group/mgrp border-t-0 pt-0 pb-5">
+        <button
+          class="nav-mobile-group-toggle m-0 flex w-full cursor-pointer items-center gap-xs border-0 bg-transparent p-0 text-left font-inter text-[1.5rem] leading-[1.6] font-medium text-black transition-[font-weight] duration-200 hover:font-medium"
+          aria-expanded="false"
+        >
+          Work
+          <svg
+            class="nav-mobile-group-chevron size-[clamp(0.3094rem,0.2603rem_+_0.2455vw,0.4813rem)] shrink-0 transition-transform duration-200 ease-in-out group-[.is-open]/mgrp:rotate-180"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+        <div class="nav-mobile-group-content h-0 overflow-hidden transition-[height] duration-300 ease-in-out">
+          <div
+            class="nav-mobile-group-inner flex flex-col gap-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] pt-[clamp(0.7031rem,0.5915rem_+_0.558vw,1.0938rem)]"
+          >
+            <a
+              href="/work?view=projects"
+              class="nav-mobile-sublink block pl-xs text-[0.875rem] font-normal text-black no-underline transition-[font-weight] duration-200 hover:font-bold"
+              >by projects</a
+            >
+            <a
+              href="/work?view=clients"
+              class="nav-mobile-sublink block pl-xs text-[0.875rem] font-normal text-black no-underline transition-[font-weight] duration-200 hover:font-bold"
+              >by Clients</a
+            >
+          </div>
+        </div>
+      </div>
+
+      {
+        NAV_LINKS.map((link) => (
+          <a
+            href={link.href}
+            class="nav-mobile-link block border-t border-[#0000001a] py-5 font-inter text-[1.5rem] leading-[1.6] font-medium text-black no-underline transition-[font-weight] duration-200 hover:font-bold"
+          >
+            {link.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <Button href="/contact" variant="outline" size="sm" class={BTN_NAV_MOBILE}>Let's Talk!</Button>
+  </div>
+</header>
+
+<script>
+  // ============================
+  // Navbar — 27zero
+  // Cambia a nav--scrolled al pasar 50px de scroll.
+  // Guarda la variante inicial (nav--white o nav--black) para restaurarla al volver arriba.
+  // ============================
+
+  const nav = document.querySelector<HTMLElement>('.nav');
+
+  if (nav) {
+    const initialVariant = nav.classList.contains('nav--black') ? 'nav--black' : 'nav--white';
+    // El vanilla usaba '2.2em' (base 14px desktop / 9px mobile). Al portar a rem
+    // se reemplaza por el clamp fluido equivalente: 19.8px mobile → 30.8px desktop.
+    const SCROLLED_TOP = 'clamp(1.2375rem, 1.0411rem + 0.9821vw, 1.925rem)';
+
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) {
+        nav.classList.add('nav--scrolled');
+        nav.classList.remove('nav--white', 'nav--black');
+        nav.style.top = SCROLLED_TOP;
+      } else {
+        nav.classList.remove('nav--scrolled');
+        nav.classList.add(initialVariant);
+        nav.style.top = '0';
+      }
+    });
+  }
+
+  // ============================
+  // Mobile menu — modal fullscreen
+  // Click en el hamburger: abre el modal (ícono estático, sin animación).
+  // El cierre es explícito (botón × dentro del modal, o tocar el hamburger
+  // de nuevo) — al ser fullscreen ya no existe un "afuera" del menú.
+  // ============================
+
+  const hamburgerBtn = document.querySelector<HTMLElement>('.nav-hamburger');
+  const mobileMenu = document.querySelector<HTMLElement>('.nav-mobile-menu');
+  const mobileCloseBtn = document.querySelector<HTMLElement>('.nav-mobile-close');
+
+  if (hamburgerBtn && mobileMenu) {
+    let isMenuOpen = false;
+
+    function openMobileMenu() {
+      isMenuOpen = true;
+      mobileMenu!.classList.add('is-open');
+    }
+
+    function closeMobileMenu() {
+      isMenuOpen = false;
+      mobileMenu!.classList.remove('is-open');
+    }
+
+    hamburgerBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      isMenuOpen ? closeMobileMenu() : openMobileMenu();
+    });
+
+    if (mobileCloseBtn) {
+      mobileCloseBtn.addEventListener('click', closeMobileMenu);
+    }
+  }
+
+  // ===== "Work" como acordeón inline dentro del modal mobile =====
+  // Mismo approach que el componente Dropdown: height 0 -> scrollHeight -> auto.
+  const mobileGroup = document.querySelector<HTMLElement>('.nav-mobile-group');
+
+  if (mobileGroup) {
+    const mobileGroupToggle = mobileGroup.querySelector<HTMLElement>('.nav-mobile-group-toggle');
+    const mobileGroupContent = mobileGroup.querySelector<HTMLElement>('.nav-mobile-group-content');
+
+    if (mobileGroupToggle && mobileGroupContent) {
+      mobileGroupToggle.addEventListener('click', () => {
+        const isOpen = mobileGroup.classList.contains('is-open');
+
+        if (!isOpen) {
+          mobileGroup.classList.add('is-open');
+          mobileGroupToggle.setAttribute('aria-expanded', 'true');
+          mobileGroupContent.style.height = mobileGroupContent.scrollHeight + 'px';
+
+          mobileGroupContent.addEventListener('transitionend', function onOpen(e) {
+            if (e.propertyName !== 'height') return;
+            if (mobileGroup.classList.contains('is-open')) {
+              mobileGroupContent.style.height = 'auto';
+            }
+            mobileGroupContent.removeEventListener('transitionend', onOpen);
+          });
+        } else {
+          mobileGroupContent.style.height = mobileGroupContent.scrollHeight + 'px';
+          mobileGroupContent.offsetHeight; // fuerza reflow
+          mobileGroup.classList.remove('is-open');
+          mobileGroupToggle.setAttribute('aria-expanded', 'false');
+          mobileGroupContent.style.height = '0px';
+        }
+      });
+    }
+  }
+
+  // ============================
+  // Dropdown "Work" (desktop) — click para abrir/cerrar, click afuera cierra.
+  // ============================
+
+  const navDropdown = document.querySelector<HTMLElement>('.nav-dropdown');
+
+  if (navDropdown) {
+    const dropdownToggle = navDropdown.querySelector<HTMLElement>('.nav-dropdown-toggle');
+
+    if (dropdownToggle) {
+      dropdownToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = navDropdown.classList.toggle('is-open');
+        dropdownToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      });
+
+      document.addEventListener('click', (e) => {
+        if (navDropdown.classList.contains('is-open') && !navDropdown.contains(e.target as Node)) {
+          navDropdown.classList.remove('is-open');
+          dropdownToggle.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+  }
+</script>
