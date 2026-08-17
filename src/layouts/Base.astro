@@ -1,0 +1,43 @@
+---
+/**
+ * Base layout — 27zero
+ * Shell del documento: `<html>`, `<head>` y `<body>` con los defaults del `body`
+ * del repo vanilla (Inter, fondo blanco, texto negro, antialiased, scroll suave).
+ *
+ * Es el único lugar donde se importa `global.css`, así que a partir de acá los
+ * componentes ya no necesitan declarar `font-inter` por su cuenta — se deja el que
+ * ya tienen porque quitarlo es una limpieza transversal de la Etapa 3, no de esta.
+ *
+ * Navbar y Footer NO viven acá: cada página los instancia (el navbar tiene variante
+ * por página, `white` / `black`). Si más adelante las 13 páginas terminan repitiendo
+ * el mismo par, el lugar para absorberlo es un `Page.astro` sobre este layout.
+ *
+ * SEO: solo `title` y `description` como placeholder. El componente `Metadata.astro`
+ * (OG, Twitter Card, canonical, fallback a `siteSettings`, JSON-LD) es Etapa 7 y se
+ * enchufa acá cuando exista — no se adelanta sin su spec.
+ */
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+  </head>
+  <body class="bg-white font-inter text-black antialiased">
+    <slot />
+  </body>
+</html>

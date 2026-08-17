@@ -15,13 +15,20 @@
  *                pero resuelto sin depender del `group/nav` ni de especificidad
  *                heredada: se usa donde el fondo es siempre claro y el botón no
  *                debe seguir la variante activa del nav (ej. el modal mobile).
+ *  - `white`   → `.btn-white`, fondo blanco relleno con borde y texto negros, hover a
+ *                fondo negro con texto blanco. Agregada en Etapa 4 (Home la usa en el
+ *                hero y en la sección EdTech Mentor). Donde el diseño pide el borde
+ *                blanco en vez de negro, el consumidor pasa `class="border-white!"`
+ *                — el `!` es necesario porque dos utilidades de `border-color` sobre
+ *                el mismo elemento se resuelven por orden de emisión de Tailwind, no
+ *                por el orden del atributo `class`.
  *
- * Las variantes `purple` y `white` del design system todavía no tienen uso — se
- * agregan cuando alguna página las pida (Etapa 4), no antes.
+ * La variante `purple` del design system todavía no tiene uso — se agrega cuando
+ * alguna página la pida, no antes.
  */
 interface Props {
   href: string;
-  variant: 'nav' | 'dark' | 'outline';
+  variant: 'nav' | 'dark' | 'outline' | 'white';
   /**
    * Tamaño de texto. `base` es el `.btn` del design system (fluido, 13→16px).
    * `sm` es el 14px fijo que el vanilla usa para el botón del modal mobile.
@@ -49,6 +56,7 @@ const VARIANTS = {
   nav: 'group-[.nav--white]/nav:border-black group-[.nav--white]/nav:text-black group-[.nav--white]/nav:hover:bg-black group-[.nav--white]/nav:hover:text-white group-[.nav--black]/nav:border-white group-[.nav--black]/nav:text-white group-[.nav--black]/nav:hover:bg-white group-[.nav--black]/nav:hover:text-black group-[.nav--scrolled]/nav:border-white group-[.nav--scrolled]/nav:text-white group-[.nav--scrolled]/nav:hover:bg-white group-[.nav--scrolled]/nav:hover:text-indigo',
   dark: 'border-black bg-black text-purple hover:border-black hover:bg-transparent hover:text-black',
   outline: 'border-black bg-transparent text-black hover:border-black hover:bg-black hover:text-white',
+  white: 'border-black bg-white text-black hover:border-black hover:bg-black hover:text-white',
 } as const;
 ---
 

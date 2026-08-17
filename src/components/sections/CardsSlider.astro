@@ -12,23 +12,43 @@
  * `.container` externo. En mobile las flechas se ocultan — solo scroll/drag táctil.
  */
 interface Props {
-  title: string;
+  /**
+   * Opcional: sin título no se renderiza el `.slider-header` y el bloque arranca
+   * directo en el track. Es el caso del slider de EdTech Mentor en Home
+   * (design-system-home.md § Slider de edtech-mentor-card).
+   */
+  title?: string;
+  /**
+   * `dark` (default) → borde/ícono negros, hover relleno negro. Es el `.slider-arrow`
+   * tal cual lo define el componente en el vanilla.
+   * `light` → borde/ícono blancos, hover relleno blanco. Para sliders sobre fondo
+   * oscuro (ej. el de EdTech Mentor en Home, `.section--mentor-home .slider-arrow`
+   * en el vanilla).
+   */
+  arrowVariant?: 'dark' | 'light';
 }
 
-const { title } = Astro.props;
+const { title, arrowVariant = 'dark' } = Astro.props;
+
+const ARROW_VARIANTS = {
+  dark: 'border-black text-black enabled:hover:bg-black enabled:hover:text-white',
+  light: 'border-white text-white enabled:hover:bg-white enabled:hover:text-black',
+} as const;
 
 const SLIDER_ARROW =
-  'slider-arrow flex size-slider-arrow cursor-pointer items-center justify-center rounded-full border-[0.0625rem] border-black bg-transparent text-black transition-all duration-200 ease-in-out enabled:hover:bg-black enabled:hover:text-white disabled:cursor-not-allowed disabled:opacity-30';
+  'slider-arrow flex size-slider-arrow cursor-pointer items-center justify-center rounded-full border-[0.0625rem] bg-transparent transition-all duration-200 ease-in-out disabled:cursor-not-allowed disabled:opacity-30';
 ---
 
 <div class="slider-block flex flex-col gap-sm">
-  <div class="slider-header mx-auto w-full max-w-(--container-max-width) px-container-x">
-    <h2
-      class="slider-title font-inter text-[clamp(1.25rem,1.2321rem_+_0.0893vw,1.3125rem)] leading-[1.5] font-medium tracking-normal"
-    >
-      {title}
-    </h2>
-  </div>
+  {
+    title && (
+      <div class="slider-header mx-auto w-full max-w-(--container-max-width) px-container-x">
+        <h2 class="slider-title font-inter text-[clamp(1.25rem,1.2321rem_+_0.0893vw,1.3125rem)] leading-[1.5] font-medium tracking-normal">
+          {title}
+        </h2>
+      </div>
+    )
+  }
 
   <div class="slider-track-wrap w-full">
     <div
@@ -40,13 +60,13 @@ const SLIDER_ARROW =
 
   <div class="slider-footer mx-auto flex w-full max-w-(--container-max-width) justify-end px-container-x max-md:hidden">
     <div class="slider-nav flex gap-[clamp(0.4219rem,0.3549rem_+_0.3348vw,0.6563rem)]">
-      <button class={SLIDER_ARROW} data-dir="prev" aria-label="Previous" disabled>
+      <button class:list={[SLIDER_ARROW, ARROW_VARIANTS[arrowVariant]]} data-dir="prev" aria-label="Previous" disabled>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <line x1="19" y1="12" x2="5" y2="12"></line>
           <polyline points="12 19 5 12 12 5"></polyline>
         </svg>
       </button>
-      <button class={SLIDER_ARROW} data-dir="next" aria-label="Next">
+      <button class:list={[SLIDER_ARROW, ARROW_VARIANTS[arrowVariant]]} data-dir="next" aria-label="Next">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <line x1="5" y1="12" x2="19" y2="12"></line>
           <polyline points="12 5 19 12 12 19"></polyline>

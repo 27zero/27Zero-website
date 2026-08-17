@@ -1,0 +1,32 @@
+---
+/**
+ * Page — 27zero
+ * `Base.astro` + Navbar/Footer instanciados. Absorbe el par que las 13 páginas
+ * confirmadas en Etapa 0 repiten siempre (CLAUDE.md §0) — el layout de las páginas
+ * deja de reinstanciarlos uno por uno.
+ *
+ * `navVariant` expone la única prop real de `Navbar` (`white` / `black`, la variante
+ * inicial al tope de la página, antes del scroll). Ver Navbar.astro para el resto del
+ * comportamiento (nav--scrolled, menú mobile).
+ *
+ * Páginas que necesiten omitir Navbar o Footer (ninguna hoy) siguen usando
+ * `Base.astro` directo — este layout no reemplaza a `Base.astro`, se apoya en él.
+ */
+import Base from './Base.astro';
+import Navbar from '../components/layout/Navbar.astro';
+import Footer from '../components/layout/Footer.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  navVariant?: 'white' | 'black';
+}
+
+const { title, description, navVariant = 'white' } = Astro.props;
+---
+
+<Base title={title} description={description}>
+  <Navbar variant={navVariant} />
+  <slot />
+  <Footer />
+</Base>

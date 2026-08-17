@@ -1,0 +1,214 @@
+---
+/**
+ * Testimonials Slider — 27zero
+ * Portado 1:1 de la sección Testimonials de `/home` del repo vanilla
+ * (markup de `home/index.html` + estilos de `home/style.css` + `initTestimonialsSlider`
+ * de `home/script.js`).
+ *
+ * Slider de 1 slide por vista: flechas a los costados + dots debajo, track movido con
+ * `translateX(-index * 100%)`, sin loop (las flechas se deshabilitan en los extremos).
+ * Sin librería — la lógica va en el `<script>` de este `.astro`, no en una island
+ * (CLAUDE.md §7): el componente no mantiene estado de React ni lo necesita.
+ *
+ * Diferencia con el vanilla: los slides y los dots se renderizan desde Astro en vez de
+ * inyectarse con `innerHTML`. Mismo DOM resultante, pero queda en el HTML estático
+ * (SEO / no-JS). Es el mismo criterio ya aplicado en `ShapesSlider`.
+ *
+ * `.testimonials-arrow` es clase propia y NO reutiliza `.slider-arrow` de `CardsSlider`,
+ * igual que en el vanilla — ver design-system-home.md § Testimonials.
+ *
+ * Shape reducido a los 4 campos del schema `testimonial` que esta sección usa hoy
+ * (`quote`, `authorName`, `authorRole`, `avatarPhoto`). El resto del schema real
+ * (`backgroundPhoto`, `client`, `workProject`, `order`) se resuelve en Etapa 5.
+ */
+interface Testimonial {
+  quote: string;
+  authorName: string;
+  authorRole: string;
+  /** Sin foto, el avatar cae a las iniciales derivadas de `authorName` (placeholder del vanilla). */
+  avatarPhoto?: { src: string; alt: string } | null;
+}
+
+interface Props {
+  testimonials: Testimonial[];
+}
+
+const { testimonials } = Astro.props;
+
+/** "Erin Grant" → "EG". Reproduce las iniciales del placeholder del vanilla sin duplicarlas como dato. */
+function getInitials(name: string): string {
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((word) => word.charAt(0))
+    .join('')
+    .toUpperCase();
+}
+
+/* Las clases se escriben siempre literales (nunca interpoladas): Tailwind escanea el
+   archivo como texto y una clase armada con template literal no se genera. Por eso los
+   clamps repetidos se comentan en vez de extraerse a variable:
+     - 1.5em  → 13.5/21px   — texto de la cita y nombre del autor
+     - 0.85em → 7.65/11.9px — gap del bloque autor e iniciales del avatar
+     - 30em   → 270/420px   — ancho del ícono de quote y max-width del contenido */
+const ARROW =
+  'testimonials-arrow flex size-slider-arrow shrink-0 cursor-pointer items-center justify-center rounded-full border-[0.0625rem] border-white bg-transparent text-white transition-all duration-200 ease-in-out enabled:hover:bg-white enabled:hover:text-black disabled:cursor-not-allowed disabled:opacity-30 max-md:hidden';
+---
+
+<section
+  class="section section--testimonials-home bg-black pt-[clamp(4.4213rem,3.7195rem_+_3.5089vw,6.8775rem)] pb-[clamp(2.61rem,2.1957rem_+_2.0714vw,4.06rem)] text-white"
+>
+  <div
+    class="testimonials-slider mx-auto flex max-w-(--container-max-width) items-center gap-gap px-container-x max-md:gap-[0.5625rem]"
+  >
+    <button class={ARROW} data-dir="prev" aria-label="Previous" disabled>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+    </button>
+
+    <div class="testimonials-track-wrap flex-1 overflow-hidden">
+      <div class="testimonials-track flex transition-transform duration-[0.4s] ease-[ease]">
+        {
+          testimonials.map((testimonial) => (
+            <div class="testimonial-slide flex flex-[0_0_100%] items-center justify-center gap-md max-md:flex-col max-md:items-start max-md:gap-[0.8438rem]">
+              <svg
+                class="testimonial-quote-icon h-auto w-[clamp(16.875rem,14.1964rem_+_13.3929vw,26.25rem)] shrink-0 max-md:hidden"
+                viewBox="0 0 376 296"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  d="M63.1627 124.2H0V0H170.91V29.0037C170.91 163.619 152.334 256.584 135.985 295.997H52.759C60.9337 243.937 63.9066 174.773 63.1627 124.2ZM268.253 124.2H205.09V0H376V29.0037C376 163.619 357.422 256.584 341.075 295.997H257.849C266.021 243.937 268.994 174.773 268.253 124.2Z"
+                  fill="#C286FF"
+                />
+              </svg>
+
+              <div
+                class="testimonial-content flex max-w-[clamp(16.875rem,14.1964rem_+_13.3929vw,26.25rem)] flex-col items-start gap-[clamp(1.6087rem,1.3534rem_+_1.2768vw,2.5025rem)] max-md:max-w-full"
+              >
+                <p
+                  class="testimonial-text font-inter text-[clamp(0.8438rem,0.7098rem_+_0.6696vw,1.3125rem)] leading-[1.5] font-medium tracking-normal text-white"
+                >
+                  {testimonial.quote}
+                </p>
+
+                <div class="testimonial-divider h-px w-full bg-white"></div>
+
+                <div class="testimonial-author flex items-center gap-[clamp(0.4781rem,0.4022rem_+_0.3795vw,0.7438rem)]">
+                  <div
+                    class="testimonial-avatar flex size-[clamp(1.6031rem,1.3487rem_+_1.2723vw,2.4937rem)] shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray"
+                  >
+                    {
+                      testimonial.avatarPhoto ? (
+                        <img src={testimonial.avatarPhoto.src} alt={testimonial.avatarPhoto.alt} class="size-full object-cover" />
+                      ) : (
+                        <span class="font-inter text-[clamp(0.4781rem,0.4022rem_+_0.3795vw,0.7438rem)] font-bold text-black">
+                          {getInitials(testimonial.authorName)}
+                        </span>
+                      )
+                    }
+                  </div>
+
+                  <div class="testimonial-author-info flex flex-col">
+                    <span
+                      class="testimonial-name font-inter text-[clamp(0.8438rem,0.7098rem_+_0.6696vw,1.3125rem)] leading-[1.5] font-normal text-white"
+                    >
+                      {testimonial.authorName}
+                    </span>
+                    <span
+                      class="testimonial-role font-inter text-[clamp(0.5231rem,0.4401rem_+_0.4152vw,0.8138rem)] leading-[1.5] font-normal text-white/70"
+                    >
+                      {testimonial.authorRole}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+
+    <button class={ARROW} data-dir="next" aria-label="Next">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+        <polyline points="12 5 19 12 12 19"></polyline>
+      </svg>
+    </button>
+  </div>
+
+  <div
+    class="testimonials-dots mt-[clamp(1.9688rem,1.6563rem_+_1.5625vw,3.0625rem)] flex items-center justify-center gap-[clamp(0.3375rem,0.2839rem_+_0.2679vw,0.525rem)] max-md:gap-[0.675rem]"
+  >
+    {
+      testimonials.map((_, i) => (
+        <button
+          class="testimonial-dot size-[clamp(0.3937rem,0.3312rem_+_0.3125vw,0.6125rem)] cursor-pointer rounded-full border-[0.0625rem] border-white bg-transparent p-0 transition-all duration-200 ease-in-out [&.testimonial-dot--active]:border-purple [&.testimonial-dot--active]:bg-purple"
+          data-index={i}
+          aria-label={`Go to slide ${i + 1}`}
+        />
+      ))
+    }
+  </div>
+</section>
+
+<script>
+  // ============================
+  // Testimonials Slider — 27zero
+  // 1 slide por vista, sin loop: el track se mueve con translateX(-index * 100%),
+  // las flechas se deshabilitan en los extremos y los dots reflejan el índice
+  // activo (y navegan directo al hacer click). Portado de `home/script.js`.
+  // ============================
+
+  function initTestimonialsSlider(root: HTMLElement) {
+    const track = root.querySelector<HTMLElement>('.testimonials-track');
+    const prevBtn = root.querySelector<HTMLButtonElement>('.testimonials-arrow[data-dir="prev"]');
+    const nextBtn = root.querySelector<HTMLButtonElement>('.testimonials-arrow[data-dir="next"]');
+    const slides = root.querySelectorAll('.testimonial-slide');
+    const dots = Array.from(root.querySelectorAll<HTMLButtonElement>('.testimonial-dot'));
+
+    if (!track || !prevBtn || !nextBtn || !slides.length) return;
+
+    const lastIndex = slides.length - 1;
+    let index = 0;
+
+    function update() {
+      track!.style.transform = `translateX(-${index * 100}%)`;
+      prevBtn!.disabled = index === 0;
+      nextBtn!.disabled = index === lastIndex;
+      dots.forEach((dot, i) => dot.classList.toggle('testimonial-dot--active', i === index));
+    }
+
+    prevBtn.addEventListener('click', () => {
+      if (index > 0) {
+        index--;
+        update();
+      }
+    });
+
+    nextBtn.addEventListener('click', () => {
+      if (index < lastIndex) {
+        index++;
+        update();
+      }
+    });
+
+    dots.forEach((dot) => {
+      dot.addEventListener('click', () => {
+        index = Number(dot.dataset.index);
+        update();
+      });
+    });
+
+    update();
+  }
+
+  // Soporta más de una sección de testimonials por página, cada una con su propio índice.
+  document.querySelectorAll<HTMLElement>('.section--testimonials-home').forEach((root) => {
+    initTestimonialsSlider(root);
+  });
+</script>

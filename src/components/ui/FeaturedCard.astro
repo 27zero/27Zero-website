@@ -24,7 +24,7 @@ const { href, title, tag, name, role, avatar, avatarInitials } = Astro.props;
 
 <a
   href={href}
-  class="card card--featured group/card relative flex size-full shrink-0 cursor-pointer flex-col justify-between overflow-hidden rounded-card bg-gray p-[clamp(0.9562rem,0.8045rem_+_0.7589vw,1.4875rem)] text-black no-underline max-md:gap-[3.6563rem]"
+  class="card card--featured group/card relative flex size-full shrink-0 cursor-pointer flex-col justify-between overflow-hidden rounded-card bg-gray p-[clamp(0.9562rem,0.8045rem_+_0.7589vw,1.4875rem)] text-black no-underline"
 >
   {
     tag && (
@@ -34,7 +34,7 @@ const { href, title, tag, name, role, avatar, avatarInitials } = Astro.props;
     )
   }
 
-  <div class="card-featured-content flex flex-col gap-sm">
+  <div class="card-featured-content flex flex-col gap-sm max-md:gap-[3.6563rem]">
     <div class="card-featured-meta flex items-center gap-[clamp(0.4838rem,0.407rem_+_0.3839vw,0.7525rem)]">
       {
         (avatar || avatarInitials) && (

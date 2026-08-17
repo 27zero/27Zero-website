@@ -1,17 +1,203 @@
 ---
+/**
+ * Home — 27zero
+ * Portado 1:1 de `/home/index.html` + `/home/style.css` del repo vanilla.
+ * Clases propias de la página documentadas en `/home/design-system-home.md`.
+ *
+ * Los nombres de clase del vanilla (`section--hero-home`, `intro-home-row`, …) se
+ * conservan como marcadores junto a las utilidades de Tailwind, igual que en los
+ * componentes de Etapa 3: sirven de trazabilidad contra la referencia.
+ *
+ * Todos los valores fluidos siguen la misma curva del resto del proyecto:
+ * mobile = `em × 9` @320px, desktop = `em × 14` @1440px. Donde el vanilla define un
+ * valor distinto dentro de su `@media (max-width: 768px)`, va como `max-md:` con el
+ * valor fijo de mobile (`em × 9`), no como parte del clamp.
+ */
+import Page from '../layouts/Page.astro';
+import CardsSlider from '../components/sections/CardsSlider.astro';
+import MarqueeLogos from '../components/sections/MarqueeLogos.astro';
+import ShapesSlider from '../components/sections/ShapesSlider.astro';
+import TestimonialsSlider from '../components/sections/TestimonialsSlider.astro';
+import Button from '../components/ui/Button.astro';
+import EdtechMentorCard from '../components/ui/EdtechMentorCard.astro';
+import FeaturedCard from '../components/ui/FeaturedCard.astro';
+import WorkCard from '../components/ui/WorkCard.astro';
 
+// TEMP: mock data — swap en Etapa 6 (GROQ)
+// `work` × 8 para el slider "Los mejores". Contenido literal del vanilla: son cards
+// placeholder entre corchetes, no copy real. Sin imagen, `WorkCard` cae al fondo gris.
+const FEATURED_WORKS = Array.from({ length: 8 }, () => ({
+  href: '#',
+  eyebrow: '[UX/UI & WEB DESIGN]',
+  title: '[Project headline]',
+  clientName: '[CLIENT NAME]',
+  clientInitials: 'CL',
+}));
+
+// TEMP: mock data — swap en Etapa 6 (GROQ)
+// `edtechMentor` con `isFeatured: true` — el único que renderiza la `FeaturedCard`.
+const FEATURED_MENTOR_POST = {
+  href: '#',
+  tag: 'Tag',
+  role: 'Founder At Kelleher Consulting Group',
+  name: 'Julie Kelleher',
+  avatarInitials: 'JK',
+  title: "A Market-First Mindset in EdTech: Julie Kelleher's Blueprint for Success",
+};
+
+// TEMP: mock data — swap en Etapa 6 (GROQ)
+// `edtechMentor` × 6 para el slider. En el vanilla los 6 repiten el mismo contenido.
+const MENTOR_POSTS = Array.from({ length: 6 }, () => ({ ...FEATURED_MENTOR_POST }));
+
+// TEMP: mock data — swap en Etapa 6 (GROQ)
+// `testimonial` × 4, solo los campos que esta sección consume hoy. El resto del schema
+// real (`backgroundPhoto`, `client`, `workProject`, `order`) se retoma en Etapa 5.
+// `avatarPhoto: null` → el avatar cae a las iniciales, como en el vanilla.
+const TESTIMONIALS = [
+  {
+    quote: "The quality of the design was impressive. We're looking forward to continue our collaboration with 27zero.",
+    authorName: 'Erin Grant',
+    authorRole: 'Vice President of Marketing',
+    avatarPhoto: null,
+  },
+  {
+    quote: 'Lorem ipsum is simply dummy text of the printing and typesetting industry standard.',
+    authorName: 'Lorem Ipsum',
+    authorRole: 'Director of Growth',
+    avatarPhoto: null,
+  },
+  {
+    quote: 'Lorem ipsum is simply dummy text of the printing and typesetting industry standard.',
+    authorName: 'Lorem Ipsum',
+    authorRole: 'Head of Admissions',
+    avatarPhoto: null,
+  },
+  {
+    quote: 'Lorem ipsum is simply dummy text of the printing and typesetting industry standard.',
+    authorName: 'Lorem Ipsum',
+    authorRole: 'Chief Marketing Officer',
+    avatarPhoto: null,
+  },
+];
+
+/* `.container` del design system global: 1440px, centrado, columna, padding-x fluido.
+   El `gap` NO va acá — cada sección declara el suyo, porque dos utilidades de `gap`
+   sobre el mismo elemento se resuelven por orden de emisión de Tailwind y el override
+   perdería en silencio. */
+const CONTAINER = 'container mx-auto flex w-full max-w-(--container-max-width) flex-col px-container-x';
+
+/* `.sliders-container` — wrapper de spacing de los sliders embebidos en una sección
+   (padding-top 3.93em mobile / 4.29em desktop, padding-bottom 0). */
+const SLIDERS_CONTAINER = 'sliders-container pt-[clamp(2.2106rem,1.7697rem_+_2.2045vw,3.7538rem)]';
+
+/* Fila de dos columnas texto + media. Idéntica en Intro y en EdTech Mentor
+   (`.intro-home-row` / `.mentor-home-row` son duplicados 1:1 en el vanilla). */
+const TEXT_MEDIA_ROW = 'flex items-start justify-between gap-sm max-md:flex-col max-md:gap-[2.61rem]';
+const TEXT_COLUMN = 'flex flex-[0_0_34%] flex-col items-start gap-sm max-md:flex-auto';
+const HEADING_ACCENT_H2 = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.36px]';
+const BODY_SM = 'text-body--sm font-inter text-body-sm leading-[1.6] font-normal tracking-normal';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Page title="27zero — EdTech Marketing Agency" navVariant="white">
+  <!-- HERO -->
+  <section
+    class="section section--hero-home mt-[clamp(3.0938rem,2.6027rem_+_2.4554vw,4.8125rem)] bg-gray py-[clamp(10.125rem,9.9829rem_+_0.7107vw,10.6225rem)]"
+  >
+    <div class:list={[CONTAINER, 'hero-home-container items-start gap-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)]']}>
+      <h1 class="font-lora text-h1 leading-[1.25] font-medium tracking-[-0.48px]">
+        Turn EdTech purpose into <span class="inter-accent font-inter font-medium">Brand power.</span>
+      </h1>
+      <div class="hero-home-cta flex flex-col items-center gap-xs">
+        <Button href="/contact" variant="white" class="border-white!">Book a strategy session</Button>
+        <p
+          class="text-caption font-inter text-[clamp(0.625rem,0.5361rem_+_0.4446vw,0.9363rem)] leading-[1.6] font-normal tracking-normal text-black"
+        >
+          Free. 30 min. No sales pitch.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- INTRO -->
+  <section class="section section--intro-home bg-purple py-[clamp(3.375rem,2.8218rem_+_2.7661vw,5.3113rem)]">
+    <div class:list={[CONTAINER, 'intro-home-container gap-gap']}>
+      <div class:list={['intro-home-row', TEXT_MEDIA_ROW]}>
+        <div class:list={['intro-home-text', TEXT_COLUMN]}>
+          <h2 class={HEADING_ACCENT_H2}>
+            The marketing team EdTech brands turn to <span class="inter-accent font-inter font-medium"
+              >for growth and impact.</span
+            >
+          </h2>
+          <p class={BODY_SM}>Lorem ipsum is simply dummy text of the printing and typesetting industry.</p>
+          <Button href="/work" variant="dark">See all work</Button>
+        </div>
+
+        {/* PENDIENTE (planning-maquetado-home.md #1): falta confirmar con el cliente si
+            `.intro-home-media` es una imagen simple o una card de `work`. Queda la
+            estructura del vanilla con su placeholder visual; el contenido real se
+            resuelve antes del QA de la sección. */}
+        <div
+          class="intro-home-media flex min-h-[clamp(19.125rem,16.0893rem_+_15.1786vw,29.75rem)] flex-1 items-center justify-center rounded-card bg-gray max-md:w-full"
+        >
+          <span
+            class="font-inter text-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] font-semibold tracking-[1px] text-black uppercase opacity-40"
+          >
+            [MEDIA PLACEHOLDER]
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class={SLIDERS_CONTAINER}>
+      <CardsSlider title="Los mejores">
+        {FEATURED_WORKS.map((work) => <WorkCard {...work} />)}
+      </CardsSlider>
+    </div>
+  </section>
+
+  {/* PENDIENTE (planning-maquetado-home.md #2): 2 de las 3 shapes siguen con lorem ipsum
+      a la espera del copy del cliente — el placeholder ya viene marcado dentro del
+      componente, que es donde vive el contenido (es igual en todas las páginas). */}
+  <ShapesSlider />
+
+  <!-- LOGOS -->
+  <section class="section section--logos-home pt-0 pb-[clamp(5.0231rem,4.2258rem_+_3.9866vw,7.8137rem)]">
+    <MarqueeLogos />
+  </section>
+
+  <!-- THE EDTECH MENTOR -->
+  <section
+    class="section section--mentor-home bg-indigo pt-[clamp(3.4144rem,1.7999rem_+_8.0723vw,9.065rem)] pb-[clamp(2.5313rem,1.827rem_+_3.5214vw,4.9962rem)] text-white"
+  >
+    <div class:list={[CONTAINER, 'mentor-home-container gap-gap']}>
+      <div class:list={['mentor-home-row', TEXT_MEDIA_ROW]}>
+        <div class:list={['mentor-home-text', TEXT_COLUMN]}>
+          <h2 class={HEADING_ACCENT_H2}>
+            The EdTech Mentor <span class="inter-accent font-inter font-medium">pearls of wisdom.</span>
+          </h2>
+          <p class={BODY_SM}>Lorem ipsum is simply dummy text of the printing and typesetting industry.</p>
+          {/* PENDIENTE (planning-maquetado-home.md #3): `/the-edtech-mentor` no está entre
+              las 13 rutas confirmadas en Etapa 0. Se deja el link tal cual apunta en el
+              vanilla, sin inventar ruta nueva. */}
+          <Button href="/the-edtech-mentor" variant="white" class="border-white!">The EdTech Mentor</Button>
+        </div>
+
+        {/* `height` (no `min-height`): el `h-full` de FeaturedCard necesita una altura
+            resuelta en el padre. En mobile pasa a `auto` y la card se ajusta al contenido. */}
+        <div class="mentor-home-featured-wrap h-[clamp(16.875rem,14.1964rem_+_13.3929vw,26.25rem)] flex-1 max-md:h-auto">
+          <FeaturedCard {...FEATURED_MENTOR_POST} />
+        </div>
+      </div>
+    </div>
+
+    {/* `arrowVariant="light"`: flechas blancas sobre el fondo indigo, equivalente al
+        `.section--mentor-home .slider-arrow` del vanilla. */}
+    <div class={SLIDERS_CONTAINER}>
+      <CardsSlider arrowVariant="light">
+        {MENTOR_POSTS.map((post) => <EdtechMentorCard {...post} />)}
+      </CardsSlider>
+    </div>
+  </section>
+
+  <TestimonialsSlider testimonials={TESTIMONIALS} />
+</Page>
