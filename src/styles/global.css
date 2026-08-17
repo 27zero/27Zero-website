@@ -45,6 +45,14 @@
 @font-face {
   font-family: 'Lora';
   font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/lora-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
   font-weight: 600;
   font-display: swap;
   src: url('/fonts/lora-600.woff2') format('woff2');
@@ -89,5 +97,46 @@
   --spacing-section-y-xl: var(--spacing-2xl);
   --container-max-width:  90rem;
   --spacing-container-x:   clamp(1.125rem, -0.1786rem + 6.5179vw, 5.6875rem);
-  --spacing-container-gap: clamp(1.125rem, 0.9464rem + 0.8929vw, 1.75rem);
+  /* Gap genérico de 2em del design system: no es solo del container — lo usan
+     también el navbar, las cards y el shapes slider. */
+  --spacing-gap: clamp(1.125rem, 0.9464rem + 0.8929vw, 1.75rem);
+
+  /* ============================================================
+     Breakpoints
+     ============================================================ */
+
+  /* El proyecto tiene UN solo breakpoint global: `max-width: 768px` INCLUSIVE
+     (design-system.md §2). El `md` default de Tailwind es 48rem/768px como
+     min-width, así que `max-md:` cortaría en 767.98px y dejaría el iPad en
+     vertical (768px exactos) del lado desktop. Se corre a 769px para que
+     `max-md:` == el `@media (max-width: 768px)` del vanilla. */
+  --breakpoint-md: 48.0625rem;
+
+  /* Breakpoint propio del navbar (991px inclusive). Es intencionalmente
+     distinto al global — ver design-system-components.md § Navbar > Mobile.
+     992px como min-width => `max-nav:` cubre hasta 991px. */
+  --breakpoint-nav: 62rem;
+
+  /* ============================================================
+     Componentes compartidos (Etapa 3)
+     Valores con 3+ usos entre componentes, promovidos a token
+     (CLAUDE.md §5, regla de desvío 3). Misma curva fluida que el
+     resto: mobile = em × 9 @320px, desktop = em × 14 @1440px.
+     ============================================================ */
+
+  /* Medidas */
+  --spacing-card:         clamp(15.625rem, 13.8393rem + 8.9286vw, 21.875rem); /* 25em → 250/350px */
+  --spacing-card-avatar:  clamp(2.625rem, 3.2679rem - 0.7143vw, 3.125rem);    /* 3em → 50/42px (mobile mayor) */
+  --spacing-icon-btn:     clamp(1.4063rem, 1.183rem + 1.1161vw, 2.1875rem);   /* 2.5em — flechas de card, hamburger, close */
+  --spacing-slider-arrow: clamp(1.6031rem, 1.3487rem + 1.2723vw, 2.4937rem);  /* 2.85em — flechas de slider */
+  --radius-card:          clamp(0.2813rem, 0.2366rem + 0.2232vw, 0.4375rem);  /* 0.5em */
+
+  /* Tipografía de cards */
+  --text-card-eyebrow:  clamp(0.5625rem, 0.4907rem + 0.3589vw, 0.8138rem); /* 0.93em → 9/13px  */
+  --text-card-title:    clamp(1.0625rem, 1.0086rem + 0.2696vw, 1.2512rem); /* 1.43em → 17/20px */
+  --text-card-client:   clamp(0.75rem, 0.7318rem + 0.0911vw, 0.8138rem);   /* 0.93em → 12/13px */
+  --text-card-headline: clamp(0.8125rem, 0.7946rem + 0.0893vw, 0.875rem);  /* 1em    → 13/14px */
+  --text-card-name:     clamp(1.0062rem, 1.1589rem - 0.1696vw, 1.125rem);  /* 1.15em → 18/16px (mobile mayor) */
+  --text-card-role:     clamp(0.625rem, 0.5911rem + 0.1696vw, 0.7438rem);  /* 0.85em → 10/12px */
+  --text-card-tag:      clamp(0.7438rem, 0.8321rem - 0.0982vw, 0.8125rem); /* 0.85em → 13/12px (mobile mayor) */
 }
