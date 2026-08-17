@@ -1,5 +1,93 @@
 @import "tailwindcss";
 
+/* Inter — self-hosted, ver design-system.md (repo vanilla) para pesos usados */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/inter-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/inter-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/inter-600.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/inter-700.woff2') format('woff2');
+}
+
+/* Lora — self-hosted, ver design-system.md (repo vanilla) para pesos usados */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/lora-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/lora-600.woff2') format('woff2');
+}
+
 @theme {
-  /* Tokens fluidos (rem + clamp) — se completan en Etapa 2 */
+  /* Colores */
+  --color-indigo: #440E92;
+  --color-purple: #B382F9;
+  --color-black:  #101010;
+  --color-gray:   #F5F5F5;
+  --color-white:  #FFFFFF;
+
+  /* Tipografías (familias) */
+  --font-inter: 'Inter', sans-serif;
+  --font-lora:  'Lora', serif;
+
+  /* Escala tipográfica */
+  --text-h1:       clamp(2rem, 1.7089rem + 1.4554vw, 3.0188rem);
+  --text-h2:       clamp(1.5rem, 1.2786rem + 1.1071vw, 2.275rem);
+  --text-h3:       clamp(1.3125rem, 1.25rem + 0.3125vw, 1.5312rem);
+  --text-h4:       clamp(1.125rem, 1.0714rem + 0.2679vw, 1.3125rem);
+  --text-h5:       clamp(0.7525rem, 0.91rem - 0.175vw, 0.875rem);
+  --text-h6:       clamp(1.0625rem, 1.0436rem + 0.0946vw, 1.1288rem);
+  --text-body:     clamp(0.8125rem, 0.7221rem + 0.4518vw, 1.1288rem);
+  --text-link:     var(--text-body);
+  --text-button:   clamp(0.8125rem, 0.7571rem + 0.2768vw, 1.0062rem);
+  --text-body-sm:  clamp(0.8125rem, 0.7771rem + 0.1768vw, 0.9363rem);
+
+  /* Spacing */
+  --spacing-xs:  clamp(0.2812rem, 0.2366rem + 0.2232vw, 0.4375rem);
+  --spacing-sm:  clamp(0.8438rem, 0.7098rem + 0.6696vw, 1.3125rem);
+  --spacing-md:  clamp(1.6875rem, 1.4196rem + 1.3393vw, 2.625rem);
+  --spacing-lg:  clamp(3.375rem, 2.8393rem + 2.6786vw, 5.25rem);
+  --spacing-xl:  clamp(5.0625rem, 4.2589rem + 4.0179vw, 7.875rem);
+  --spacing-2xl: clamp(7.875rem, 6.625rem + 6.25vw, 12.25rem);
+
+  /* Section / Container (estructura global) */
+  --spacing-section-y:    clamp(3.6562rem, 3.0759rem + 2.9018vw, 5.6875rem);
+  --spacing-section-y-sm: clamp(1.6875rem, 1.4196rem + 1.3393vw, 2.625rem);
+  --spacing-section-y-lg: var(--spacing-xl);
+  --spacing-section-y-xl: var(--spacing-2xl);
+  --container-max-width:  90rem;
+  --spacing-container-x:   clamp(1.125rem, -0.1786rem + 6.5179vw, 5.6875rem);
+  --spacing-container-gap: clamp(1.125rem, 0.9464rem + 0.8929vw, 1.75rem);
 }
