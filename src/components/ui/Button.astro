@@ -17,18 +17,31 @@
  *                debe seguir la variante activa del nav (ej. el modal mobile).
  *  - `white`   → `.btn-white`, fondo blanco relleno con borde y texto negros, hover a
  *                fondo negro con texto blanco. Agregada en Etapa 4 (Home la usa en el
- *                hero y en la sección EdTech Mentor). Donde el diseño pide el borde
- *                blanco en vez de negro, el consumidor pasa `class="border-white!"`
- *                — el `!` es necesario porque dos utilidades de `border-color` sobre
- *                el mismo elemento se resuelven por orden de emisión de Tailwind, no
- *                por el orden del atributo `class`.
+ *                hero y en la sección EdTech Mentor).
+ *  - `whiteIndigo` → variante de `white` para uso sobre fondo indigo (`.section--main-contact
+ *                .btn-white` del vanilla, Contact): mismo fondo/borde blancos, pero
+ *                texto indigo en vez de negro. En hover pasa a fondo transparente
+ *                (deja ver el indigo de la sección) con texto **blanco**, no indigo
+ *                — texto indigo sobre fondo indigo transparente sería invisible; el
+ *                vanilla (`contact/style.css` `.section--main-contact .btn-white:hover`)
+ *                confirma `color: var(--color-white)` en hover, así que el texto SÍ
+ *                cambia de color, igual que `white`, solo que parte de un color base
+ *                distinto (indigo en vez de negro).
+ *  - `purple`  → `.btn-purple`, fondo purple con texto negro, hover a outline negro
+ *                sobre fondo transparente. Agregada en Etapa 4 (Contact la usa en el
+ *                submit del formulario).
  *
- * La variante `purple` del design system todavía no tiene uso — se agrega cuando
- * alguna página la pida, no antes.
+ * Polimórfico: con `href` renderiza `<a>` (el caso por defecto — nav, CTAs). Sin
+ * `href`, renderiza `<button type={type}>` — necesario para el submit real de un
+ * `<form>` (Contact), donde un link no cumple la semántica ni dispara el evento
+ * `submit`. `type` solo aplica en este segundo caso.
  */
 interface Props {
-  href: string;
-  variant: 'nav' | 'dark' | 'outline' | 'white';
+  variant: 'nav' | 'dark' | 'outline' | 'white' | 'whiteIndigo' | 'purple';
+  /** Con `href` renderiza `<a>`. Sin `href`, renderiza `<button>` (ver `type`). */
+  href?: string;
+  /** Solo se usa cuando no hay `href` (renderiza `<button type={type}>`). */
+  type?: 'button' | 'submit' | 'reset';
   /**
    * Tamaño de texto. `base` es el `.btn` del design system (fluido, 13→16px).
    * `sm` es el 14px fijo que el vanilla usa para el botón del modal mobile.
@@ -41,7 +54,7 @@ interface Props {
   class?: string;
 }
 
-const { href, variant, size = 'base', class: className } = Astro.props;
+const { href, type = 'button', variant, size = 'base', class: className } = Astro.props;
 
 /* Sin font-size: lo aporta SIZES, para que solo haya una utilidad de font-size. */
 const BASE =
@@ -57,9 +70,21 @@ const VARIANTS = {
   dark: 'border-black bg-black text-purple hover:border-black hover:bg-transparent hover:text-black',
   outline: 'border-black bg-transparent text-black hover:border-black hover:bg-black hover:text-white',
   white: 'border-black bg-white text-black hover:border-black hover:bg-black hover:text-white',
+  whiteIndigo: 'border-white bg-white text-indigo hover:border-white hover:bg-transparent hover:text-white',
+  purple: 'border-purple bg-purple text-black hover:border-black hover:bg-transparent hover:text-black',
 } as const;
+
+const CLASSES = ['btn', `btn-${variant}`, BASE, SIZES[size], VARIANTS[variant], className];
 ---
 
-<a href={href} class:list={['btn', `btn-${variant}`, BASE, SIZES[size], VARIANTS[variant], className]}>
-  <slot />
-</a>
+{
+  href ? (
+    <a href={href} class:list={CLASSES}>
+      <slot />
+    </a>
+  ) : (
+    <button type={type} class:list={CLASSES}>
+      <slot />
+    </button>
+  )
+}
