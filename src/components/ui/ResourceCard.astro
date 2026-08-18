@@ -1,0 +1,59 @@
+---
+/**
+ * Resource Card — 27zero
+ * Portado 1:1 de `.card-resource-item` de `/resources` del repo vanilla — la versión
+ * del grid: imagen arriba, contenido abajo. Sin JS ni hover propio.
+ *
+ * Mismo shape de datos que `ResourceCardFeatured`, distinta composición: acá la card es
+ * vertical y el tipografía es más chica. No comparten wrapper porque en el vanilla son
+ * dos bloques de markup distintos, no un componente con variantes.
+ *
+ * "View Article" va hardcodeado (label fijo de UI, CLAUDE.md §4). Va con la
+ * capitalización del vanilla, distinta del "Read article" de la featured.
+ *
+ * La imagen es un bloque de color plano (`#E3E3E3`) hasta que haya assets reales —
+ * misma nota que en `ResourceCardFeatured`.
+ */
+import Button from './Button.astro';
+
+interface Props {
+  href: string;
+  date: string;
+  title: string;
+  description: string;
+}
+
+const { href, date, title, description } = Astro.props;
+---
+
+<div
+  class="card-resource-item flex flex-col items-start gap-[clamp(0.8839rem,0.7436rem_+_0.7015vw,1.375rem)]"
+>
+  <div class="card--resource w-full">
+    <div class="card-resource-image h-[18.75rem] w-full overflow-hidden rounded-card bg-[#E3E3E3]"></div>
+  </div>
+
+  <div class="card-resource-body flex flex-col items-start gap-[clamp(0.6429rem,0.5408rem_+_0.5102vw,1rem)]">
+    <span
+      class="card-resource-date font-inter text-[clamp(0.8125rem,0.7946rem_+_0.0893vw,0.875rem)] font-semibold tracking-normal text-black"
+    >
+      {date}
+    </span>
+
+    <h4
+      class="card-resource-title font-lora text-[clamp(1.3125rem,1.2589rem_+_0.2679vw,1.5rem)] leading-[1.25] font-medium tracking-[-0.24px] text-black"
+    >
+      {title}
+    </h4>
+
+    <p
+      class="card-resource-desc font-inter text-[clamp(0.8125rem,0.7768rem_+_0.1785vw,0.9375rem)] leading-[1.5] font-normal tracking-normal text-black"
+    >
+      {description}
+    </p>
+
+    <Button href={href} variant="purple" class="mt-[clamp(0.1687rem,0.142rem_+_0.1339vw,0.2625rem)] self-start">
+      View Article
+    </Button>
+  </div>
+</div>

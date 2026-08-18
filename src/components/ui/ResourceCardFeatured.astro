@@ -1,0 +1,60 @@
+---
+/**
+ * Resource Card Featured — 27zero
+ * Portado 1:1 de `.card--resource-featured` de `/resources` del repo vanilla.
+ * Sin JS ni hover propio: la única interacción es el botón.
+ *
+ * Layout horizontal: imagen a la izquierda (1.3fr) y contenido a la derecha (1fr),
+ * alineado al fondo de la celda. En mobile pasa a una sola columna.
+ *
+ * "Read article" va hardcodeado: es un label fijo de UI, no contenido editable
+ * (CLAUDE.md §4), mismo criterio que "Explore the practice" en `PracticesCard`.
+ *
+ * La imagen es todavía un bloque de color plano (`#E3E3E3` del vanilla), no un `<img>`:
+ * no hay assets reales. Cuando lleguen, se reemplaza por `<img>` con `alt` obligatorio
+ * — por eso el componente no expone una prop de imagen que hoy nadie podría llenar.
+ */
+import Button from './Button.astro';
+
+interface Props {
+  href: string;
+  date: string;
+  title: string;
+  description: string;
+}
+
+const { href, date, title, description } = Astro.props;
+---
+
+<div
+  class="card--resource-featured grid w-full grid-cols-[1.3fr_1fr] items-stretch gap-[clamp(1.4063rem,1.183rem_+_1.1161vw,2.1875rem)] max-md:grid-cols-1 max-md:gap-[0.8438rem]"
+>
+  <div
+    class="card-resource-featured-image min-h-[clamp(12.5rem,10.5714rem_+_9.6429vw,19.25rem)] rounded-card bg-[#E3E3E3] max-md:w-full"
+  >
+  </div>
+
+  <div
+    class="card-resource-featured-content flex flex-col items-start justify-end gap-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)]"
+  >
+    <span
+      class="card-resource-date font-inter text-[clamp(0.8125rem,0.7946rem_+_0.0893vw,0.875rem)] font-semibold tracking-normal text-black"
+    >
+      {date}
+    </span>
+
+    <h3
+      class="card-resource-featured-title font-lora text-[clamp(1.3125rem,1.0446rem_+_1.3393vw,2.25rem)] leading-[1.25] font-medium tracking-[-0.36px] text-black"
+    >
+      {title}
+    </h3>
+
+    <p
+      class="card-resource-featured-desc max-w-[clamp(18rem,15.1429rem_+_14.2857vw,28rem)] font-inter text-[clamp(0.8125rem,0.7571rem_+_0.2768vw,1.0062rem)] leading-[1.6] font-normal text-black/65"
+    >
+      {description}
+    </p>
+
+    <Button href={href} variant="purple" class="mt-xs self-start">Read article</Button>
+  </div>
+</div>

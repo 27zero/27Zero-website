@@ -1,0 +1,60 @@
+---
+/**
+ * Resources — 27zero
+ * Portado 1:1 de `/resources/index.html` + `/resources/style.css` del repo vanilla.
+ * Clases propias en `design-system-resources.md` — ojo, ese doc quedó desactualizado
+ * respecto al CSS (describe flex y otros tamaños donde el CSS usa grid); la fuente de
+ * verdad de valores es `style.css`.
+ *
+ * Página estática en su armado: el shell (intro + featured + grid de 6) nunca cambia;
+ * lo que en Etapa 6 pasa a GROQ es el contenido de las cards.
+ *
+ * Valores fluidos con la curva del resto del proyecto: mobile = `em × 9` @320px,
+ * desktop = `em × 14` @1440px. Ver nota sobre la base mobile en el reporte de entrega:
+ * `resources/style.css` es la única hoja del vanilla que no declara
+ * `body { font-size: 9px }` en su media query, y acá se sigue igual la convención
+ * global del proyecto para no dejar esta página con un ritmo distinto al resto.
+ */
+import Page from '../layouts/Page.astro';
+import ResourceCard from '../components/ui/ResourceCard.astro';
+import ResourceCardFeatured from '../components/ui/ResourceCardFeatured.astro';
+import { FEATURED_RESOURCE, RESOURCES } from '../lib/mockData/resources';
+
+const CONTAINER = 'container mx-auto flex w-full max-w-(--container-max-width) flex-col px-container-x';
+---
+
+<Page title="Resources — 27zero" navVariant="white">
+  <!-- INTRO + FEATURED CARD -->
+  <section
+    class="section section--resources-hero pt-[clamp(4.5rem,2.4821rem_+_10.0893vw,11.5625rem)] pb-[clamp(3.7366rem,3.1435rem_+_2.9656vw,5.8125rem)]"
+  >
+    <div class:list={[CONTAINER, 'gap-[clamp(2.0089rem,1.69rem_+_1.5944vw,3.125rem)]']}>
+      <div
+        class="hero-resources-header flex max-w-[clamp(22.5rem,18.9286rem_+_17.8571vw,35rem)] flex-col gap-[clamp(0.675rem,0.5679rem_+_0.5357vw,1.05rem)]"
+      >
+        {/* Los dos `span` van en bloque: el título ocupa dos líneas fijas, no por wrap. */}
+        <h1
+          class="font-lora text-h1 leading-[1.25] font-medium tracking-[clamp(-0.03rem,-0.0171rem_-_0.0143vw,-0.02rem)]"
+        >
+          <span class="block">EdTech</span><span class="block">Resources</span>
+        </h1>
+        <p class="text-body font-inter text-body leading-[1.6] font-normal tracking-normal">
+          Resources built from real campaigns, real strategies, and real results.
+        </p>
+      </div>
+
+      <ResourceCardFeatured {...FEATURED_RESOURCE} />
+    </div>
+  </section>
+
+  <!-- GRID DE RESOURCE CARDS -->
+  <section class="section section--resources-grid pt-0 pb-[clamp(3.6563rem,3.0759rem_+_2.9018vw,5.6875rem)]">
+    <div class={CONTAINER}>
+      <div
+        class="resources-grid grid grid-cols-3 gap-x-[clamp(0.5223rem,0.4394rem_+_0.4146vw,0.8125rem)] gap-y-[clamp(3.6161rem,3.0421rem_+_2.8699vw,5.625rem)] max-md:grid-cols-1 max-md:gap-[1.125rem]"
+      >
+        {RESOURCES.map((resource) => <ResourceCard {...resource} />)}
+      </div>
+    </div>
+  </section>
+</Page>
