@@ -1,0 +1,223 @@
+---
+/**
+ * About — 27zero
+ * Portado 1:1 de `/about/index.html` + `/about/style.css` del repo vanilla.
+ * Clases propias de la página documentadas en `/about/design-system-about.md`.
+ *
+ * Todos los valores fluidos siguen la misma curva del resto del proyecto:
+ * mobile = `em × 9` @320px, desktop = `em × 14` @1440px, salvo donde el vanilla fija
+ * un valor mobile distinto al que da esa fórmula (ej. `margin-top`/`padding` del hero,
+ * `padding` de Proof Point) — ahí el `clamp()` usa los px reales de cada extremo, no
+ * la fórmula genérica. Donde ambos extremos coinciden en el mismo px (ej. el gap de
+ * `.proof-point-container`), va como valor fijo, sin `clamp()`.
+ *
+ * La sección "The EdTech Mentor" es duplicado exacto de la misma sección en Home
+ * (design-system-about.md § The EdTech Mentor) — mismas clases/valores, mock
+ * compartido vía `lib/mockData/edtechMentor.ts`, solo cambia a `arrowVariant="light"`
+ * igual que en Home.
+ */
+import Page from '../layouts/Page.astro';
+import CardsSlider from '../components/sections/CardsSlider.astro';
+import ShapesSlider from '../components/sections/ShapesSlider.astro';
+import Button from '../components/ui/Button.astro';
+import EdtechMentorCard from '../components/ui/EdtechMentorCard.astro';
+import FeaturedCard from '../components/ui/FeaturedCard.astro';
+import TeamCard from '../components/ui/TeamCard.astro';
+import WorkCard from '../components/ui/WorkCard.astro';
+import { FEATURED_MENTOR_POST, MENTOR_POSTS } from '../lib/mockData/edtechMentor';
+
+// TEMP: mock data — swap en Etapa 6 (GROQ)
+// `team` × 8. Placeholder literal repetido tal cual el vanilla — confirmado con
+// Santiago no variar contenido entre las 8 cards hasta tener el roster real
+// (planning-maquetado-about.md § Mock data requerida).
+const TEAM_MEMBERS = Array.from({ length: 8 }, () => ({
+  image: { src: '/assets/team.png', alt: 'Laureano Díaz' },
+  name: 'Laureano Díaz',
+  position: 'Chief Strategy Officer — Industry & Growth',
+}));
+
+// TEMP: mock data — swap en Etapa 6 (GROQ)
+// `work` con `isFeatured: true` para Proof Point. Copy lorem ipsum tal cual el
+// vanilla — pendiente de copy real del cliente (planning-maquetado-about.md #1).
+// Sección page-specific (no vive en /components), así que se renderiza inline en
+// vez de pasar por `WorkCard`.
+const PROOF_POINT_WORK = {
+  title: 'What is Lorem Ipsum?',
+  text: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since 1966, when designers at Letraset and James Mosley, the librarian at St Bride Printing",
+};
+
+// TEMP: mock data — swap en Etapa 6 (GROQ)
+// `work` × 6 para el Work Slider. Placeholder literal del vanilla — eyebrow `[Work]`
+// y client name `[Client Name]`, distintos de los de Home (`[UX/UI & WEB DESIGN]` /
+// `[CLIENT NAME]`), se replican tal cual sin normalizar entre páginas.
+const WORKS = Array.from({ length: 6 }, () => ({
+  href: '#',
+  eyebrow: '[Work]',
+  title: '[Project headline]',
+  clientName: '[Client Name]',
+  clientInitials: 'CL',
+}));
+
+/* `.container` del design system global. El `gap` NO va acá — cada sección declara
+   el suyo (mismo criterio que index.astro). */
+const CONTAINER = 'container mx-auto flex w-full max-w-(--container-max-width) flex-col px-container-x';
+
+/* `.sliders-container` — wrapper de spacing de los sliders embebidos en una sección
+   (idéntico al de Home). */
+const SLIDERS_CONTAINER = 'sliders-container pt-[clamp(2.2106rem,1.7697rem_+_2.2045vw,3.7538rem)]';
+
+/* Fila de dos columnas texto + media de la sección EdTech Mentor — duplicado 1:1 de
+   `.mentor-home-row` en index.astro. */
+const TEXT_MEDIA_ROW = 'flex items-start justify-between gap-sm max-md:flex-col max-md:gap-[2.61rem]';
+const TEXT_COLUMN = 'flex flex-[0_0_34%] flex-col items-start gap-sm max-md:flex-auto';
+
+/* H2 override de `.section--mentor-home` (Lora, 2.57em, -0.36px) — específico de esa
+   sección, NO el H2 global de la página (ver nota sobre `h2` más abajo). */
+const MENTOR_HEADING = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.36px]';
+
+/* H2 global de About (`about/style.css`: Lora 2.6em/-0.42px) — usado en DNA y Team,
+   sin override propio de sección. Calibrado 1:1 contra el token `text-h2` de
+   `global.css` (2.275rem desktop ≈ 2.6em·14px, 1.5rem mobile = 24px). */
+const GLOBAL_HEADING = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px]';
+
+const BODY = 'text-body font-inter leading-[1.6] font-normal tracking-normal';
+---
+
+<Page title="About — 27zero" navVariant="white">
+  <!-- HERO -->
+  <section
+    class="section section--hero-marketing relative mt-[clamp(6rem,5.2143rem_+_3.9286vw,8.75rem)] overflow-hidden pt-[clamp(5.625rem,8.4375rem_-_3.125vw,7.8125rem)] pb-[clamp(5.625rem,12.4554rem_-_7.5893vw,10.9375rem)]"
+  >
+    {/* PENDIENTE (planning-maquetado-about.md #2): asset de fondo del hero sin
+        definir. Se maqueta con el placeholder del vanilla — no bloquea el resto. */}
+    <div class="hero-marketing-bg absolute inset-0 z-0 flex items-center justify-center bg-gray">
+      <span
+        class="font-inter text-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] font-semibold tracking-[1px] text-black uppercase opacity-40"
+      >
+        [HERO BACKGROUND IMAGE]
+      </span>
+    </div>
+
+    <div
+      class:list={[
+        CONTAINER,
+        'hero-marketing-container relative z-[1] gap-[clamp(1.8056rem,1.519rem_+_1.433vw,2.8087rem)]',
+      ]}
+    >
+      <div class="hero-marketing-text flex max-w-[50%] flex-col gap-[clamp(1.2656rem,1.0647rem_+_1.0045vw,1.9688rem)] max-md:max-w-full">
+        <h1 class="font-lora text-h1 leading-[1.25] font-medium tracking-[-0.48px]">
+          Your extended team of EdTech marketing experts and creatives.
+        </h1>
+        <p class:list={[BODY, 'max-w-[90%] text-black max-md:max-w-full']}>
+          Our mission is to help drive global education transformation. With extensive hands-on experience, we
+          understand the industry's evolving needs and enable EdTech companies to thrive.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CREATIVITY IS OUR DNA -->
+  <section class="section section--dna bg-purple py-[clamp(3.2119rem,2.7021rem_+_2.5491vw,4.9962rem)]">
+    <div
+      class:list={[CONTAINER, 'dna-container items-center gap-[clamp(1.2656rem,1.0647rem_+_1.0045vw,1.9688rem)] text-center']}
+    >
+      <h2 class={GLOBAL_HEADING}>Creativity is our DNA</h2>
+      <p
+        class="dna-subtitle mx-auto max-w-[70%] text-center font-inter text-[clamp(1.125rem,1.0714rem_+_0.2679vw,1.3125rem)] leading-[1.6] font-normal tracking-normal max-md:max-w-full"
+      >
+        We are experts in generating demand and growing revenue for education organizations of all kinds, from
+        institutions to software, from b2c to b2b2c. We've been part of the transformation in education since 2001.
+      </p>
+    </div>
+  </section>
+
+  <!-- TEAM -->
+  <section class="section section--team bg-indigo py-[clamp(4.6181rem,3.8851rem_+_3.6652vw,7.1838rem)]">
+    <div class:list={[CONTAINER, 'team-container gap-[clamp(2.25rem,1.8929rem_+_1.7857vw,3.5rem)]']}>
+      <div class="team-intro flex flex-col items-center gap-[clamp(0.8438rem,0.7098rem_+_0.6696vw,1.3125rem)] text-center">
+        <h2 class:list={[GLOBAL_HEADING, 'text-white']}>The people behind the work.</h2>
+        <p class:list={[BODY, 'mx-auto max-w-[70%] text-white max-md:max-w-full']}>
+          Our mission is to help drive global education transformation. With extensive hands-on experience, we
+          understand the industry's evolving needs and enable EdTech companies to thrive.
+        </p>
+      </div>
+
+      <div class="team-grid grid grid-cols-3 justify-center gap-0 max-md:grid-cols-1">
+        {TEAM_MEMBERS.map((member) => <TeamCard {...member} />)}
+      </div>
+    </div>
+  </section>
+
+  <!-- PROOF POINT -->
+  {/* PENDIENTE (planning-maquetado-about.md #1): copy lorem ipsum del cliente,
+      mismo tratamiento que ShapesSlider — se maqueta con el placeholder marcado. */}
+  <section
+    class="section section--proof-point bg-white pt-[clamp(3.75rem,3.6607rem_+_0.4464vw,4.0625rem)] pb-[clamp(3.75rem,2.5rem_+_6.25vw,8.125rem)]"
+  >
+    <div class:list={[CONTAINER, 'proof-point-container grid grid-cols-[2fr_1.5fr] gap-[2.8125rem] max-md:grid-cols-1']}>
+      <div class="proof-point-media flex aspect-[5/3] items-center justify-center rounded-card bg-gray max-md:aspect-video">
+        <span
+          class="font-inter text-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] font-semibold tracking-[1px] text-black uppercase opacity-40"
+        >
+          [MEDIA PLACEHOLDER]
+        </span>
+      </div>
+
+      <div class="proof-point-text flex h-full flex-col justify-end gap-[clamp(0.9619rem,0.8092rem_+_0.7634vw,1.4962rem)]">
+        <h3
+          class="proof-point-title font-lora text-[clamp(1.5rem,1.2861rem_+_1.0696vw,2.2487rem)] leading-[1.25] font-medium tracking-[-0.36px] text-black"
+        >
+          {PROOF_POINT_WORK.title}
+        </h3>
+        <p class:list={[BODY, 'text-black']}>{PROOF_POINT_WORK.text}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- WORK SLIDER -->
+  <section class="section section--work-slider py-0">
+    {/* Override scoped, page-specific: el vanilla fija `.section--work-slider
+        .card--work` a 30em (vs. los 25em por defecto de `WorkCard`) solo acá — no se
+        agregó como prop de tamaño al componente porque ninguna otra página lo pide
+        todavía. Si eso cambia, se revisa como variante compartida. */}
+    <div class="[&_.card--work]:h-[clamp(16.875rem,14.1964rem_+_13.3929vw,26.25rem)] [&_.card--work]:min-h-[clamp(16.875rem,14.1964rem_+_13.3929vw,26.25rem)]">
+      <CardsSlider title="Work">
+        {WORKS.map((work) => <WorkCard {...work} />)}
+      </CardsSlider>
+    </div>
+  </section>
+
+  <!-- SHAPES SLIDER -->
+  {/* Copy compartido con Home — 2 de 3 shapes con lorem ipsum pendiente del mismo
+      cliente, ya marcado dentro del componente. */}
+  <ShapesSlider />
+
+  <!-- THE EDTECH MENTOR (duplicado 1:1 de la misma sección en Home) -->
+  <section
+    class="section section--mentor-home bg-indigo pt-[clamp(3.4144rem,1.7999rem_+_8.0723vw,9.065rem)] pb-[clamp(2.5313rem,1.827rem_+_3.5214vw,4.9962rem)] text-white"
+  >
+    <div class:list={[CONTAINER, 'mentor-home-container gap-gap']}>
+      <div class:list={['mentor-home-row', TEXT_MEDIA_ROW]}>
+        <div class:list={['mentor-home-text', TEXT_COLUMN]}>
+          <h2 class={MENTOR_HEADING}>
+            The EdTech Mentor <span class="inter-accent font-inter font-medium">pearls of wisdom.</span>
+          </h2>
+          <p class:list={['text-body--sm font-inter text-body-sm leading-[1.6] font-normal tracking-normal']}>
+            Lorem ipsum is simply dummy text of the printing and typesetting industry.
+          </p>
+          <Button href="/the-edtech-mentor" variant="white" class="border-white!">The EdTech Mentor</Button>
+        </div>
+
+        <div class="mentor-home-featured-wrap h-[clamp(16.875rem,14.1964rem_+_13.3929vw,26.25rem)] flex-1 max-md:h-auto">
+          <FeaturedCard {...FEATURED_MENTOR_POST} />
+        </div>
+      </div>
+    </div>
+
+    <div class={SLIDERS_CONTAINER}>
+      <CardsSlider arrowVariant="light">
+        {MENTOR_POSTS.map((post) => <EdtechMentorCard {...post} />)}
+      </CardsSlider>
+    </div>
+  </section>
+</Page>

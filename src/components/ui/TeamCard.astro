@@ -1,0 +1,39 @@
+---
+/**
+ * Team Card — 27zero
+ * Portado de `.team-card` / `.team-card-info` del repo vanilla (About, sección Team).
+ * Sin JS, sin hover: la card es una foto de fondo con nombre + cargo superpuestos
+ * arriba a la derecha.
+ *
+ * El vanilla aplica la foto como `background-image` en `.team-card`. Acá se resuelve
+ * con un `<img>` absoluto detrás del overlay de texto para que el `alt` sea
+ * obligatorio a nivel de tipo (CLAUDE.md §8.1), mismo patrón que WorkCard/FeaturedCard/
+ * EdtechMentorCard (Etapa 3).
+ *
+ * `max-width` del overlay pasa de `em` (desktop) a `%` (mobile) en el vanilla — no es
+ * una escala lineal, así que va como valor fijo + override en `max-md:`, no como
+ * `clamp()` (CLAUDE.md §5, regla de desvío 4).
+ */
+interface Props {
+  image: { src: string; alt: string };
+  name: string;
+  position: string;
+}
+
+const { image, name, position } = Astro.props;
+---
+
+<div class="team-card relative aspect-square w-full overflow-hidden">
+  <img src={image.src} alt={image.alt} class="absolute inset-0 size-full object-cover" />
+
+  <div
+    class="team-card-info absolute top-0 right-0 flex max-w-[13.125rem] flex-col items-end gap-[clamp(0.2025rem,0.1704rem_+_0.1607vw,0.315rem)] px-[clamp(0.8438rem,0.7098rem_+_0.6696vw,1.3125rem)] pt-[clamp(2.4919rem,2.0963rem_+_1.9777vw,3.8762rem)] pb-[clamp(0.8438rem,0.7098rem_+_0.6696vw,1.3125rem)] text-right max-md:max-w-[75%]"
+  >
+    <p class="team-card-name m-0 font-lora text-[clamp(1.75rem,1.6875rem_+_0.3125vw,1.9688rem)] leading-[1.05] font-medium tracking-normal text-white">
+      {name}
+    </p>
+    <span class="team-card-position font-inter text-[0.875rem] leading-[1.4] font-medium tracking-normal text-white">
+      {position}
+    </span>
+  </div>
+</div>

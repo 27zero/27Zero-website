@@ -22,6 +22,7 @@ import Button from '../components/ui/Button.astro';
 import EdtechMentorCard from '../components/ui/EdtechMentorCard.astro';
 import FeaturedCard from '../components/ui/FeaturedCard.astro';
 import WorkCard from '../components/ui/WorkCard.astro';
+import { FEATURED_MENTOR_POST, MENTOR_POSTS } from '../lib/mockData/edtechMentor';
 
 // TEMP: mock data — swap en Etapa 6 (GROQ)
 // `work` × 8 para el slider "Los mejores". Contenido literal del vanilla: son cards
@@ -33,21 +34,6 @@ const FEATURED_WORKS = Array.from({ length: 8 }, () => ({
   clientName: '[CLIENT NAME]',
   clientInitials: 'CL',
 }));
-
-// TEMP: mock data — swap en Etapa 6 (GROQ)
-// `edtechMentor` con `isFeatured: true` — el único que renderiza la `FeaturedCard`.
-const FEATURED_MENTOR_POST = {
-  href: '#',
-  tag: 'Tag',
-  role: 'Founder At Kelleher Consulting Group',
-  name: 'Julie Kelleher',
-  avatarInitials: 'JK',
-  title: "A Market-First Mindset in EdTech: Julie Kelleher's Blueprint for Success",
-};
-
-// TEMP: mock data — swap en Etapa 6 (GROQ)
-// `edtechMentor` × 6 para el slider. En el vanilla los 6 repiten el mismo contenido.
-const MENTOR_POSTS = Array.from({ length: 6 }, () => ({ ...FEATURED_MENTOR_POST }));
 
 // TEMP: mock data — swap en Etapa 6 (GROQ)
 // `testimonial` × 4, solo los campos que esta sección consume hoy. El resto del schema
