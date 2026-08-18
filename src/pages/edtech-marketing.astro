@@ -1,0 +1,150 @@
+---
+/**
+ * EdTech Marketing — 27zero
+ * Portado 1:1 de `/edtech-marketing/index.html` + `/edtech-marketing/style.css` del
+ * repo vanilla. Clases propias documentadas en `design-system-edtech-marketing.md`.
+ *
+ * El hero comparte clases (`.section--hero-marketing`) con el de About, que en el
+ * vanilla se describe como derivado de este — pero los valores NO son iguales
+ * (padding, gap del container y el bloque `.hero-home-cta`, que About no tiene), así
+ * que cada página declara los suyos y no se extrae un componente compartido.
+ *
+ * Valores fluidos con la curva del resto del proyecto: mobile = `em × 9` @320px,
+ * desktop = `em × 14` @1440px, salvo donde el vanilla fija un valor mobile propio en
+ * su `@media (max-width: 768px)` — ahí el `clamp()` usa los px reales de cada extremo.
+ */
+import Page from '../layouts/Page.astro';
+import ServiceMenu from '../components/sections/ServiceMenu.astro';
+import ShapesSlider from '../components/sections/ShapesSlider.astro';
+import Button from '../components/ui/Button.astro';
+import PracticeIcon from '../components/ui/PracticeIcon.astro';
+import PracticesCard from '../components/ui/PracticesCard.astro';
+import { PRACTICES } from '../lib/mockData/practices';
+import { SERVICES_BY_CATEGORY } from '../lib/mockData/servicesByCategory';
+
+const CONTAINER = 'container mx-auto flex w-full max-w-(--container-max-width) flex-col px-container-x';
+
+const BODY = 'text-body font-inter text-body leading-[1.6] font-medium tracking-normal';
+
+/* Placeholder de wireframe (fondo gris + label en mayúsculas al 40%), mismo tratamiento
+   que en Home y About. */
+const PLACEHOLDER_LABEL =
+  'font-inter text-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] font-semibold tracking-[1px] text-black uppercase opacity-40';
+---
+
+<Page title="EdTech Marketing — 27zero" navVariant="white">
+  <!-- HERO -->
+  <section
+    class="section section--hero-marketing relative mt-[clamp(6.0019rem,5.2167rem_+_3.9259vw,8.75rem)] overflow-hidden pt-[clamp(3.7538rem,8.9729rem_-_5.7991vw,7.8131rem)] pb-[clamp(7.4988rem,11.9168rem_-_4.9089vw,10.935rem)]"
+  >
+    {/* PENDIENTE (planning-maquetado-edtech-marketing.md #1): asset de fondo del hero
+        sin definir. Se maqueta con el placeholder del vanilla, no bloquea. */}
+    <div class="hero-marketing-bg absolute inset-0 z-0 flex items-center justify-center bg-gray">
+      <span class={PLACEHOLDER_LABEL}>[HERO BACKGROUND IMAGE]</span>
+    </div>
+
+    <div
+      class:list={[
+        CONTAINER,
+        'hero-marketing-container relative z-[1] gap-[clamp(1.2038rem,1.0127rem_+_0.9554vw,1.8725rem)]',
+      ]}
+    >
+      <div class="hero-marketing-text flex max-w-[50%] flex-col gap-xs max-md:max-w-full">
+        <h1 class="font-lora text-h1 leading-[1.25] font-medium tracking-[-0.48px]">
+          The first and only agency built for EdTech.
+        </h1>
+        <p class:list={[BODY, 'max-w-[90%] text-black']}>
+          Three practices. One goal: helping EdTech brands turn purpose into lasting impact.
+        </p>
+      </div>
+
+      <div class="hero-home-cta mr-auto flex flex-col items-center gap-xs">
+        <Button href="/contact" variant="white" class="border-white!">Book a strategy session</Button>
+        <p class="text-caption font-inter text-body-sm leading-[1.6] font-normal tracking-normal text-black">
+          Free. 30 min. No sales pitch.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  {/* PENDIENTE (planning-maquetado-edtech-marketing.md #2): 2 de las 3 shapes siguen
+      con lorem ipsum a la espera del copy del cliente — el placeholder ya viene marcado
+      dentro del componente, que es donde vive el contenido. */}
+  <ShapesSlider />
+
+  <!-- PRACTICES -->
+  <section
+    class="section section--practices bg-indigo pt-[clamp(5.0231rem,4.2258rem_+_3.9866vw,7.8137rem)] pb-[clamp(6.0244rem,5.0681rem_+_4.7812vw,9.3712rem)]"
+  >
+    <div class:list={[CONTAINER, 'practices-container gap-[clamp(4.0162rem,3.3787rem_+_3.1875vw,6.2475rem)]']}>
+      <div class="practices-intro flex flex-col gap-[clamp(0.3994rem,0.336rem_+_0.317vw,0.6212rem)]">
+        <h2 class="font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px] text-white">
+          Three practices. One goal.
+        </h2>
+        <p
+          class="text-body--sm max-w-[clamp(19.125rem,16.0893rem_+_15.1786vw,29.75rem)] font-inter text-body-sm leading-[1.6] font-normal tracking-normal text-white/85 max-md:max-w-full"
+        >
+          Elevating real voices, layering audiences with precision, and building brand equity that compounds —
+          together, the engine behind every client's go-to-market success.
+        </p>
+      </div>
+
+      {/* Mobile: el grid pasa a carrusel horizontal con scroll-snap y las cards toman
+          tamaño fijo (300×380), igual que el vanilla. */}
+      <div
+        class="practices-grid grid grid-cols-3 gap-[clamp(1.2038rem,1.0127rem_+_0.9554vw,1.8725rem)] max-md:flex max-md:snap-x max-md:snap-mandatory max-md:overflow-x-auto max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden max-md:[&_.practices-card]:h-[23.75rem] max-md:[&_.practices-card]:w-[18.75rem] max-md:[&_.practices-card]:flex-[0_0_18.75rem] max-md:[&_.practices-card]:snap-start"
+      >
+        {
+          PRACTICES.map((practice) => (
+            <PracticesCard href={practice.href} title={practice.title} body={practice.body}>
+              <PracticeIcon slot="icon" iconId={practice.iconId} />
+            </PracticesCard>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- MENU -->
+  <section
+    class="section section--menu bg-black pt-[clamp(4.0162rem,3.3787rem_+_3.1875vw,6.2475rem)] pb-[clamp(6.0244rem,5.0681rem_+_4.7812vw,9.3712rem)]"
+  >
+    {/* `.menu-container` es un `.container` pero en grid, no en columna flex. */}
+    <div
+      class="container menu-container mx-auto grid w-full max-w-(--container-max-width) grid-cols-[0.45fr_1fr] items-start gap-[clamp(4.6181rem,3.8851rem_+_3.6652vw,7.1838rem)] px-container-x max-md:grid-cols-1 max-md:gap-[2.4131rem]"
+    >
+      <div class="menu-intro flex flex-col gap-[clamp(1.4063rem,1.183rem_+_1.1161vw,2.1875rem)]">
+        <h2
+          class="font-lora text-[clamp(1.75rem,1.6075rem_+_0.7125vw,2.2487rem)] leading-[1.25] font-medium tracking-[-0.36px] text-white"
+        >
+          What's on the menu?
+        </h2>
+        <p class:list={[BODY, 'text-white/85']}>
+          Wherever you are in your marketing cycle, we have something cooking — strategy, creativity, and execution,
+          ready to serve when you are.
+        </p>
+      </div>
+
+      <ServiceMenu categories={SERVICES_BY_CATEGORY} />
+    </div>
+  </section>
+
+  <!-- CLOSING CTA -->
+  <section
+    class="section section--closing-cta bg-white py-[clamp(3.7519rem,3.3963rem_+_1.7777vw,4.9962rem)] text-center"
+  >
+    <div
+      class:list={[
+        CONTAINER,
+        'closing-cta-container items-center gap-[clamp(1.2038rem,1.0127rem_+_0.9554vw,1.8725rem)]',
+      ]}
+    >
+      <h2 class="max-w-[50%] font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px] text-black max-md:max-w-full">
+        Let's partner to articulate and unpack meaningful results.
+      </h2>
+      {/* `.btn-dark` acá va con texto blanco en vez del purple de la variante; el hover
+          a negro ya es el default de `dark`. */}
+      <Button href="/contact" variant="dark" class="text-white!">Book a strategy session</Button>
+    </div>
+  </section>
+</Page>

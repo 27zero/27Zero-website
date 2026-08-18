@@ -1,0 +1,65 @@
+---
+/**
+ * Service Icon — 27zero
+ * Diccionario de íconos de `service-card`, portados de `/edtech-marketing` del repo
+ * vanilla. Se pasa al `<slot name="icon">` de `ServiceCard`.
+ *
+ * Existe para que la data (mock hoy, GROQ en Etapa 6) referencie un `iconId` corto en
+ * vez de cargar con el markup SVG completo: la data queda legible y la presentación
+ * vive donde corresponde.
+ *
+ * OJO — en el vanilla NO hay un ícono único por servicio: los 28 `service-card` de la
+ * página reutilizan solo estos 3 marcos de marca, rotando 1→2→3 y reiniciando en cada
+ * categoría. Son decorativos, no representan al servicio. El mock conserva qué ícono
+ * usa cada servicio para que el render sea 1:1 con el vanilla; cuando el cliente
+ * entregue íconos reales por servicio, se agregan entradas acá y se actualiza el
+ * `iconId` en la data — el resto no cambia.
+ *
+ * Todos usan `fill="currentColor"`: `ServiceCard` recolorea título, ícono y flecha con
+ * una sola regla en hover.
+ */
+interface Props {
+  iconId: string;
+}
+
+const { iconId } = Astro.props;
+
+const ICONS: Record<string, { width: number; height: number; viewBox: string; d: string }> = {
+  /** Asterisco de muchos rayos. Es también el ícono por defecto de `ServiceCard`. */
+  asterisk: {
+    width: 87,
+    height: 87,
+    viewBox: '0 0 87 87',
+    d: 'M44.85 85.96L41.32 86.31L40.78 54.4L28.49 83.89L25.15 82.27L36.21 53.6C27.52 60.85 21.19 67.7 13.93 75.03L11.42 72.36L33.39 49.8L3.99 61.62L2.73 58.34L32.62 45.38L0 44.9L0.03 41.5L32.54 41.16L2.48 28.68L3.54 25.37L33.39 36.74L11.36 14L13.49 11.86C13.94 11.41 15.28 12.82 15.74 13.27L36.16 32.99L25.55 6.58C25.3 5.96 24.98 4.63 24.94 4.08C24.88 3.36 27.38 2.91 27.94 3.09L40.75 32.37L41.29 0H44.92L45.23 32.05L57.44 2.88C57.86 2.98 60.19 3.97 60.72 4.28L49.23 33.91L71.34 12.14C72.1 11.74 73.81 12.89 74.69 14.15L53.89 35.95L81.97 24.74C82.29 25.38 82.96 27.81 82.91 28.3L52.9 41.17L86.13 41.54L85.94 44.93L54.01 45.49L83.29 57.58L82.99 61.24L53.44 49.92C59.85 58.28 67.24 64.57 74.67 72.26L72.21 74.98L50.12 53.62L61.57 82.33L58.19 83.51L45.16 53.77L44.83 85.95L44.85 85.96Z',
+  },
+  /** Cuatro lóbulos alrededor de un hueco cuadrado. */
+  quatrefoil: {
+    width: 86,
+    height: 86,
+    viewBox: '0 0 86 86',
+    d: 'M85.8001 57.14C85.8601 71.56 75.1301 83.19 62.0601 85.3C47.1001 87.72 34.8301 79.23 29.1601 65.13L28.6601 85.73C14.5801 85.76 2.49011 75.33 0.400109 61.46C-1.78989 46.89 6.84011 34.18 21.0501 29.08L0.000109243 28.68C-0.0398908 14.51 10.9101 2.25003 24.1401 0.360027C39.8301 -1.87997 52.2201 7.39003 56.9501 21.82L57.2101 2.71554e-05C71.9301 -0.0199728 83.8401 11.01 85.5801 24.88C87.4301 39.65 78.4301 52.29 63.9101 56.78L85.8001 57.14ZM57.1501 57.04V28.73H28.7001V57.03H57.1501V57.04Z',
+  },
+  /** Anillo abierto que arranca de una esquina cuadrada. */
+  arc: {
+    width: 86,
+    height: 86,
+    viewBox: '0 0 86 86',
+    d: 'M12.4454 72.96L72.8854 73.08L72.9354 12.5C90.0254 29.46 89.4554 56.74 73.0554 73.14C56.6554 89.54 29.6354 89.83 12.9654 73.75C-3.70457 57.67 -4.55457 29.93 11.8954 13.04C28.1354 -3.64003 55.3854 -4.86003 72.9154 12.52L12.4654 12.63L12.4354 72.97L12.4454 72.96Z',
+  },
+};
+
+/* Fallback al asterisco (el default del propio `ServiceCard`) si llega un id
+   desconocido: la card se sigue renderizando en vez de quedar sin ícono. */
+const icon = ICONS[iconId] ?? ICONS.asterisk;
+---
+
+<svg
+  width={icon.width}
+  height={icon.height}
+  viewBox={icon.viewBox}
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+  aria-hidden="true"
+>
+  <path d={icon.d} fill="currentColor"></path>
+</svg>

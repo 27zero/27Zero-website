@@ -1,0 +1,62 @@
+---
+/**
+ * Practice Icon — 27zero
+ * Diccionario de íconos de `practices-card`, portados de `/edtech-marketing` del repo
+ * vanilla. Se pasa al `<slot name="icon">` de `PracticesCard`.
+ *
+ * Mismo criterio que `ServiceIcon`: la data referencia un `iconId` corto y el markup
+ * SVG vive acá. A diferencia de los íconos de servicio (3 marcos rotando entre 28
+ * cards), acá sí hay uno propio por práctica — son 3 prácticas y 3 íconos distintos.
+ *
+ * `fill="black"` y no `currentColor`, igual que el vanilla y que el ícono por defecto
+ * de `PracticesCard`: la card no recolorea el ícono en hover, solo la flecha.
+ *
+ * Los tres tienen relación de aspecto distinta (59×39, 58×59, 58×58) y
+ * `PracticesCard` fija el alto y ancho del `<svg>`; el `preserveAspectRatio` por
+ * defecto (`xMidYMid meet`) los encaja sin deformarlos, igual que en el vanilla.
+ */
+interface Props {
+  iconId: string;
+}
+
+const { iconId } = Astro.props;
+
+const ICONS: Record<string, { width: number; height: number; viewBox: string; d: string }> = {
+  /** Cuatro ondas ascendentes. Es también el ícono por defecto de `PracticesCard`. */
+  waves: {
+    width: 59,
+    height: 39,
+    viewBox: '0 0 59 39',
+    d: 'M38.87 38.86L38.55 24.46C35.42 33.03 28.46 38.75 19.35 38.86L19.06 25.09C15.51 33.29 9.14 38.7 0 38.87V-1.0866e-05C8.93 -0.0700109 15.41 5.42999 19.06 13.54L19.39 0.0299891C28.16 -0.140011 35.55 5.67999 38.5 14.47L38.8 0.00998913C49.45 -0.100011 58.13 8.57999 58.2 19.23C58.27 29.58 50.19 38.58 38.86 38.85L38.87 38.86Z',
+  },
+  /** Círculo con espiral interior. */
+  spiral: {
+    width: 58,
+    height: 59,
+    viewBox: '0 0 58 59',
+    d: 'M24.9677 0.295236C41.4677 -2.02476 55.6777 9.61523 57.7477 25.1252C59.8777 41.0452 48.6577 55.6152 32.7977 57.7752C17.3077 59.8852 2.72769 48.9552 0.347691 33.4852C-2.08231 17.7252 8.44769 2.61524 24.9677 0.295236ZM37.8077 55.3452C50.2977 49.8752 52.0777 34.1352 44.0877 24.8952C36.0977 15.6552 21.3777 15.7252 13.5477 25.3352C5.67769 34.9852 8.27769 50.3652 20.5177 55.5552C14.7677 49.1952 14.1077 41.2852 19.3977 35.6652C24.6877 30.0452 33.4077 30.1652 38.5777 35.6252C43.7477 41.0852 43.0277 49.1152 37.8077 55.3452Z',
+  },
+  /** Cuadrado con un círculo recortado. */
+  'square-circle': {
+    width: 58,
+    height: 58,
+    viewBox: '0 0 58 58',
+    d: 'M57.87 57.94L0 57.96V0H57.87V57.94ZM24.08 7.92C11.88 10.76 5.29 22.71 7.88 33.81C10.62 45.53 22.25 52.61 33.61 50.06C44.97 47.51 52.47 36.01 50.13 24.71C47.7 12.98 36.29 5.07 24.08 7.91V7.92Z',
+  },
+};
+
+/* Fallback al ícono de ondas (el default del propio `PracticesCard`) si llega un id
+   desconocido: la card se sigue renderizando en vez de quedar sin ícono. */
+const icon = ICONS[iconId] ?? ICONS.waves;
+---
+
+<svg
+  width={icon.width}
+  height={icon.height}
+  viewBox={icon.viewBox}
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+  aria-hidden="true"
+>
+  <path d={icon.d} fill="black"></path>
+</svg>

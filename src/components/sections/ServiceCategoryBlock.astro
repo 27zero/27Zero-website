@@ -1,0 +1,48 @@
+---
+/**
+ * Service Category Block — 27zero
+ * UN bloque del menú de servicios: título de categoría + grid de `ServiceCard`.
+ * Portado de `.menu-block` / `.menu-block-title` / `.menu-block-grid` de
+ * `/edtech-marketing` del repo vanilla.
+ *
+ * Autocontenido a propósito: no depende de `ServiceMenu` ni de ningún wrapper externo.
+ * Recibe una sola categoría, así que la página interna de Practice (Etapa 6) puede
+ * instanciarlo suelto para listar los servicios de esa práctica, sin arrastrar el loop
+ * del menú completo.
+ *
+ * El override de tamaño de `ServiceCard` (cuadrada y fluida en vez del tamaño fijo del
+ * componente) vive acá y no en la página: es propio de este grid, y así viaja con el
+ * bloque a cualquier contexto que lo reutilice. Gana por especificidad (0,2,0 contra
+ * el 0,1,0 de las utilidades del componente).
+ */
+import ServiceCard from '../ui/ServiceCard.astro';
+import ServiceIcon from '../ui/ServiceIcon.astro';
+import type { ServiceCategory } from '../../lib/mockData/servicesByCategory';
+
+type Props = ServiceCategory;
+
+const { title, services } = Astro.props;
+
+/* Desktop: grid de 3 columnas, cards cuadradas al ancho de su celda.
+   Mobile: carrusel horizontal con scroll-snap, cards al 60% del viewport. */
+const GRID =
+  'menu-block-grid grid grid-cols-3 gap-[clamp(0.6019rem,0.5063rem_+_0.4777vw,0.9363rem)] [&_.service-card]:aspect-square [&_.service-card]:h-auto [&_.service-card]:w-full max-md:flex max-md:snap-x max-md:snap-mandatory max-md:overflow-x-auto max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden max-md:[&_.service-card]:w-[60%] max-md:[&_.service-card]:flex-[0_0_60%] max-md:[&_.service-card]:snap-start';
+---
+
+<div class="menu-block flex flex-col gap-md">
+  <h3
+    class="menu-block-title font-lora text-[clamp(1.3125rem,1.26rem_+_0.2625vw,1.4962rem)] leading-[1.4] font-medium tracking-normal text-white"
+  >
+    {title}
+  </h3>
+
+  <div class={GRID}>
+    {
+      services.map((service) => (
+        <ServiceCard href={service.href} title={service.title}>
+          <ServiceIcon slot="icon" iconId={service.iconId} />
+        </ServiceCard>
+      ))
+    }
+  </div>
+</div>

@@ -1,0 +1,29 @@
+---
+/**
+ * Service Menu — 27zero
+ * Wrapper de iteración del menú de servicios: renderiza un `ServiceCategoryBlock` por
+ * categoría. Portado de `.menu-blocks` de `/edtech-marketing` del repo vanilla.
+ *
+ * Sin lógica propia — todo lo que es "un bloque" (título, grid, tamaño de card) vive en
+ * `ServiceCategoryBlock`, que además funciona suelto. Acá solo queda el contenedor que
+ * los apila.
+ *
+ * Tampoco incluye el intro de la sección (`h2` + párrafo) ni el `<section>`: ese copy
+ * es de la página, y dejarlo afuera permite reutilizar el listado en otro contexto con
+ * su propio encabezado.
+ */
+import ServiceCategoryBlock from './ServiceCategoryBlock.astro';
+import type { ServiceCategory } from '../../lib/mockData/servicesByCategory';
+
+interface Props {
+  categories: ServiceCategory[];
+}
+
+const { categories } = Astro.props;
+---
+
+<div
+  class="menu-blocks flex flex-col items-stretch gap-[clamp(2.2106rem,1.8597rem_+_1.7545vw,3.4388rem)] overflow-hidden"
+>
+  {categories.map((category) => <ServiceCategoryBlock title={category.title} services={category.services} />)}
+</div>
