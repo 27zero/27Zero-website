@@ -1,0 +1,52 @@
+---
+/**
+ * Category Sliders — 27zero
+ * Portado 1:1 de la sección de sliders por categoría de `/work` del repo vanilla
+ * (`.section--categories` > `.categories-wrap` > `.category-anchor` × N).
+ *
+ * Plantilla compartida entre Work y Clientes: ambas páginas tienen exactamente el
+ * mismo markup y solo cambian el criterio de agrupación de los `work` (categoría de
+ * servicio vs. cliente) y los labels. Por eso el componente no sabe nada de Work —
+ * recibe las categorías ya armadas y renderiza el loop.
+ *
+ * Cada `.category-anchor` lleva el `id` de su categoría: es el destino del
+ * `scrollIntoView` de `FilterPills` (que usa el mismo slug como `data-filter`) y por
+ * eso lleva `scroll-margin-top`, para que el navbar fijo no tape el título al llegar.
+ *
+ * No renderiza flechas propias: cada categoría delega en `CardsSlider`, que en esta
+ * página usa su `arrowVariant` por defecto (`dark`) — `work/style.css` no override a
+ * `.slider-arrow`, a diferencia de la sección EdTech Mentor de Home/About.
+ */
+import CardsSlider from './CardsSlider.astro';
+import WorkCard from '../ui/WorkCard.astro';
+import type { WorkCategory } from '../../lib/mockData/workByCategory';
+
+interface Props {
+  categories: WorkCategory[];
+  /** Clases extra del contexto de uso — overrides scoped por página (ver `work.astro`). */
+  class?: string;
+}
+
+const { categories, class: className } = Astro.props;
+---
+
+<section
+  class:list={[
+    'section section--categories pt-0 pb-[clamp(5.8275rem,4.9025rem_+_4.625vw,9.065rem)]',
+    className,
+  ]}
+>
+  <div class="categories-wrap flex flex-col gap-[clamp(1.6087rem,1.3534rem_+_1.2768vw,2.5025rem)]">
+    {
+      categories.map((category) => (
+        <div id={category.id} class="category-anchor scroll-mt-[clamp(4.5rem,3.7857rem_+_3.5714vw,7rem)]">
+          <CardsSlider title={category.label}>
+            {category.items.map((item) => (
+              <WorkCard {...item} />
+            ))}
+          </CardsSlider>
+        </div>
+      ))
+    }
+  </div>
+</section>

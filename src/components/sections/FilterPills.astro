@@ -1,0 +1,77 @@
+---
+/**
+ * Filter Pills — 27zero
+ * Portado 1:1 de la sección de pills de `/work` del repo vanilla
+ * (markup de `work/index.html` + estilos de `work/style.css` + `work/script.js`).
+ *
+ * Antepone siempre el pill "All" (activo por default) a las categorías recibidas.
+ * Click en un pill: mueve el estado `pill--active` y, si no es "All", scrollea al
+ * `.category-anchor` cuyo `id` coincide con su `data-filter`. "All" solo togglea el
+ * estado visual, sin scroll — comportamiento del vanilla, pendiente de confirmar con
+ * cliente si además debería filtrar (planning-maquetado-work.md #1).
+ *
+ * Sin librería: la lógica va en el `<script>` de este `.astro`, no en una island
+ * (CLAUDE.md §7) — no hay estado de React de por medio.
+ *
+ * NOTA — `pill--active`: `work/style.css` togglea la clase por JS pero nunca la
+ * estiliza (no existe la regla en ninguna hoja del vanilla), así que en el repo de
+ * referencia el pill activo se ve idéntico a los inactivos. Acá se implementa según
+ * `work/design-system-work.md § .pill--active` (fondo y borde purple, texto negro),
+ * que es la intención documentada del diseño. Ver reporte de entrega.
+ */
+interface Props {
+  /** Sin el pill "All": lo antepone este componente. */
+  categories: { id: string; label: string }[];
+}
+
+const { categories } = Astro.props;
+
+/* El hover gana sobre el estado activo, igual que en el vanilla, donde `.pill:hover`
+   (0,2,0) le gana a `.pill--active` (0,1,0). Acá `[&.pill--active]:` también es (0,2,0),
+   así que el empate lo resolvería el orden de emisión de Tailwind — por eso el hover
+   sobre un pill activo se declara explícito en (0,3,0), sin depender de ese orden. */
+const PILL =
+  'pill cursor-pointer rounded-full border-[0.0625rem] border-black bg-transparent px-[clamp(0.7875rem,0.6625rem_+_0.625vw,1.225rem)] py-[clamp(0.3375rem,0.2839rem_+_0.2679vw,0.525rem)] font-inter text-[clamp(0.6019rem,0.5063rem_+_0.4777vw,0.9363rem)] leading-[1.5] font-medium whitespace-nowrap text-black transition-all duration-200 ease-in-out hover:border-indigo hover:text-indigo [&.pill--active]:border-purple [&.pill--active]:bg-purple [&.pill--active]:text-black [&.pill--active]:hover:border-indigo [&.pill--active]:hover:text-indigo';
+---
+
+<section class="section section--pills pt-0 pb-[clamp(4.0162rem,3.3787rem_+_3.1875vw,6.2475rem)]">
+  <div
+    class="container pills-container mx-auto flex w-full max-w-(--container-max-width) flex-col gap-gap pr-container-x pl-[clamp(1.125rem,-1.8036rem_+_14.6429vw,11.375rem)]"
+  >
+    <div
+      class="pills-wrap flex flex-wrap gap-[clamp(0.4219rem,0.3549rem_+_0.3348vw,0.6563rem)] max-md:flex-nowrap max-md:overflow-x-auto max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden"
+      id="pillsWrap"
+    >
+      <button class:list={[PILL, 'pill--active']} data-filter="all">All</button>
+      {categories.map((category) => <button class={PILL} data-filter={category.id}>{category.label}</button>)}
+    </div>
+  </div>
+</section>
+
+<script>
+  // ============================
+  // Filter Pills — 27zero
+  // Click en un pill: mueve el estado activo y scrollea a su `.category-anchor`.
+  // "All" no scrollea. Portado de `work/script.js`.
+  // ============================
+
+  const pillsWrap = document.getElementById('pillsWrap');
+
+  if (pillsWrap) {
+    pillsWrap.addEventListener('click', (e) => {
+      const pill = (e.target as HTMLElement).closest<HTMLElement>('.pill');
+      if (!pill) return;
+
+      pillsWrap.querySelectorAll('.pill').forEach((p) => p.classList.remove('pill--active'));
+      pill.classList.add('pill--active');
+
+      const filterId = pill.dataset.filter;
+      if (!filterId || filterId === 'all') return;
+
+      const target = document.getElementById(filterId);
+      if (!target) return;
+
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+</script>

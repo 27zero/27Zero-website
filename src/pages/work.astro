@@ -1,0 +1,72 @@
+---
+/**
+ * Work — 27zero
+ * Portado 1:1 de `/work/index.html` + `/work/style.css` del repo vanilla.
+ * Clases propias documentadas en `/work/design-system-work.md`.
+ *
+ * Página estática en su armado: la estructura (hero, pills, marquee, 8 sliders por
+ * categoría) nunca cambia; lo que en Etapa 6 pasa a GROQ es el contenido de las cards.
+ *
+ * El grueso de la página vive en dos componentes de `sections/` — `FilterPills` y
+ * `CategorySliders` — porque Clientes reutiliza exactamente el mismo markup con otro
+ * criterio de agrupación (por cliente en vez de por categoría de servicio). Acá solo
+ * queda el hero y el ensamblado.
+ *
+ * Valores fluidos con la curva del resto del proyecto: mobile = `em × 9` @320px,
+ * desktop = `em × 14` @1440px, salvo donde el vanilla fija un valor mobile propio en
+ * su `@media (max-width: 768px)` — ahí el `clamp()` usa los px reales de cada extremo.
+ */
+import Page from '../layouts/Page.astro';
+import CategorySliders from '../components/sections/CategorySliders.astro';
+import FilterPills from '../components/sections/FilterPills.astro';
+import MarqueeLogos from '../components/sections/MarqueeLogos.astro';
+import { WORK_BY_CATEGORY, WORK_FILTER_CATEGORIES } from '../lib/mockData/workByCategory';
+
+/* `.container` con el `padding-left` propio del hero/pills de Work (13em desktop,
+   2em mobile — el doble de la indentación del container base en desktop). Va como
+   `pl-` + `pr-container-x` en vez de `px-container-x` + `pl-`: dos utilidades sobre
+   el mismo `padding-left` se resuelven por orden de emisión de Tailwind, no por el
+   orden del atributo `class`, y el override perdería en silencio. */
+const HERO_CONTAINER =
+  'container mx-auto flex w-full max-w-(--container-max-width) flex-col pr-container-x pl-[clamp(1.125rem,-1.8036rem_+_14.6429vw,11.375rem)]';
+
+/* Override scoped de la categoría "Los mejores": sus cards son más altas que las del
+   resto (32em vs. los 25em por defecto de `WorkCard`), igual que el
+   `#los-mejores .card--work` de `work/style.css`. Va como clase de la página y no como
+   prop de `CategorySliders` para que el componente siga siendo la plantilla genérica
+   que Clientes reutiliza — mismo criterio que el override del Work Slider en About. */
+const LOS_MEJORES_CARD_HEIGHT =
+  '[&_#los-mejores_.card--work]:h-[clamp(20rem,17.7143rem_+_11.4286vw,28rem)] [&_#los-mejores_.card-work-body]:min-h-[clamp(20rem,17.7143rem_+_11.4286vw,28rem)]';
+---
+
+<Page title="Work — 27zero" navVariant="white">
+  <!-- HERO -->
+  <section
+    class="section section--hero pt-[clamp(10.2431rem,8.6172rem_+_8.1295vw,15.9337rem)] pb-[clamp(2.8125rem,2.3661rem_+_2.2321vw,4.375rem)]"
+  >
+    <div class:list={[HERO_CONTAINER, 'hero-container gap-xs']}>
+      <span
+        class="text-eyebrow block font-inter text-[clamp(0.7256rem,0.6104rem_+_0.5759vw,1.1288rem)] leading-[1.6] font-normal tracking-normal text-black"
+      >
+        Work: Behind the fastest-growing EdTech brands
+      </span>
+      <h1 class="font-lora text-h1 leading-[1.25] font-medium tracking-[clamp(-0.03rem,0.0013rem_-_0.0348vw,-0.0056rem)]">
+        Behind the fastest growing EdTech brands.
+      </h1>
+      <p class="text-body font-inter text-body leading-[1.6] font-medium tracking-normal">
+        First-hand expertise, innovative conceptual thinking &amp; design, client-first approach
+      </p>
+    </div>
+  </section>
+
+  <!-- FILTER PILLS -->
+  <FilterPills categories={WORK_FILTER_CATEGORIES} />
+
+  <!-- MARQUEE LOGOS -->
+  <section class="section section--marquee pt-0 pb-[clamp(4.0162rem,3.3787rem_+_3.1875vw,6.2475rem)]">
+    <MarqueeLogos />
+  </section>
+
+  <!-- CATEGORY SLIDERS -->
+  <CategorySliders categories={WORK_BY_CATEGORY} class={LOS_MEJORES_CARD_HEIGHT} />
+</Page>
