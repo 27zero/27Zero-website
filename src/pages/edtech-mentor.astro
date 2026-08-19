@@ -1,0 +1,136 @@
+---
+/**
+ * The EdTech Mentor — 27zero
+ * Portado 1:1 de `/edtech-mentor/index.html` + `/edtech-mentor/style.css` del repo
+ * vanilla. Clases propias en `design-system-edtech-mentor.md`.
+ *
+ * Página estática en su armado: el shell (hero, pills, featured, 3 secciones de
+ * categoría, CTA final) nunca cambia; lo que en Etapa 6 pasa a GROQ es el contenido de
+ * las cards.
+ *
+ * Corrección de typo confirmada (planning-maquetado-edtech-mentor.md § Nota): el
+ * vanilla escribe "Essential series" en el `h2` pero "Essencial" en el pill y en
+ * `id="essencial"` — inconsistencia interna, no un typo consistente a replicar (a
+ * diferencia de "Performace Review" en EdTech Marketing). Se corrige a "Essential" en
+ * label/`data-filter`/`id`.
+ *
+ * Valores fluidos con la curva del resto del proyecto: mobile = `em × 9` @320px,
+ * desktop = `em × 14` @1440px, salvo donde el vanilla fija un valor mobile propio.
+ */
+import Page from '../layouts/Page.astro';
+import FilterPills from '../components/sections/FilterPills.astro';
+import MentorCategorySection from '../components/sections/MentorCategorySection.astro';
+import Button from '../components/ui/Button.astro';
+import FeaturedCard from '../components/ui/FeaturedCard.astro';
+import { FEATURED_MENTOR, MENTORS_BY_CATEGORY } from '../lib/mockData/mentorsByCategory';
+
+const CONTAINER = 'container mx-auto flex w-full max-w-(--container-max-width) flex-col px-container-x';
+
+const [essential, investor, founders] = MENTORS_BY_CATEGORY;
+
+/* `data-filter`/`id` ya corregidos a "Essential" en el mock — el pill hereda el label
+   corregido directo de ahí, sin repetir el string acá. */
+const FILTER_CATEGORIES = MENTORS_BY_CATEGORY.map((category) => ({
+  id: category.id,
+  label: category.heading.replace(/\s+series$/i, ''),
+}));
+---
+
+<Page title="The EdTech Mentor — 27zero" navVariant="white">
+  <!-- HERO / INTRO -->
+  <section class="section section--hero pt-[clamp(7.875rem,12.2143rem_-_4.8214vw,11.25rem)] pb-[clamp(0.8438rem,0.4598rem_+_1.9196vw,2.1875rem)]">
+    <div class:list={[CONTAINER, 'hero-container gap-xs']}>
+      <nav
+        class="breadcrumb mb-xs flex items-center gap-xs font-inter text-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] leading-[1.5] font-normal text-black opacity-55"
+        aria-label="Breadcrumb"
+      >
+        <a href="/" class="breadcrumb-link text-current underline hover:text-indigo">Home</a>
+        <span class="breadcrumb-separator inline-block">&gt;</span>
+        <span class="breadcrumb-current">EdTech Mentor Interviews.</span>
+      </nav>
+      <h1
+        class="font-lora text-[clamp(2rem,1.8464rem_+_0.7679vw,2.5375rem)] leading-[1.25] font-medium tracking-[clamp(-0.0213rem,-0.0012rem_-_0.0223vw,-0.0056rem)]"
+      >
+        The EdTech Mentor Interview Series.
+      </h1>
+      <p class="text-body font-inter text-body leading-[1.6] font-medium tracking-normal">
+        Global EdTech leaders sharing their perspectives, experiences, and valuable lessons from their journey in
+        this formidable industry.
+      </p>
+    </div>
+  </section>
+
+  <!-- FILTER PILLS -->
+  {/* `indent={false}`: a diferencia de Work/Clientes, `.pills-container` acá no lleva
+      el indent de 13em — mismo padding estándar que el resto de la página. */}
+  <FilterPills
+    categories={FILTER_CATEGORIES}
+    leadPill={{ label: 'Subscribe on LinkedIn', href: 'https://linkedin.com', target: '_blank', rel: 'noopener' }}
+    indent={false}
+  />
+
+  <!-- FEATURED CARD -->
+  <section class="section section--featured-mentor pt-0 pb-[clamp(3.6563rem,3.0759rem_+_2.9018vw,5.6875rem)]">
+    <div class={CONTAINER}>
+      <div class="featured-mentor-wrap h-[clamp(20rem,14.7321rem_+_26.3393vw,38.4375rem)] w-full overflow-hidden">
+        <FeaturedCard {...FEATURED_MENTOR} />
+      </div>
+    </div>
+  </section>
+
+  <!-- ESSENTIAL SERIES (bg indigo) -->
+  <MentorCategorySection
+    {...essential}
+    sectionClass="bg-indigo text-white"
+    buttonVariant="whiteIndigo"
+    arrowVariant="light"
+    ctaLabel="Go to Series"
+    ctaHref="#"
+  />
+
+  <!-- INVESTOR SERIES (bg purple) -->
+  {/* Único override sin precedente: sobre fondo purple, rol/nombre de cada card pasan
+      de blanco a negro (`.section--investor-mentor .card-edtech-mentor-role/-name`
+      del vanilla) — blanco sobre purple igual es legible, pero el vanilla lo define
+      así explícitamente, se replica tal cual. */}
+  <MentorCategorySection
+    {...investor}
+    sectionClass="bg-purple text-black"
+    buttonVariant="blackWhite"
+    arrowVariant="dark"
+    cardTextClass="[&_.card-edtech-mentor-role]:text-black [&_.card-edtech-mentor-name]:text-black"
+    ctaLabel="Go to Series"
+    ctaHref="#"
+  />
+
+  <!-- FOUNDERS SERIES (bg negro) -->
+  <MentorCategorySection
+    {...founders}
+    sectionClass="bg-black text-white"
+    buttonVariant="whiteIndigo"
+    arrowVariant="light"
+    ctaLabel="Go to Series"
+    ctaHref="#"
+  />
+
+  <!-- CTA -->
+  <section class="section section--cta-mentor bg-white py-[clamp(3.2119rem,2.7021rem_+_2.5491vw,4.9962rem)] text-black">
+    <div class:list={[CONTAINER, 'cta-mentor-container gap-[clamp(1.4063rem,1.183rem_+_1.1161vw,2.1875rem)]']}>
+      <div class="cta-mentor-title-block flex flex-col gap-[clamp(0.3994rem,0.336rem_+_0.317vw,0.6212rem)]">
+        <h2
+          class="cta-mentor-title max-w-[clamp(5.625rem,4.7321rem_+_4.4643vw,8.75rem)] font-lora text-[clamp(1.5rem,1.0711rem_+_2.1446vw,3.0013rem)] leading-[1.25] font-medium tracking-[-0.36px]"
+        >
+          Begin your journey to growth.
+        </h2>
+        <p class="text-body max-w-[clamp(24.1088rem,20.282rem_+_19.1339vw,37.5025rem)] font-inter text-body leading-[1.6] font-medium tracking-normal">
+          Let's partner to articulate and unpack meaningful results. Together, we'll discover an approach that will
+          expand your impact.
+        </p>
+      </div>
+      <div class="cta-mentor-actions flex flex-wrap gap-[clamp(0.4219rem,0.3549rem_+_0.3348vw,0.6563rem)] max-md:flex-col max-md:items-baseline">
+        <Button href="/contact" variant="purple">Let's Talk</Button>
+        <Button href="#" variant="white">Learn more</Button>
+      </div>
+    </div>
+  </section>
+</Page>

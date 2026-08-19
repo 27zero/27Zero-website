@@ -1,0 +1,81 @@
+---
+/**
+ * Mentor Category Section — 27zero
+ * UN bloque de categoría de `/edtech-mentor` del repo vanilla: header propio (h2 con
+ * acento + subtexto + 2 CTA) + slider sin título de `EdtechMentorCard`. Portado de
+ * `.section--essential-mentor` / `.section--investor-mentor` / `.section--founders-mentor`.
+ *
+ * A diferencia de `ServiceCategoryBlock` (EdTech Marketing), las 3 instancias de esta
+ * página NO comparten la misma piel visual — cada categoría tiene su propio fondo,
+ * color de texto y variante de botón (indigo / purple / negro). Por eso el componente
+ * recibe esos valores como props en vez de hardcodearlos: la variación es intrínseca a
+ * la sección, no un detalle de la página que se pueda absorber con un solo estilo fijo.
+ *
+ * `cardTextClass` (opcional): override scoped para el rol/nombre dentro de cada
+ * `EdtechMentorCard` — por default son blancos (legibles sobre indigo/negro), pero
+ * sobre fondo purple (Investor) el vanilla los pasa a negro
+ * (`.section--investor-mentor .card-edtech-mentor-role/-name`). Va como clase
+ * arbitraria descendente aplicada al wrapper del slider, mismo patrón que el override
+ * de altura de card en Work.
+ */
+import CardsSlider from './CardsSlider.astro';
+import EdtechMentorCard from '../ui/EdtechMentorCard.astro';
+import Button from '../ui/Button.astro';
+import type { MentorCategory } from '../../lib/mockData/mentorsByCategory';
+
+interface Props extends MentorCategory {
+  /** Fondo + color de texto base de la sección (ej. "bg-indigo text-white"). */
+  sectionClass: string;
+  /** Variante de `Button` para los 2 CTA — coincide con el `.btn-white` scoped del vanilla. */
+  buttonVariant: 'whiteIndigo' | 'blackWhite';
+  ctaLabel: string;
+  ctaHref: string;
+  arrowVariant?: 'dark' | 'light';
+  cardTextClass?: string;
+}
+
+const {
+  id,
+  heading,
+  headingAccent,
+  subtext,
+  items,
+  sectionClass,
+  buttonVariant,
+  ctaLabel,
+  ctaHref,
+  arrowVariant = 'dark',
+  cardTextClass,
+} = Astro.props;
+
+const CONTAINER = 'container mx-auto flex w-full max-w-(--container-max-width) flex-col gap-sm px-container-x';
+const HEADING = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.36px]';
+const SLIDERS_CONTAINER = 'sliders-container pt-[clamp(2.2106rem,1.7697rem_+_2.2045vw,3.7538rem)]';
+---
+
+<section
+  id={id}
+  class:list={[
+    'section pt-[clamp(3.8588rem,3.2462rem_+_3.0625vw,6.0025rem)] pb-[clamp(2.5313rem,1.5395rem_+_4.9589vw,6.0025rem)]',
+    sectionClass,
+  ]}
+>
+  <div class={CONTAINER}>
+    <h2 class={HEADING}>
+      {heading} <span class="inter-accent font-inter font-medium">{headingAccent}</span>
+    </h2>
+    <p class="text-body--sm font-inter text-body-sm leading-[1.6] font-normal tracking-normal">{subtext}</p>
+    <div class="flex flex-wrap gap-[clamp(1.125rem,0.9464rem_+_0.8929vw,1.75rem)] max-md:flex-col max-md:items-baseline">
+      <Button href={ctaHref} variant={buttonVariant}>{ctaLabel}</Button>
+      <Button href="https://linkedin.com" target="_blank" rel="noopener" variant={buttonVariant}>
+        Subscribe on LinkedIn
+      </Button>
+    </div>
+  </div>
+
+  <div class:list={[SLIDERS_CONTAINER, cardTextClass]}>
+    <CardsSlider arrowVariant={arrowVariant}>
+      {items.map((item) => <EdtechMentorCard {...item} />)}
+    </CardsSlider>
+  </div>
+</section>

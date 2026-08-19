@@ -30,6 +30,12 @@
  *  - `purple`  → `.btn-purple`, fondo purple con texto negro, hover a outline negro
  *                sobre fondo transparente. Agregada en Etapa 4 (Contact la usa en el
  *                submit del formulario).
+ *  - `blackWhite` → variante de `dark` para uso sobre fondo purple (`.section--investor-mentor
+ *                .btn-white` del vanilla, EdTech Mentor): mismo fondo/borde negros que
+ *                `dark`, pero texto blanco por default en vez de purple — sobre fondo
+ *                purple, texto purple se perdería casi por completo. En hover pasa a
+ *                fondo transparente con texto negro, igual que `dark` (el hover de
+ *                ambas coincide; solo cambia el color de texto default).
  *
  * Polimórfico: con `href` renderiza `<a>` (el caso por defecto — nav, CTAs). Sin
  * `href`, renderiza `<button type={type}>` — necesario para el submit real de un
@@ -37,7 +43,7 @@
  * `submit`. `type` solo aplica en este segundo caso.
  */
 interface Props {
-  variant: 'nav' | 'dark' | 'outline' | 'white' | 'whiteIndigo' | 'purple';
+  variant: 'nav' | 'dark' | 'outline' | 'white' | 'whiteIndigo' | 'purple' | 'blackWhite';
   /** Con `href` renderiza `<a>`. Sin `href`, renderiza `<button>` (ver `type`). */
   href?: string;
   /** Solo se usa cuando no hay `href` (renderiza `<button type={type}>`). */
@@ -72,6 +78,7 @@ const VARIANTS = {
   white: 'border-black bg-white text-black hover:border-black hover:bg-black hover:text-white',
   whiteIndigo: 'border-white bg-white text-indigo hover:border-white hover:bg-transparent hover:text-white',
   purple: 'border-purple bg-purple text-black hover:border-black hover:bg-transparent hover:text-black',
+  blackWhite: 'border-black bg-black text-white hover:border-black hover:bg-transparent hover:text-black',
 } as const;
 
 const CLASSES = ['btn', `btn-${variant}`, BASE, SIZES[size], VARIANTS[variant], className];
