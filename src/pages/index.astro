@@ -22,49 +22,38 @@ import Button from '../components/ui/Button.astro';
 import EdtechMentorCard from '../components/ui/EdtechMentorCard.astro';
 import FeaturedCard from '../components/ui/FeaturedCard.astro';
 import WorkCard from '../components/ui/WorkCard.astro';
-import { FEATURED_MENTOR_POST, MENTOR_POSTS } from '../lib/mockData/edtechMentor';
+import { toMentorCard, toWorkCard } from '../lib/sanity/cards';
+import type { MentorCardProjection, TestimonialProjection, WorkCardProjection } from '../lib/sanity/cards';
+import { sanityClient } from '../lib/sanity/client';
+import { toImage } from '../lib/sanity/image';
+import { homeQuery } from '../lib/sanity/queries';
+import type { MentorCardData, WorkCardData } from '../types/ui';
 
-// TEMP: mock data — swap en Etapa 6 (GROQ)
-// `work` × 8 para el slider "Los mejores". Contenido literal del vanilla: son cards
-// placeholder entre corchetes, no copy real. Sin imagen, `WorkCard` cae al fondo gris.
-const FEATURED_WORKS = Array.from({ length: 8 }, () => ({
-  href: '#',
-  eyebrow: '[UX/UI & WEB DESIGN]',
-  title: '[Project headline]',
-  clientName: '[CLIENT NAME]',
-  clientInitials: 'CL',
+/* Una sola query para las 3 secciones que consumen CMS (CLAUDE.md §10). */
+const { featuredWorks, featuredMentor, mentorPosts, testimonials } = await sanityClient.fetch<{
+  featuredWorks: WorkCardProjection[];
+  featuredMentor: MentorCardProjection | null;
+  mentorPosts: MentorCardProjection[];
+  testimonials: TestimonialProjection[];
+}>(homeQuery);
+
+/* Slider "Los mejores": `work.isFeatured`, que en Etapa 5 reemplazó a la categoría
+   homónima — "Los mejores" nunca fue una categoría de servicio, era el destacado. */
+const FEATURED_WORKS: WorkCardData[] = featuredWorks.map((work) => toWorkCard(work));
+
+/* La `FeaturedCard` de la sección EdTech Mentor: la entrevista destacada más reciente. */
+const FEATURED_MENTOR_POST: MentorCardData | null = featuredMentor ? toMentorCard(featuredMentor) : null;
+
+const MENTOR_POSTS: MentorCardData[] = mentorPosts.map(toMentorCard);
+
+/* `avatarPhoto` se pasa como `{ src, alt }` o `null`: sin foto, `TestimonialsSlider`
+   deriva las iniciales del nombre, igual que el placeholder del vanilla. */
+const TESTIMONIALS = testimonials.map((testimonial) => ({
+  quote: testimonial.quote,
+  authorName: testimonial.authorName ?? '',
+  authorRole: testimonial.authorRole,
+  avatarPhoto: toImage(testimonial.avatarPhoto, { width: 128, height: 128 }) ?? null,
 }));
-
-// TEMP: mock data — swap en Etapa 6 (GROQ)
-// `testimonial` × 4, solo los campos que esta sección consume hoy. El resto del schema
-// real (`backgroundPhoto`, `client`, `workProject`, `order`) se retoma en Etapa 5.
-// `avatarPhoto: null` → el avatar cae a las iniciales, como en el vanilla.
-const TESTIMONIALS = [
-  {
-    quote: "The quality of the design was impressive. We're looking forward to continue our collaboration with 27zero.",
-    authorName: 'Erin Grant',
-    authorRole: 'Vice President of Marketing',
-    avatarPhoto: null,
-  },
-  {
-    quote: 'Lorem ipsum is simply dummy text of the printing and typesetting industry standard.',
-    authorName: 'Lorem Ipsum',
-    authorRole: 'Director of Growth',
-    avatarPhoto: null,
-  },
-  {
-    quote: 'Lorem ipsum is simply dummy text of the printing and typesetting industry standard.',
-    authorName: 'Lorem Ipsum',
-    authorRole: 'Head of Admissions',
-    avatarPhoto: null,
-  },
-  {
-    quote: 'Lorem ipsum is simply dummy text of the printing and typesetting industry standard.',
-    authorName: 'Lorem Ipsum',
-    authorRole: 'Chief Marketing Officer',
-    avatarPhoto: null,
-  },
-];
 
 /* `.container` del design system global: 1440px, centrado, columna, padding-x fluido.
    El `gap` NO va acá — cada sección declara el suyo, porque dos utilidades de `gap`
@@ -171,7 +160,7 @@ const BODY_SM = 'text-body--sm font-inter text-body-sm leading-[1.6] font-normal
         {/* `height` (no `min-height`): el `h-full` de FeaturedCard necesita una altura
             resuelta en el padre. En mobile pasa a `auto` y la card se ajusta al contenido. */}
         <div class="mentor-home-featured-wrap h-[clamp(16.875rem,14.1964rem_+_13.3929vw,26.25rem)] flex-1 max-md:h-auto">
-          <FeaturedCard {...FEATURED_MENTOR_POST} />
+          {FEATURED_MENTOR_POST && <FeaturedCard {...FEATURED_MENTOR_POST} />}
         </div>
       </div>
     </div>

@@ -128,7 +128,7 @@ Si en briefing el cliente pide explícitamente editar textos de una página fija
 ### Siempre estático
 Copy legal, 404, labels de UI, y cualquier sección con maquetación única de una sola página.
 
-- Tipos de contenido en Sanity: `work` (Work + Clientes + interna compartida — mismo documentType, distinto orden/criterio de vista), `edtechMentor`, `resource`, `edtechMarketingPractice`, `edtechMarketingService`, `team` (referenciado desde About)
+- Tipos de contenido en Sanity: `work` (Work + Clientes + interna compartida — mismo documentType, distinto orden/criterio de vista), `edtechMentor`, `resource`, `edtechMarketingPractice`, `edtechMarketingService`, `team` (referenciado desde About), `testimonial` (existente en Sanity, no contado en Etapa 0 — usado en Home)
 - Páginas fijas con campos editables: ninguna
 - `siteSettings`: **sí** — ya existe en `27zero-sanity`, se ajusta, no se crea
 
@@ -251,7 +251,8 @@ El criterio es de propiedad, no de tamaño:
 - `camelCase` siempre (GROQ y JS lo consumen directo)
 - Significado fijo en todo el proyecto: `title`, `slug`, `seo`, `body`, `image`, `mainImage` (destacada), `publishedAt`
 - Booleanos con prefijo verbal: `isFeatured`, `hasVideo`
-- Cada campo con `title` legible en español y `description` cuando el uso no sea obvio — **el schema es también la UX del editor**
+- Cada campo con `title` en **inglés** (el label que ve el editor en el formulario) y `description` en **español** cuando el uso no sea obvio (el texto de ayuda debajo del campo) — **el schema es también la UX del editor**
+- `seo.ts` y `blockContent.ts` (object types compartidos entre documentTypes) quedan siempre en inglés, sin excepción
 
 ### Contrato de tipos
 Los repos están separados: **no hay build step ni sincronización automática.**
@@ -345,7 +346,7 @@ Cuando se defina o modifique un schema en el Studio, se actualiza `src/types/san
 - **Editores del Studio:** `___` (verificar tope del plan free)
 - **Figma:** `___`
 - **Contactos clave:** `___`
-- **Notas de briefing:** Etapa 0 cerrada — ver `PLANNING.md` para detalle. 6 documentTypes confirmados: `work`, `edtechMentor`, `resource`, `edtechMarketingPractice`, `edtechMarketingService`, `team`
+- **Notas de briefing:** Etapa 0 cerrada — ver `PLANNING.md` para detalle. 7 documentTypes confirmados: `work`, `edtechMentor`, `resource`, `edtechMarketingPractice`, `edtechMarketingService`, `team`, `testimonial` (este último ya existía en Sanity, no se creó en esta migración — no contado originalmente en Etapa 0 por ser nivel-componente, no nivel-página)
 
 ---
 

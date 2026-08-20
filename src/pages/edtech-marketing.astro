@@ -19,8 +19,72 @@ import ShapesSlider from '../components/sections/ShapesSlider.astro';
 import Button from '../components/ui/Button.astro';
 import PracticeIcon from '../components/ui/PracticeIcon.astro';
 import PracticesCard from '../components/ui/PracticesCard.astro';
-import { PRACTICES } from '../lib/mockData/practices';
-import { SERVICES_BY_CATEGORY } from '../lib/mockData/servicesByCategory';
+import { sanityClient } from '../lib/sanity/client';
+import { edtechMarketingQuery } from '../lib/sanity/queries';
+import { practiceUrl, serviceUrl } from '../lib/utils/routes';
+import type { PracticeIconId, ServiceCategoryId, ServiceIconId } from '../types/sanity';
+import { SERVICE_CATEGORY_LABELS, SERVICE_CATEGORY_ORDER } from '../types/sanity';
+import type { ServiceGroup } from '../types/ui';
+
+const { practices, services, settings } = await sanityClient.fetch<{
+  practices: {
+    _id: string;
+    title: string;
+    slug: string;
+    shortDescription?: string;
+    description?: string;
+    iconId?: PracticeIconId;
+  }[];
+  services: { _id: string; title: string; slug: string; category: ServiceCategoryId; iconId?: ServiceIconId }[];
+  settings: { servicesTitle?: string; servicesDescription?: string } | null;
+}>(edtechMarketingQuery);
+
+/* El body de la card usa `shortDescription` y cae a `description`: son dos campos
+   distintos en el schema y el brief de Etapa 5 los deja marcados como posible
+   duplicado a revisar con contenido real. */
+const PRACTICES = practices.map((practice) => ({
+  href: practiceUrl(practice.slug),
+  title: practice.title,
+  body: practice.shortDescription ?? practice.description ?? undefined,
+  iconId: practice.iconId,
+}));
+
+/* El orden de las 8 categorías es de diseño, no un dato del CMS: `category` es una
+   `options.list` sin campo de orden, así que se recorre `SERVICE_CATEGORY_ORDER` (el
+   orden del Figma) en vez de dejar que lo decida el alfabeto. Las categorías sin
+   servicios cargados no se renderizan — un `.menu-block` con título y grid vacío no
+   comunica nada.
+
+   El ícono del servicio sale de `iconId` y, si el editor no lo eligió, se rota entre
+   los 3 marcos de marca reiniciando en cada categoría, que es exactamente lo que hace
+   el vanilla (ahí ningún servicio tiene ícono propio). */
+const ICON_ROTATION: ServiceIconId[] = ['asterisk', 'quatrefoil', 'arc'];
+
+const SERVICES_BY_CATEGORY: ServiceGroup[] = SERVICE_CATEGORY_ORDER.flatMap((categoryId) => {
+  const items = services.filter((service) => service.category === categoryId);
+  if (items.length === 0) return [];
+
+  return [
+    {
+      title: SERVICE_CATEGORY_LABELS[categoryId],
+      services: items.map((service, index) => ({
+        href: serviceUrl(service.slug),
+        title: service.title,
+        iconId: service.iconId ?? ICON_ROTATION[index % ICON_ROTATION.length],
+      })),
+    },
+  ];
+});
+
+/* Fieldset `services` de `settings` (agregado en Etapa 5). El singleton todavía está
+   vacío, así que el copy aprobado del Figma queda como default y el campo de Sanity
+   actúa de override — mismo patrón de fallback que CLAUDE.md §8.1 define para SEO. */
+const SERVICES_INTRO = {
+  title: settings?.servicesTitle ?? "What's on the menu?",
+  description:
+    settings?.servicesDescription ??
+    'Wherever you are in your marketing cycle, we have something cooking — strategy, creativity, and execution, ready to serve when you are.',
+};
 
 const CONTAINER = 'container mx-auto flex w-full max-w-(--container-max-width) flex-col px-container-x';
 
@@ -97,7 +161,9 @@ const PLACEHOLDER_LABEL =
         {
           PRACTICES.map((practice) => (
             <PracticesCard href={practice.href} title={practice.title} body={practice.body}>
-              <PracticeIcon slot="icon" iconId={practice.iconId} />
+              {/* Sin `iconId` cargado, no se pasa el slot y `PracticesCard` cae a su
+                  ícono por defecto en vez de renderizar un `<svg>` vacío. */}
+              {practice.iconId && <PracticeIcon slot="icon" iconId={practice.iconId} />}
             </PracticesCard>
           ))
         }
@@ -117,12 +183,9 @@ const PLACEHOLDER_LABEL =
         <h2
           class="font-lora text-[clamp(1.75rem,1.6075rem_+_0.7125vw,2.2487rem)] leading-[1.25] font-medium tracking-[-0.36px] text-white"
         >
-          What's on the menu?
+          {SERVICES_INTRO.title}
         </h2>
-        <p class:list={[BODY, 'text-white/85']}>
-          Wherever you are in your marketing cycle, we have something cooking — strategy, creativity, and execution,
-          ready to serve when you are.
-        </p>
+        <p class:list={[BODY, 'text-white/85']}>{SERVICES_INTRO.description}</p>
       </div>
 
       <ServiceMenu categories={SERVICES_BY_CATEGORY} />

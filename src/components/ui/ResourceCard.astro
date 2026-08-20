@@ -11,8 +11,9 @@
  * "View Article" va hardcodeado (label fijo de UI, CLAUDE.md §4). Va con la
  * capitalización del vanilla, distinta del "Read article" de la featured.
  *
- * La imagen es un bloque de color plano (`#E3E3E3`) hasta que haya assets reales —
- * misma nota que en `ResourceCardFeatured`.
+ * `image` es opcional y se recibe como `{ src, alt }` para que el `alt` sea obligatorio
+ * a nivel de tipo — misma nota que en `ResourceCardFeatured`: sin imagen (o sin `alt`)
+ * la card cae al bloque de color plano del vanilla.
  */
 import Button from './Button.astro';
 
@@ -21,16 +22,19 @@ interface Props {
   date: string;
   title: string;
   description: string;
+  image?: { src: string; alt: string };
 }
 
-const { href, date, title, description } = Astro.props;
+const { href, date, title, description, image } = Astro.props;
 ---
 
 <div
   class="card-resource-item flex flex-col items-start gap-[clamp(0.8839rem,0.7436rem_+_0.7015vw,1.375rem)]"
 >
   <div class="card--resource w-full">
-    <div class="card-resource-image h-[18.75rem] w-full overflow-hidden rounded-card bg-[#E3E3E3]"></div>
+    <div class="card-resource-image h-[18.75rem] w-full overflow-hidden rounded-card bg-[#E3E3E3]">
+      {image && <img src={image.src} alt={image.alt} loading="lazy" class="size-full object-cover" />}
+    </div>
   </div>
 
   <div class="card-resource-body flex flex-col items-start gap-[clamp(0.6429rem,0.5408rem_+_0.5102vw,1rem)]">

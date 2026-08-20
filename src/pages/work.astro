@@ -20,7 +20,49 @@ import Page from '../layouts/Page.astro';
 import CategorySliders from '../components/sections/CategorySliders.astro';
 import FilterPills from '../components/sections/FilterPills.astro';
 import MarqueeLogos from '../components/sections/MarqueeLogos.astro';
-import { WORK_BY_CATEGORY, WORK_FILTER_CATEGORIES } from '../lib/mockData/workByCategory';
+import { toWorkCard } from '../lib/sanity/cards';
+import type { WorkCardProjection } from '../lib/sanity/cards';
+import { sanityClient } from '../lib/sanity/client';
+import { workListQuery } from '../lib/sanity/queries';
+import type { WorkGroup } from '../types/ui';
+
+const { categories, works } = await sanityClient.fetch<{
+  categories: { _id: string; title: string; slug: string }[];
+  works: WorkCardProjection[];
+}>(workListQuery);
+
+/* "Los mejores" va primero y NO es una categoría: en Etapa 5 se sacó de `workCategory`
+   y su rol lo asumió `work.isFeatured` (brief-cierre-etapa-5.md §3). Por eso se arma a
+   mano acá y queda fuera de los pills, igual que en el vanilla. */
+const FEATURED_GROUP: WorkGroup = {
+  id: 'los-mejores',
+  label: 'Los mejores',
+  items: works.filter((work) => work.isFeatured).map((work) => toWorkCard(work)),
+};
+
+/* Un grupo por categoría, con el título de la categoría como eyebrow de sus cards.
+   Las categorías sin ningún `work` no se renderizan: dejarlas daría un slider vacío y
+   un pill que scrollea a un anchor sin contenido.
+
+   ⚠️ El orden es alfabético, no el del Figma: `workCategory` no tiene campo `order`
+   en el schema. Ver reporte de entrega. */
+const CATEGORY_GROUPS: WorkGroup[] = categories.flatMap((category) => {
+  const items = works
+    .filter((work) => work.categorySlug === category.slug)
+    .map((work) => toWorkCard(work, category.title));
+
+  return items.length > 0 ? [{ id: category.slug, label: category.title, items }] : [];
+});
+
+const WORK_BY_CATEGORY: WorkGroup[] = [
+  ...(FEATURED_GROUP.items.length > 0 ? [FEATURED_GROUP] : []),
+  ...CATEGORY_GROUPS,
+];
+
+/* Los pills salen de las categorías reales, sin "Los mejores" — en el vanilla esa
+   sección tiene slider pero no pill (el "All" lo antepone `FilterPills`). Derivarlos
+   de los mismos grupos garantiza que todo pill apunte a un anchor existente. */
+const WORK_FILTER_CATEGORIES = CATEGORY_GROUPS.map(({ id, label }) => ({ id, label }));
 
 /* `.container` con el `padding-left` propio del hero/pills de Work (13em desktop,
    2em mobile — el doble de la indentación del container base en desktop). Va como

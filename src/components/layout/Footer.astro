@@ -7,7 +7,13 @@
  * `siteSettings` (CLAUDE.md §8). Se conservan exactamente los del vanilla,
  * incluidos los placeholder (`/services`, `/careers`, `/privacy`).
  */
-const LINK_COLUMNS = [
+interface FooterLink {
+  href: string;
+  label: string;
+  external?: boolean;
+}
+
+const LINK_COLUMNS: FooterLink[][] = [
   [
     { href: '/', label: 'Home' },
     { href: '/work', label: 'Work' },

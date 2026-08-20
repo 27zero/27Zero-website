@@ -19,10 +19,10 @@
  */
 import CardsSlider from './CardsSlider.astro';
 import WorkCard from '../ui/WorkCard.astro';
-import type { WorkCategory } from '../../lib/mockData/workByCategory';
+import type { WorkGroup } from '../../types/ui';
 
 interface Props {
-  categories: WorkCategory[];
+  categories: WorkGroup[];
   /** Clases extra del contexto de uso — overrides scoped por página (ver `work.astro`). */
   class?: string;
 }

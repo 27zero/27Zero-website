@@ -81,6 +81,11 @@
   --text-link:     var(--text-body);
   --text-button:   clamp(0.8125rem, 0.7571rem + 0.2768vw, 1.0062rem);
   --text-body-sm:  clamp(0.8125rem, 0.7771rem + 0.1768vw, 0.9363rem);
+  /* Cuerpo de texto de las internas de artículo/case study (`resources-cms` y
+     `work-cms` declaran `.text-body` en 1.14em = 13→16px, no en el 1.29em = 13→18px del
+     resto del sitio). Es token y no valor arbitrario porque entre las dos páginas
+     aparece en cada párrafo, ítem de lista y bajada (CLAUDE.md §5, regla de desvío 3). */
+  --text-body-article: clamp(0.8125rem, 0.7589rem + 0.2679vw, 1rem);
 
   /* Spacing */
   --spacing-xs:  clamp(0.2812rem, 0.2366rem + 0.2232vw, 0.4375rem);

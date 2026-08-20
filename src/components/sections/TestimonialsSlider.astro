@@ -19,12 +19,17 @@
  *
  * Shape reducido a los 4 campos del schema `testimonial` que esta sección usa hoy
  * (`quote`, `authorName`, `authorRole`, `avatarPhoto`). El resto del schema real
- * (`backgroundPhoto`, `client`, `workProject`, `order`) se resuelve en Etapa 5.
+ * (`backgroundPhoto`, `client`, `workProject`) no se renderiza acá; `order` lo aplica
+ * la query, no el componente.
+ *
+ * `authorRole` es opcional porque el schema no lo marca `required()`: el slide se
+ * renderiza igual con el nombre solo. `authorName` sí es obligatorio — de ahí salen
+ * las iniciales del avatar cuando no hay foto.
  */
 interface Testimonial {
   quote: string;
   authorName: string;
-  authorRole: string;
+  authorRole?: string;
   /** Sin foto, el avatar cae a las iniciales derivadas de `authorName` (placeholder del vanilla). */
   avatarPhoto?: { src: string; alt: string } | null;
 }

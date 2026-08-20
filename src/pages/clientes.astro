@@ -26,7 +26,38 @@ import Page from '../layouts/Page.astro';
 import CategorySliders from '../components/sections/CategorySliders.astro';
 import FilterPills from '../components/sections/FilterPills.astro';
 import MarqueeLogos from '../components/sections/MarqueeLogos.astro';
-import { WORK_BY_CLIENT, WORK_FILTER_CLIENTS } from '../lib/mockData/workByClient';
+import { toWorkCard } from '../lib/sanity/cards';
+import type { WorkCardProjection } from '../lib/sanity/cards';
+import { sanityClient } from '../lib/sanity/client';
+import { workByClientQuery } from '../lib/sanity/queries';
+import { slugify } from '../lib/utils/format';
+import type { WorkGroup } from '../types/ui';
+
+const { clients, works } = await sanityClient.fetch<{
+  clients: { _id: string; name: string }[];
+  works: WorkCardProjection[];
+}>(workByClientQuery);
+
+/* Mismo `documentType` y mismos componentes que Work — cambia el criterio de
+   agrupación (cliente en vez de categoría de servicio) y, con él, el eyebrow de cada
+   card: acá lleva el nombre del cliente, no el de la categoría.
+
+   El `id` del grupo se deriva del nombre porque `client` no tiene campo `slug` en el
+   schema; es el `id` del `.category-anchor` y el `data-filter` de su pill.
+
+   La query ya deja afuera a los clientes sin ningún `work` publicado, así que no hay
+   grupo vacío ni pill que scrollee a un anchor sin cards. */
+const WORK_BY_CLIENT: WorkGroup[] = clients.map((client) => ({
+  id: slugify(client.name),
+  label: client.name,
+  items: works
+    .filter((work) => work.clientName === client.name)
+    .map((work) => toWorkCard(work, client.name)),
+}));
+
+/* A diferencia de Work, acá TODOS los grupos llevan pill: no existe el bloque
+   "Los mejores" que en Work queda fuera del filtro. El "All" lo antepone `FilterPills`. */
+const WORK_FILTER_CLIENTS = WORK_BY_CLIENT.map(({ id, label }) => ({ id, label }));
 
 /* `.container` con el `padding-left` propio del hero/pills (13em desktop, 2em mobile).
    Va como `pl-` + `pr-container-x` y no `px-container-x` + `pl-`: dos utilidades sobre

@@ -13,7 +13,7 @@
  *
  * La sección "The EdTech Mentor" es duplicado exacto de la misma sección en Home
  * (design-system-about.md § The EdTech Mentor) — mismas clases/valores, mock
- * compartido vía `lib/mockData/edtechMentor.ts`, solo cambia a `arrowVariant="light"`
+ * misma query (`featuredMentor` + `mentorPosts`), solo cambia a `arrowVariant="light"`
  * igual que en Home.
  */
 import Page from '../layouts/Page.astro';
@@ -24,39 +24,51 @@ import EdtechMentorCard from '../components/ui/EdtechMentorCard.astro';
 import FeaturedCard from '../components/ui/FeaturedCard.astro';
 import TeamCard from '../components/ui/TeamCard.astro';
 import WorkCard from '../components/ui/WorkCard.astro';
-import { FEATURED_MENTOR_POST, MENTOR_POSTS } from '../lib/mockData/edtechMentor';
+import { toMentorCard, toWorkCard } from '../lib/sanity/cards';
+import type { MentorCardProjection, WorkCardProjection } from '../lib/sanity/cards';
+import { sanityClient } from '../lib/sanity/client';
+import { toImage } from '../lib/sanity/image';
+import { aboutQuery } from '../lib/sanity/queries';
+import type { SanityImage } from '../types/sanity';
+import type { MentorCardData, WorkCardData } from '../types/ui';
 
-// TEMP: mock data — swap en Etapa 6 (GROQ)
-// `team` × 8. Placeholder literal repetido tal cual el vanilla — confirmado con
-// Santiago no variar contenido entre las 8 cards hasta tener el roster real
-// (planning-maquetado-about.md § Mock data requerida).
-const TEAM_MEMBERS = Array.from({ length: 8 }, () => ({
-  image: { src: '/assets/team.png', alt: 'Laureano Díaz' },
-  name: 'Laureano Díaz',
-  position: 'Chief Strategy Officer — Industry & Growth',
-}));
+/* Una sola query para las 4 secciones que consumen CMS (CLAUDE.md §10). */
+const { team, works, featuredMentor, mentorPosts, proofPoint } = await sanityClient.fetch<{
+  team: { _id: string; name: string; role: string; photo?: SanityImage }[];
+  works: WorkCardProjection[];
+  featuredMentor: MentorCardProjection | null;
+  mentorPosts: MentorCardProjection[];
+  proofPoint: { title?: string; text?: string; image?: SanityImage } | null;
+}>(aboutQuery);
 
-// TEMP: mock data — swap en Etapa 6 (GROQ)
-// `work` con `isFeatured: true` para Proof Point. Copy lorem ipsum tal cual el
-// vanilla — pendiente de copy real del cliente (planning-maquetado-about.md #1).
-// Sección page-specific (no vive en /components), así que se renderiza inline en
-// vez de pasar por `WorkCard`.
-const PROOF_POINT_WORK = {
-  title: 'What is Lorem Ipsum?',
-  text: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since 1966, when designers at Letraset and James Mosley, the librarian at St Bride Printing",
+/* `TeamCard` exige `image` con `alt` obligatorio (CLAUDE.md §8.1), así que los
+   integrantes sin foto cargada quedan fuera del grid: la card es una foto con el
+   nombre encima, sin foto no hay card que renderizar. */
+const TEAM_MEMBERS = team.flatMap((member) => {
+  const image = toImage(member.photo, { width: 800 });
+  return image ? [{ image, name: member.name, position: member.role }] : [];
+});
+
+/* Proof Point sale del fieldset `aboutProofPoint` de `settings`. Mientras el singleton
+   siga vacío, el copy actual de la página queda como default y el campo de Sanity
+   funciona como override — mismo patrón de fallback que CLAUDE.md §8.1 define para SEO.
+   PENDIENTE (planning-maquetado-about.md #1): el default sigue siendo lorem ipsum a la
+   espera del copy del cliente. */
+const PROOF_POINT = {
+  title: proofPoint?.title ?? 'What is Lorem Ipsum?',
+  text:
+    proofPoint?.text ??
+    "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since 1966, when designers at Letraset and James Mosley, the librarian at St Bride Printing",
+  image: toImage(proofPoint?.image, { width: 1000 }),
 };
 
-// TEMP: mock data — swap en Etapa 6 (GROQ)
-// `work` × 6 para el Work Slider. Placeholder literal del vanilla — eyebrow `[Work]`
-// y client name `[Client Name]`, distintos de los de Home (`[UX/UI & WEB DESIGN]` /
-// `[CLIENT NAME]`), se replican tal cual sin normalizar entre páginas.
-const WORKS = Array.from({ length: 6 }, () => ({
-  href: '#',
-  eyebrow: '[Work]',
-  title: '[Project headline]',
-  clientName: '[Client Name]',
-  clientInitials: 'CL',
-}));
+/* Work Slider: los 6 proyectos más recientes, sin filtrar por destacado — a diferencia
+   del slider de Home, esta sección lista work en general. */
+const WORKS: WorkCardData[] = works.map((work) => toWorkCard(work));
+
+const FEATURED_MENTOR_POST: MentorCardData | null = featuredMentor ? toMentorCard(featuredMentor) : null;
+
+const MENTOR_POSTS: MentorCardData[] = mentorPosts.map(toMentorCard);
 
 /* `.container` del design system global. El `gap` NO va acá — cada sección declara
    el suyo (mismo criterio que index.astro). */
@@ -155,21 +167,25 @@ const BODY = 'text-body font-inter leading-[1.6] font-normal tracking-normal';
     class="section section--proof-point bg-white pt-[clamp(3.75rem,3.6607rem_+_0.4464vw,4.0625rem)] pb-[clamp(3.75rem,2.5rem_+_6.25vw,8.125rem)]"
   >
     <div class:list={[CONTAINER, 'proof-point-container grid grid-cols-[2fr_1.5fr] gap-[2.8125rem] max-md:grid-cols-1']}>
-      <div class="proof-point-media flex aspect-[5/3] items-center justify-center rounded-card bg-gray max-md:aspect-video">
-        <span
-          class="font-inter text-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] font-semibold tracking-[1px] text-black uppercase opacity-40"
-        >
-          [MEDIA PLACEHOLDER]
-        </span>
+      <div class="proof-point-media flex aspect-[5/3] items-center justify-center overflow-hidden rounded-card bg-gray max-md:aspect-video">
+        {
+          PROOF_POINT.image ? (
+            <img src={PROOF_POINT.image.src} alt={PROOF_POINT.image.alt} class="size-full object-cover" />
+          ) : (
+            <span class="font-inter text-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] font-semibold tracking-[1px] text-black uppercase opacity-40">
+              [MEDIA PLACEHOLDER]
+            </span>
+          )
+        }
       </div>
 
       <div class="proof-point-text flex h-full flex-col justify-end gap-[clamp(0.9619rem,0.8092rem_+_0.7634vw,1.4962rem)]">
         <h3
           class="proof-point-title font-lora text-[clamp(1.5rem,1.2861rem_+_1.0696vw,2.2487rem)] leading-[1.25] font-medium tracking-[-0.36px] text-black"
         >
-          {PROOF_POINT_WORK.title}
+          {PROOF_POINT.title}
         </h3>
-        <p class:list={[BODY, 'text-black']}>{PROOF_POINT_WORK.text}</p>
+        <p class:list={[BODY, 'text-black']}>{PROOF_POINT.text}</p>
       </div>
     </div>
   </section>
@@ -209,7 +225,7 @@ const BODY = 'text-body font-inter leading-[1.6] font-normal tracking-normal';
         </div>
 
         <div class="mentor-home-featured-wrap h-[clamp(16.875rem,14.1964rem_+_13.3929vw,26.25rem)] flex-1 max-md:h-auto">
-          <FeaturedCard {...FEATURED_MENTOR_POST} />
+          {FEATURED_MENTOR_POST && <FeaturedCard {...FEATURED_MENTOR_POST} />}
         </div>
       </div>
     </div>

@@ -1,0 +1,186 @@
+---
+/**
+ * Resources — interna de un artículo — 27zero
+ * Portado 1:1 de `/resources-cms/index.html` + `/resources-cms/style.css` del repo
+ * vanilla.
+ *
+ * La tabla de contenidos NO es un campo del schema: se deriva de los `h2` del `body`
+ * (`getHeadings()`), y `PortableText` emite en cada `h2` el mismo `id` que el TOC pone
+ * en el `href`. Sin `h2` en el body no hay `<aside>` y el artículo va a ancho completo.
+ *
+ * El copy de la sección CTA final es estático (CLAUDE.md §4: maquetación única de una
+ * sola página, el cliente no lo edita por artículo).
+ *
+ * Valores fluidos con la curva del proyecto: mobile = `em × 9` @320px,
+ * desktop = `em × 14` @1440px.
+ */
+import Page from '../../layouts/Page.astro';
+import Button from '../../components/ui/Button.astro';
+import PortableText from '../../components/ui/PortableText.astro';
+import { sanityClient } from '../../lib/sanity/client';
+import { resourceDetailQuery } from '../../lib/sanity/queries';
+import { getHeadings } from '../../lib/utils/portableText';
+import { toStaticPaths } from '../../lib/utils/routes';
+import type { PortableTextBlock, SanityImage } from '../../types/sanity';
+
+export interface ResourceDetail {
+  _id: string;
+  title?: string;
+  slug?: string;
+  shortDescription?: string;
+  description?: string;
+  publishedAt?: string;
+  heroBanner?: SanityImage;
+  body?: PortableTextBlock[];
+}
+
+/* Una sola query para todo el build: `resourceDetailQuery` trae los N artículos y cada
+   página recibe el suyo por props. Ver nota en `queries.ts`. */
+export async function getStaticPaths() {
+  const resources = await sanityClient.fetch<ResourceDetail[]>(resourceDetailQuery);
+  return toStaticPaths(resources, { label: 'resources/[slug]', slugOf: (r) => r.slug });
+}
+
+const resource = Astro.props as ResourceDetail;
+
+const headings = getHeadings(resource.body);
+
+const CONTAINER = 'container mx-auto w-full max-w-(--container-max-width) px-container-x';
+
+/* `scroll-margin-top` en los `h2`: sin esto el navbar fijo tapa el título al saltar
+   desde el TOC. En el vanilla vive en `.article-section`, que acá no existe porque el
+   Portable Text es plano — el heading se lo lleva puesto. */
+const ARTICLE_CLASSES = {
+  normal: 'font-inter text-body-article leading-[1.6] font-normal text-black',
+  h2: 'font-lora text-[clamp(1.375rem,1.2679rem_+_0.5357vw,1.75rem)] leading-[1.3] font-medium text-black scroll-mt-[clamp(5.0625rem,4.2589rem_+_4.0179vw,7.875rem)] mt-[clamp(0.8438rem,0.7098rem_+_0.6696vw,1.3125rem)]',
+  h3: 'font-lora text-h4 leading-[1.3] font-medium text-black scroll-mt-[clamp(5.0625rem,4.2589rem_+_4.0179vw,7.875rem)]',
+  bullet:
+    'flex flex-col gap-[clamp(0.3375rem,0.2839rem_+_0.2679vw,0.525rem)] pl-[clamp(0.8438rem,0.7098rem_+_0.6696vw,1.3125rem)] list-disc',
+  number:
+    'flex flex-col gap-[clamp(0.3375rem,0.2839rem_+_0.2679vw,0.525rem)] pl-[clamp(0.8438rem,0.7098rem_+_0.6696vw,1.3125rem)] list-decimal',
+  listItem: 'font-inter text-[clamp(0.9375rem,0.9196rem_+_0.0893vw,1rem)] leading-[1.6] text-black',
+  link: 'text-indigo underline underline-offset-2',
+};
+---
+
+<Page title={`${resource.title ?? 'Resource'} — 27zero`} description={resource.shortDescription ?? resource.description} navVariant="white">
+  <!-- 1. HERO -->
+  <section
+    class="section section--hero-resources-cms bg-[#D9D9D9] mt-[clamp(7.0313rem,5.9152rem_+_5.5804vw,10.9375rem)] py-[clamp(11.25rem,16.875rem_-_6.25vw,15.625rem)]"
+  >
+    <div
+      class:list={[CONTAINER, 'flex max-w-[70%] items-center justify-center text-center max-md:max-w-full']}
+    >
+      <h1
+        class="font-lora text-h1 leading-[1.25] font-medium tracking-[clamp(-0.02rem,-0.0171rem_-_0.0143vw,-0.03rem)] text-black"
+      >
+        {resource.title}
+      </h1>
+    </div>
+  </section>
+
+  <!-- 2. ARTÍCULO — TOC + contenido -->
+  <section
+    class="section section--article-resources-cms pt-[clamp(2.0089rem,1.69rem_+_1.5944vw,3.125rem)] pb-[clamp(2.6518rem,2.2309rem_+_2.1046vw,4.125rem)]"
+  >
+    <div
+      class:list={[
+        CONTAINER,
+        'grid items-start gap-[clamp(3.6563rem,3.0759rem_+_2.9018vw,5.6875rem)]',
+        /* Sin headings no hay sidebar: una columna sola con `1fr 2.6fr` dejaría el
+           artículo en el 72% derecho del container, desalineado con el resto del sitio. */
+        headings.length > 0 ? 'grid-cols-[1fr_2.6fr] max-md:grid-cols-1' : 'grid-cols-1',
+      ]}
+    >
+      {
+        headings.length > 0 && (
+          <aside
+            class="toc-resources-cms sticky top-[clamp(4.5rem,3.7857rem_+_3.5714vw,7rem)] flex flex-col items-start gap-sm max-md:static"
+          >
+            <span
+              class="font-lora text-[clamp(1.25rem,1.1786rem_+_0.3571vw,1.5rem)] leading-[1.6] font-bold text-indigo underline"
+            >
+              Table of Contents
+            </span>
+
+            <nav class="flex flex-col gap-[clamp(0.7875rem,0.6625rem_+_0.625vw,1.225rem)]">
+              {
+                headings.map((heading, index) => (
+                  <a
+                    href={`#${heading.id}`}
+                    class:list={[
+                      'toc-link font-inter text-[0.8125rem] leading-[1.4] font-semibold no-underline transition-colors duration-200 hover:text-black/65',
+                      index === 0 ? 'text-black' : 'text-black/35',
+                    ]}
+                  >
+                    {heading.label}
+                  </a>
+                ))
+              }
+            </nav>
+
+            <Button href="/contact" variant="blackWhite" size="xs" class="font-inter font-semibold">
+              Let's Talk!
+            </Button>
+          </aside>
+        )
+      }
+
+      <div class="article-resources-cms-body flex flex-col gap-gap">
+        {
+          resource.description && (
+            <p class="font-inter text-body-article leading-[1.6] font-normal text-black">
+              {resource.description}
+            </p>
+          )
+        }
+
+        <PortableText
+          value={resource.body}
+          classes={ARTICLE_CLASSES}
+          headingIds
+          class="flex flex-col gap-sm"
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. CTA -->
+  <section
+    class="section section--cta-resources-cms bg-indigo py-[clamp(4.6205rem,3.8871rem_+_3.6671vw,7.1875rem)] text-white"
+  >
+    <div class={CONTAINER}>
+      <div
+        class="flex max-w-[34%] flex-col items-start gap-[clamp(0.675rem,0.5679rem_+_0.5357vw,1.05rem)] max-md:max-w-full"
+      >
+        <h2
+          class="font-lora text-h2 leading-[1.25] font-medium tracking-[clamp(-0.024rem,-0.0223rem_-_0.0054vw,-0.0225rem)] text-white"
+        >
+          Ready to unlock your EdTech brand's full potential?
+        </h2>
+        <p class="font-inter text-[0.875rem] leading-[1.6] font-normal text-white/75">
+          You need a marketing partner that knows the education sector from the inside.
+          Let's start a conversation about what your brand could become.
+        </p>
+      </div>
+    </div>
+  </section>
+</Page>
+
+<script>
+  /* TOC — el link clickeado pasa a ser el activo (mismo comportamiento que
+     `/resources-cms/script.js`: es por click, no scroll-spy). Va en `<script>` del
+     `.astro` y no en una island: no hay estado de React de por medio (CLAUDE.md §7). */
+  const tocLinks = document.querySelectorAll<HTMLAnchorElement>('.toc-link');
+
+  tocLinks.forEach((link) => {
+    link.addEventListener('click', () => {
+      tocLinks.forEach((other) => {
+        other.classList.remove('text-black');
+        other.classList.add('text-black/35');
+      });
+      link.classList.remove('text-black/35');
+      link.classList.add('text-black');
+    });
+  });
+</script>

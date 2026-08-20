@@ -1,0 +1,198 @@
+---
+/**
+ * EdTech Marketing — interna de un servicio — 27zero
+ * Portado 1:1 de `/edtech-marketing-service/index.html` +
+ * `/edtech-marketing-service/style.css` del repo vanilla.
+ *
+ * La ruta es `/edtech-marketing/services/[slug]` (plural), que es lo que emite
+ * `serviceUrl()` y lo que el menú de servicios ya linkea desde 6B. Práctica y servicio
+ * viven en subcarpetas distintas porque sus slugs se solapan por nombre ("Project
+ * Management" existe en las dos taxonomías).
+ *
+ * Todos los campos de esta página se crearon en Etapa 5 — el doctype estaba
+ * prácticamente vacío antes:
+ *
+ *   `description`  → bajada del hero
+ *   `intro`        → sección Credibility
+ *   `features`     → acordeón "From a single conversation to a content engine"
+ *   `proofPoint`   → sección Proof Point
+ *   `pageCta`      → Closing CTA
+ *
+ * Valores fluidos con la curva del proyecto: mobile = `em × 9` @320px,
+ * desktop = `em × 14` @1440px, salvo donde el vanilla fija un valor mobile propio.
+ */
+import Page from '../../../layouts/Page.astro';
+import Button from '../../../components/ui/Button.astro';
+import Dropdown from '../../../components/ui/Dropdown.astro';
+import ServiceIcon from '../../../components/ui/ServiceIcon.astro';
+import { sanityClient } from '../../../lib/sanity/client';
+import { toImage } from '../../../lib/sanity/image';
+import { serviceDetailQuery } from '../../../lib/sanity/queries';
+import { toStaticPaths } from '../../../lib/utils/routes';
+import type { SanityImage, ServiceCategoryId, ServiceIconId } from '../../../types/sanity';
+
+export interface ServiceDetail {
+  _id: string;
+  title?: string;
+  slug?: string;
+  category?: ServiceCategoryId;
+  iconId?: ServiceIconId;
+  description?: string;
+  introTitle?: string;
+  introDescription?: string;
+  featuresTitle?: string;
+  features?: { _key: string; title?: string; description?: string }[];
+  proofPointTitle?: string;
+  proofPointDescription?: string;
+  proofPointImage?: SanityImage;
+  ctaTitle?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+}
+
+export async function getStaticPaths() {
+  const services = await sanityClient.fetch<ServiceDetail[]>(serviceDetailQuery);
+  return toStaticPaths(services, {
+    label: 'edtech-marketing/services/[slug]',
+    slugOf: (s) => s.slug,
+  });
+}
+
+const service = Astro.props as ServiceDetail;
+
+const proofPointImage = toImage(service.proofPointImage, { width: 1200 });
+
+const features = (service.features ?? []).filter((feature) => feature.title || feature.description);
+
+const CONTAINER = 'container mx-auto flex w-full max-w-(--container-max-width) flex-col gap-gap px-container-x';
+
+const BODY = 'font-inter text-body leading-[1.6] font-normal tracking-normal';
+const BODY_SM = 'font-inter text-body-sm leading-[1.6] font-normal tracking-normal';
+const H2 = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px]';
+---
+
+<Page
+  title={`${service.title ?? 'EdTech Marketing'} — 27zero`}
+  description={service.description}
+  navVariant="white"
+>
+  <!-- HERO -->
+  <section
+    class="section section--hero-marketing relative mt-[clamp(6rem,5.2143rem_+_3.9286vw,8.75rem)] overflow-hidden pt-[clamp(6rem,8.3304rem_-_2.5893vw,7.8125rem)] pb-[clamp(7.8125rem,11.8304rem_-_4.4643vw,10.9375rem)]"
+  >
+    <div class="hero-marketing-bg absolute inset-0 z-0 bg-gray"></div>
+
+    <div
+      class:list={[CONTAINER, 'hero-marketing-container relative z-[1] gap-[clamp(1.2038rem,1.0127rem_+_0.9554vw,1.8725rem)]']}
+    >
+      <div class="hero-marketing-text flex max-w-[50%] flex-col gap-xs max-md:max-w-full">
+        {
+          service.iconId && (
+            <div class="hero-marketing-icon mb-xs size-[clamp(3.2119rem,2.7021rem_+_2.5491vw,4.9962rem)] text-black [&_svg]:size-full">
+              <ServiceIcon iconId={service.iconId} />
+            </div>
+          )
+        }
+        <h1 class="font-lora text-h1 leading-[1.25] font-medium tracking-[-0.48px]">{service.title}</h1>
+        {service.description && <p class:list={[BODY, 'max-w-[90%] text-black']}>{service.description}</p>}
+      </div>
+
+      <div class="hero-home-cta mr-auto flex flex-col items-center gap-xs">
+        <Button href="/contact" variant="white" class="border-white!">Book a strategy session</Button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CREDIBILITY — fieldset `intro` -->
+  {
+    (service.introTitle || service.introDescription) && (
+      <section class="section section--credibility pt-[clamp(1.8056rem,1.519rem_+_1.433vw,2.8087rem)] pb-[clamp(3.8588rem,3.2462rem_+_3.0625vw,6.0025rem)]">
+        <div class:list={[CONTAINER, 'items-center gap-[clamp(1.4063rem,1.183rem_+_1.1161vw,2.1875rem)]']}>
+          <div class="credibility-intro flex flex-col items-center gap-[clamp(0.9619rem,0.8092rem_+_0.7634vw,1.4962rem)] text-center">
+            {service.introTitle && (
+              <h2 class:list={[H2, 'max-w-[55%] text-black max-md:max-w-full']}>{service.introTitle}</h2>
+            )}
+            {service.introDescription && (
+              <p class:list={[BODY_SM, 'max-w-[80%] text-black max-md:max-w-full']}>
+                {service.introDescription}
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- FEATURES — acordeón, fieldset `features` -->
+  {
+    features.length > 0 && (
+      <section class="section section--conversation-engine bg-black pt-[clamp(4.6181rem,3.8851rem_+_3.6652vw,7.1838rem)] pb-[clamp(3.2119rem,2.7021rem_+_2.5491vw,4.9962rem)]">
+        <div class="container conversation-engine-container mx-auto grid w-full max-w-(--container-max-width) grid-cols-[0.45fr_1fr] items-start gap-[clamp(4.6181rem,3.8851rem_+_3.6652vw,7.1838rem)] px-container-x max-md:grid-cols-1 max-md:gap-[clamp(2.4131rem,2.0301rem_+_1.9152vw,3.7538rem)]">
+          <h2 class:list={[H2, 'text-white']}>
+            {service.featuresTitle ?? 'From a single conversation to a content engine.'}
+          </h2>
+
+          <div class="conversation-engine-dropdowns flex flex-col gap-0">
+            {features.map((feature) => (
+              <Dropdown title={feature.title ?? ''}>
+                {feature.description && <p>{feature.description}</p>}
+              </Dropdown>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- PROOF POINT — fieldset `proofPoint` -->
+  {
+    (service.proofPointDescription || proofPointImage) && (
+      <section class="section section--proof-point bg-indigo pt-[clamp(3.75rem,3.1071rem_+_3.2143vw,6rem)] pb-[clamp(3.75rem,2.7679rem_+_4.9107vw,7.1875rem)]">
+        <div class="container proof-point-container mx-auto grid w-full max-w-(--container-max-width) grid-cols-[2fr_1.5fr] gap-[2.8125rem] px-container-x max-md:grid-cols-1">
+          <div class="proof-point-media flex aspect-[5/3] items-center justify-center overflow-hidden rounded-[0.5em] bg-gray max-md:aspect-[16/9]">
+            {proofPointImage && (
+              <img
+                src={proofPointImage.src}
+                alt={proofPointImage.alt}
+                class="size-full object-cover"
+                loading="lazy"
+              />
+            )}
+          </div>
+
+          <div class="proof-point-text flex h-full flex-col justify-end gap-[clamp(0.9619rem,0.8092rem_+_0.7634vw,1.4962rem)]">
+            {/* El schema le pone "Proof Point" como `initialValue`, así que el default es
+                el mismo texto que el Figma — el editor puede cambiarlo por servicio. */}
+            <h3 class="font-lora text-[clamp(1.5rem,1.2857rem_+_1.0714vw,2.25rem)] leading-[1.25] font-medium tracking-[-0.36px] text-white">
+              {service.proofPointTitle ?? 'Proof Point'}
+            </h3>
+            {service.proofPointDescription && (
+              <p class:list={[BODY, 'text-white']}>{service.proofPointDescription}</p>
+            )}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- CLOSING CTA — fieldset `pageCta` -->
+  {
+    service.ctaTitle && (
+      <section class="section section--closing-cta bg-white py-[clamp(3.75rem,3.3929rem_+_1.7857vw,5rem)] text-center">
+        <div
+          class:list={[
+            CONTAINER,
+            'closing-cta-container items-center gap-[clamp(1.2038rem,1.0127rem_+_0.9554vw,1.8725rem)]',
+          ]}
+        >
+          <h2 class:list={[H2, 'max-w-[50%] text-black max-md:max-w-full']}>{service.ctaTitle}</h2>
+          {service.ctaLabel && (
+            <Button href={service.ctaHref ?? '/contact'} variant="dark" class="text-white!">
+              {service.ctaLabel}
+            </Button>
+          )}
+        </div>
+      </section>
+    )
+  }
+</Page>

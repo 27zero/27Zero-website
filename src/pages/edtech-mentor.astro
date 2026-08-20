@@ -11,8 +11,9 @@
  * Corrección de typo confirmada (planning-maquetado-edtech-mentor.md § Nota): el
  * vanilla escribe "Essential series" en el `h2` pero "Essencial" en el pill y en
  * `id="essencial"` — inconsistencia interna, no un typo consistente a replicar (a
- * diferencia de "Performace Review" en EdTech Marketing). Se corrige a "Essential" en
- * label/`data-filter`/`id`.
+ * diferencia de "Performace Review" en EdTech Marketing). Quedó corregido en el propio
+ * schema en Etapa 5 (`interviewCategory: 'essential'`), así que el `id`/`data-filter`
+ * de esta página es el valor real de la taxonomía.
  *
  * Valores fluidos con la curva del resto del proyecto: mobile = `em × 9` @320px,
  * desktop = `em × 14` @1440px, salvo donde el vanilla fija un valor mobile propio.
@@ -22,14 +23,60 @@ import FilterPills from '../components/sections/FilterPills.astro';
 import MentorCategorySection from '../components/sections/MentorCategorySection.astro';
 import Button from '../components/ui/Button.astro';
 import FeaturedCard from '../components/ui/FeaturedCard.astro';
-import { FEATURED_MENTOR, MENTORS_BY_CATEGORY } from '../lib/mockData/mentorsByCategory';
+import { toMentorCard } from '../lib/sanity/cards';
+import type { MentorCardProjection } from '../lib/sanity/cards';
+import { sanityClient } from '../lib/sanity/client';
+import { mentorListQuery } from '../lib/sanity/queries';
+import type { InterviewCategory } from '../types/sanity';
+import type { MentorCardData, MentorGroup } from '../types/ui';
 
 const CONTAINER = 'container mx-auto flex w-full max-w-(--container-max-width) flex-col px-container-x';
 
+const { featured, mentors } = await sanityClient.fetch<{
+  featured: MentorCardProjection | null;
+  mentors: MentorCardProjection[];
+}>(mentorListQuery);
+
+const FEATURED_MENTOR: MentorCardData | null = featured ? toMentorCard(featured) : null;
+
+/* El copy de cada sección (h2, acento, subtexto) NO sale de Sanity: es maquetación
+   única de esta página, sin N instancias detrás (CLAUDE.md §4 — "siempre estático").
+   Lo único que viene del CMS son las entrevistas, agrupadas por `interviewCategory`.
+
+   El `id` es el valor de la taxonomía, que es también el `id` del `.category-anchor` y
+   el `data-filter` del pill. El typo `essencial` del vanilla ya quedó corregido a
+   `essential` en el schema (Etapa 5), así que acá no hay nada que normalizar. */
+const CATEGORY_COPY: { id: InterviewCategory; heading: string; headingAccent: string; subtext: string }[] = [
+  {
+    id: 'essential',
+    heading: 'Essential series',
+    headingAccent: 'Interviews',
+    subtext: 'Pearls of wisdom from seasoned EdTech Leaders.',
+  },
+  {
+    id: 'investor',
+    heading: 'Investor Series',
+    headingAccent: 'Interviews',
+    subtext: 'The Impact of Investment in EdTech, hosted by Phill Miller',
+  },
+  {
+    id: 'founders',
+    heading: 'Founders Series',
+    headingAccent: 'Interviews',
+    subtext: 'Conversations with EdTech founders about growth and impact.',
+  },
+];
+
+const MENTORS_BY_CATEGORY: MentorGroup[] = CATEGORY_COPY.map((category) => ({
+  ...category,
+  items: mentors.filter((mentor) => mentor.interviewCategory === category.id).map(toMentorCard),
+}));
+
 const [essential, investor, founders] = MENTORS_BY_CATEGORY;
 
-/* `data-filter`/`id` ya corregidos a "Essential" en el mock — el pill hereda el label
-   corregido directo de ahí, sin repetir el string acá. */
+/* Los pills salen de las mismas 3 secciones, así que cada uno tiene su anchor. Se
+   muestran las 3 aunque una categoría no tenga entrevistas cargadas: son secciones
+   fijas del diseño, no grupos derivados de la data como en Work/Clientes. */
 const FILTER_CATEGORIES = MENTORS_BY_CATEGORY.map((category) => ({
   id: category.id,
   label: category.heading.replace(/\s+series$/i, ''),
@@ -73,7 +120,7 @@ const FILTER_CATEGORIES = MENTORS_BY_CATEGORY.map((category) => ({
   <section class="section section--featured-mentor pt-0 pb-[clamp(3.6563rem,3.0759rem_+_2.9018vw,5.6875rem)]">
     <div class={CONTAINER}>
       <div class="featured-mentor-wrap h-[clamp(20rem,14.7321rem_+_26.3393vw,38.4375rem)] w-full overflow-hidden">
-        <FeaturedCard {...FEATURED_MENTOR} />
+        {FEATURED_MENTOR && <FeaturedCard {...FEATURED_MENTOR} />}
       </div>
     </div>
   </section>

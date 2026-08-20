@@ -18,7 +18,25 @@
 import Page from '../layouts/Page.astro';
 import ResourceCard from '../components/ui/ResourceCard.astro';
 import ResourceCardFeatured from '../components/ui/ResourceCardFeatured.astro';
-import { FEATURED_RESOURCE, RESOURCES } from '../lib/mockData/resources';
+import { toResourceCard } from '../lib/sanity/cards';
+import type { ResourceProjection } from '../lib/sanity/cards';
+import { sanityClient } from '../lib/sanity/client';
+import { resourceListQuery } from '../lib/sanity/queries';
+
+const resources = await sanityClient.fetch<ResourceProjection[]>(resourceListQuery);
+
+/* `resource` no tiene campo `isFeatured` en el schema, así que el destacado es el
+   artículo más reciente (la query ya viene ordenada por `publishedAt desc`) y el resto
+   va al grid. Si en algún momento el cliente necesita fijar cuál se destaca sin que
+   dependa de la fecha, eso es un campo nuevo en el Studio, no lógica de esta página.
+
+   Los anchos de imagen difieren porque la featured ocupa la columna de 1.3fr y las del
+   grid una de tres — pedirle al CDN el mismo tamaño para ambas desperdiciaría bytes. */
+const [featured, ...rest] = resources;
+
+const FEATURED_RESOURCE = featured ? toResourceCard(featured, { imageWidth: 1000 }) : null;
+
+const RESOURCES = rest.map((resource) => toResourceCard(resource, { imageWidth: 700 }));
 
 const CONTAINER = 'container mx-auto flex w-full max-w-(--container-max-width) flex-col px-container-x';
 ---
@@ -43,7 +61,7 @@ const CONTAINER = 'container mx-auto flex w-full max-w-(--container-max-width) f
         </p>
       </div>
 
-      <ResourceCardFeatured {...FEATURED_RESOURCE} />
+      {FEATURED_RESOURCE && <ResourceCardFeatured {...FEATURED_RESOURCE} />}
     </div>
   </section>
 

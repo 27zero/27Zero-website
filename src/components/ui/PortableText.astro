@@ -1,0 +1,142 @@
+---
+/**
+ * PortableText — 27zero
+ *
+ * Renderer genérico de Portable Text. Vive en `ui/` y no en la interna de EdTech
+ * Mentor porque hoy ya lo consumen cuatro campos de tres documentTypes distintos
+ * (`edtechMentor.body`, `resource.body`, `work.description.projectContent`,
+ * `work.challenge.challengeContent`, `work.solution.body`) y cada uno pide un markup
+ * distinto para el mismo árbol de bloques.
+ *
+ * Corre en build: `toHTML()` se resuelve en el frontmatter del `.astro`, así que el
+ * navegador recibe HTML plano y cero JS (CLAUDE.md §7 — esto no es una island).
+ *
+ * La API no expone el `components` map crudo de `@portabletext/to-html` como única
+ * vía: las páginas casi siempre solo necesitan poner clases de Tailwind sobre `p`,
+ * `h2`, `ul` y `a`, y hacerlo a mano obliga a reescribir el serializer entero (y a
+ * volver a resolver el escapado). Por eso `classes` cubre ese caso declarativamente y
+ * `components` queda para lo que de verdad es estructura nueva — el bloque
+ * `pearlOfWisdom` de `edtechMentor`, por ejemplo.
+ */
+import { escapeHTML, toHTML, type PortableTextComponents } from '@portabletext/to-html';
+import { headingId } from '../../lib/utils/portableText';
+
+/** Clase por estilo de bloque, lista y link. Todas opcionales: sin clase, el tag va pelado. */
+export interface PortableTextClasses {
+  normal?: string;
+  h1?: string;
+  h2?: string;
+  h3?: string;
+  h4?: string;
+  blockquote?: string;
+  /** `<ul>` */
+  bullet?: string;
+  /** `<ol>` */
+  number?: string;
+  /** `<li>`, para ambos tipos de lista. */
+  listItem?: string;
+  /** `<a>` de los `markDefs` de tipo `link`. */
+  link?: string;
+}
+
+interface Props {
+  /** El array de bloques tal como sale de GROQ. `undefined` o vacío no renderiza nada. */
+  value: unknown;
+  classes?: PortableTextClasses;
+  /**
+   * Serializers propios, para bloques que no son texto (`pearlOfWisdom`) o para pisar
+   * un estilo puntual. Se mergean ENCIMA de lo que arma `classes`.
+   */
+  components?: PortableTextComponents;
+  /**
+   * Agrega `id` slugificado a cada heading, para anclas y tabla de contenidos.
+   * El id sale de `headingId()`, la misma función que usa `getHeadings()` para armar
+   * el TOC — ver `lib/utils/portableText.ts`.
+   */
+  headingIds?: boolean;
+  /** Clase del wrapper. Sin ella no se emite el `<div>` contenedor. */
+  class?: string;
+}
+
+/* ──────────────────────────── Serialización ───────────────────────────── */
+
+const { value, classes = {}, components, headingIds = false, class: className } = Astro.props;
+
+const attr = (name: string, cssClass: string | undefined) =>
+  cssClass ? ` ${name}="${escapeHTML(cssClass)}"` : '';
+
+const HEADING_STYLES = ['h1', 'h2', 'h3', 'h4'] as const;
+
+/**
+ * `block` se arma a partir de `classes` en vez de declararse tag por tag: los cuatro
+ * headings comparten la misma lógica salvo el nombre del tag y su clase.
+ */
+const blockComponents: PortableTextComponents['block'] = {
+  normal: ({ children }) => `<p${attr('class', classes.normal)}>${children}</p>`,
+  blockquote: ({ children }) =>
+    `<blockquote${attr('class', classes.blockquote)}>${children}</blockquote>`,
+  ...Object.fromEntries(
+    HEADING_STYLES.map((style) => [
+      style,
+      ({ children, value: block }: { children: string; value: unknown }) => {
+        const id = headingIds ? headingId(block) : '';
+        return `<${style}${attr('id', id || undefined)}${attr('class', classes[style])}>${children}</${style}>`;
+      },
+    ])
+  ),
+};
+
+const baseComponents: PortableTextComponents = {
+  block: blockComponents,
+
+  list: {
+    bullet: ({ children }) => `<ul${attr('class', classes.bullet)}>${children}</ul>`,
+    number: ({ children }) => `<ol${attr('class', classes.number)}>${children}</ol>`,
+  },
+
+  listItem: {
+    bullet: ({ children }) => `<li${attr('class', classes.listItem)}>${children}</li>`,
+    number: ({ children }) => `<li${attr('class', classes.listItem)}>${children}</li>`,
+  },
+
+  marks: {
+    /**
+     * `rel="noopener"` + `target="_blank"` solo en links externos: los internos abren
+     * en la misma pestaña, y sin `noopener` un `target="_blank"` le entrega
+     * `window.opener` al destino.
+     */
+    link: ({ children, value: mark }) => {
+      const href = (mark as { href?: string })?.href ?? '';
+      const isExternal = /^https?:\/\//i.test(href);
+      const target = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
+      return `<a href="${escapeHTML(href)}"${target}${attr('class', classes.link)}>${children}</a>`;
+    },
+  },
+};
+
+/**
+ * Merge manual y no `mergeComponents()`: la librería mergea a un solo nivel, así que
+ * pasar un `block` propio para pisar `h2` borraría los otros tres estilos.
+ */
+const merged: PortableTextComponents = {
+  ...baseComponents,
+  ...components,
+  block: { ...blockComponents, ...(components?.block as object) },
+  list: { ...baseComponents.list, ...(components?.list as object) },
+  listItem: { ...baseComponents.listItem, ...(components?.listItem as object) },
+  marks: { ...baseComponents.marks, ...components?.marks },
+  types: components?.types,
+};
+
+const blocks = Array.isArray(value) ? value : [];
+
+/* `onMissingComponent: false` apaga el warning por consola en build. Un bloque sin
+   serializer se omite igual, y el warning por documento se vuelve ruido en un build de
+   N páginas — los tipos faltantes se detectan en QA, no en el log. */
+const html = blocks.length > 0 ? toHTML(blocks as never, { components: merged, onMissingComponent: false }) : '';
+---
+
+{
+  html !== '' &&
+    (className ? <div class={className} set:html={html} /> : <Fragment set:html={html} />)
+}

@@ -48,6 +48,10 @@ interface Props {
   href?: string;
   /** Solo se usa cuando no hay `href` (renderiza `<button type={type}>`). */
   type?: 'button' | 'submit' | 'reset';
+  /** Solo aplica cuando hay `href` (caso `<a>`). */
+  target?: '_blank' | '_self' | '_parent' | '_top';
+  /** Solo aplica cuando hay `href` (caso `<a>`). */
+  rel?: string;
   /**
    * Tamaño de texto. `base` es el `.btn` del design system (fluido, 13→16px).
    * `sm` es el 14px fijo que el vanilla usa para el botón del modal mobile.
@@ -55,12 +59,12 @@ interface Props {
    * `font-size` sobre el mismo elemento se resuelven por orden de emisión de
    * Tailwind, no por especificidad: el override perdía en silencio.
    */
-  size?: 'base' | 'sm';
+  size?: 'base' | 'sm' | 'xs';
   /** Clases extra del contexto de uso (posicionamiento, layout). */
   class?: string;
 }
 
-const { href, type = 'button', variant, size = 'base', class: className } = Astro.props;
+const { href, type = 'button', variant, size = 'base', class: className, target, rel } = Astro.props;
 
 /* Sin font-size: lo aporta SIZES, para que solo haya una utilidad de font-size. */
 const BASE =
@@ -69,6 +73,11 @@ const BASE =
 const SIZES = {
   base: 'text-button',
   sm: 'text-[0.875rem]',
+  /* 13px fijo del `.toc-cta` de la interna de Resources, que además pisa la familia a
+     Inter. Va como `size` y no como clase suelta del consumidor por el mismo motivo que
+     el resto: dos utilidades de `font-size` sobre el mismo elemento se resuelven por
+     orden de emisión de Tailwind, no por especificidad. */
+  xs: 'text-[0.8125rem]',
 } as const;
 
 const VARIANTS = {
@@ -86,7 +95,7 @@ const CLASSES = ['btn', `btn-${variant}`, BASE, SIZES[size], VARIANTS[variant], 
 
 {
   href ? (
-    <a href={href} class:list={CLASSES}>
+    <a href={href} target={target} rel={rel} class:list={CLASSES}>
       <slot />
     </a>
   ) : (

@@ -21,9 +21,9 @@
 import CardsSlider from './CardsSlider.astro';
 import EdtechMentorCard from '../ui/EdtechMentorCard.astro';
 import Button from '../ui/Button.astro';
-import type { MentorCategory } from '../../lib/mockData/mentorsByCategory';
+import type { MentorGroup } from '../../types/ui';
 
-interface Props extends MentorCategory {
+interface Props extends MentorGroup {
   /** Fondo + color de texto base de la sección (ej. "bg-indigo text-white"). */
   sectionClass: string;
   /** Variante de `Button` para los 2 CTA — coincide con el `.btn-white` scoped del vanilla. */

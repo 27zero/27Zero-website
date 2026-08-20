@@ -13,10 +13,10 @@
  * su propio encabezado.
  */
 import ServiceCategoryBlock from './ServiceCategoryBlock.astro';
-import type { ServiceCategory } from '../../lib/mockData/servicesByCategory';
+import type { ServiceGroup } from '../../types/ui';
 
 interface Props {
-  categories: ServiceCategory[];
+  categories: ServiceGroup[];
 }
 
 const { categories } = Astro.props;

@@ -1,0 +1,365 @@
+---
+/**
+ * The EdTech Mentor — interna de una entrevista — 27zero
+ * Portado 1:1 de `/edtech-mentor-cms/index.html` + `/edtech-mentor-cms/style.css` del
+ * repo vanilla.
+ *
+ * La ruta es `/edtech-mentor/[slug]` y no `/the-edtech-mentor/[slug]`: la página-shell
+ * de 6B ya vive en `/edtech-mentor` y `mentorUrl()` (`utils/routes`) emite ese prefijo
+ * en las cards de Home, About y el listado. El vanilla usaba `/the-edtech-mentor` en su
+ * nav, pero cambiarlo ahora desalinearía los cinco lugares que ya linkean.
+ *
+ * El bloque "Pearl of wisdom" se renderiza como tipo custom dentro del Portable Text de
+ * `body` (`pearlOfWisdom` insertable, Etapa 5). El campo plano `pearlOfWisdom` que
+ * todavía existe en el schema NO se renderiza — ver reporte de entrega.
+ *
+ * Secciones que se omiten enteras si el documento no tiene el dato: los dos botones del
+ * hero, la imagen y la bajada del bloque Featured, el highlight, Rapid Fire y el slider
+ * final. Hoy casi ninguna entrevista tiene esos campos cargados.
+ *
+ * Valores: los del hero y el artículo están en px literales en el CSS del vanilla (así
+ * se entregó el spec), el resto sigue la curva `em × 9` @320px → `em × 14` @1440px.
+ */
+import Page from '../../layouts/Page.astro';
+import Button from '../../components/ui/Button.astro';
+import CardsSlider from '../../components/sections/CardsSlider.astro';
+import EdtechMentorCard from '../../components/ui/EdtechMentorCard.astro';
+import PortableText from '../../components/ui/PortableText.astro';
+import { toMentorCard, type MentorCardProjection } from '../../lib/sanity/cards';
+import { sanityClient } from '../../lib/sanity/client';
+import { toImage } from '../../lib/sanity/image';
+import { mentorDetailQuery } from '../../lib/sanity/queries';
+import { getInitials } from '../../lib/utils/format';
+import { hasContent } from '../../lib/utils/portableText';
+import { toStaticPaths } from '../../lib/utils/routes';
+import type { InterviewCategory, PortableTextBlock, SanityImage } from '../../types/sanity';
+
+export interface MentorDetail {
+  _id: string;
+  title?: string;
+  slug?: string;
+  guestName?: string;
+  guestRole?: string;
+  guestCompany?: string;
+  guestPhoto?: SanityImage;
+  highlightTitle?: string;
+  shortDescription?: string;
+  introText?: string;
+  mainImage?: SanityImage;
+  bannerPost?: SanityImage;
+  body?: PortableTextBlock[];
+  rapidFire?: {
+    description?: string;
+    image?: SanityImage;
+    questions?: { _key: string; question?: string; answer?: string }[];
+  };
+  interviewCategory?: InterviewCategory;
+  publishedAt?: string;
+  linkedinUrl?: string;
+  mediumUrl?: string;
+  related?: MentorCardProjection[];
+}
+
+export async function getStaticPaths() {
+  const mentors = await sanityClient.fetch<MentorDetail[]>(mentorDetailQuery);
+  return toStaticPaths(mentors, { label: 'edtech-mentor/[slug]', slugOf: (m) => m.slug });
+}
+
+const mentor = Astro.props as MentorDetail;
+
+/* Avatar del hero y avatares del chat de Rapid Fire salen de la misma foto, en dos
+   tamaños distintos. `toImage()` devuelve `undefined` sin `alt` cargado (CLAUDE.md
+   §8.1), y ahí el círculo cae a las iniciales — que es el estado real de 7 de las 8
+   entrevistas de hoy. */
+const heroAvatar = toImage(mentor.guestPhoto, { width: 230, height: 230 });
+const chatAvatar = toImage(mentor.guestPhoto, { width: 100, height: 100 });
+const initials = getInitials(mentor.guestName);
+
+const introImage = toImage(mentor.mainImage, { width: 900 });
+const rapidFireImage = toImage(mentor.rapidFire?.image, { width: 700 });
+
+/* `introText` es la bajada del fieldset `interviewIntro`; `shortDescription` es la de la
+   card del listado. El bloque Featured del vanilla muestra un solo párrafo al lado de la
+   imagen: se prefiere el que el fieldset modela para esta sección y se cae al otro. */
+const introCopy = mentor.introText ?? mentor.shortDescription;
+
+const questions = (mentor.rapidFire?.questions ?? []).filter((item) => item.question || item.answer);
+
+const related = (mentor.related ?? []).map(toMentorCard);
+
+const CONTAINER = 'container mx-auto flex w-full max-w-(--container-max-width) flex-col px-container-x';
+
+const AVATAR_CIRCLE =
+  'flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#D9D9D9]';
+
+/* Clases del cuerpo del artículo. Los `h2` llevan margen propio (60px arriba y abajo en
+   el vanilla) porque el contenedor no puede darles `gap`: el Portable Text emite
+   headings y párrafos como hermanos planos, con `margin-bottom` distinto cada uno. */
+const ARTICLE_CLASSES = {
+  normal:
+    'font-inter text-[clamp(0.875rem,0.8036rem_+_0.3571vw,1.125rem)] leading-[1.6] font-normal text-black mb-[1.5rem] last:mb-0',
+  h2: 'font-lora text-[clamp(1.5rem,1.2857rem_+_1.0714vw,2.25rem)] leading-[1.25] font-medium tracking-[-0.36px] text-black mt-[3.75rem] mb-[3.75rem] first:mt-0',
+  h3: 'font-lora text-h3 leading-[1.3] font-medium text-black mt-[2.5rem] mb-[1.5rem]',
+  bullet: 'mb-[1.5rem] flex list-disc flex-col gap-xs pl-sm',
+  number: 'mb-[1.5rem] flex list-decimal flex-col gap-xs pl-sm',
+  listItem: 'font-inter text-[clamp(0.875rem,0.8036rem_+_0.3571vw,1.125rem)] leading-[1.6] text-black',
+  link: 'text-indigo underline underline-offset-2',
+};
+
+/**
+ * Serializer del bloque `pearlOfWisdom` — el `.pearl-box` del vanilla. Devuelve HTML
+ * como string (es la API de `@portabletext/to-html`), así que las clases van escritas
+ * literales y no pueden salir de una constante compartida.
+ */
+const ARTICLE_COMPONENTS = {
+  types: {
+    pearlOfWisdom: ({ value }: { value: { quote?: string } }) => {
+      const quote = value?.quote ?? '';
+      if (quote === '') return '';
+      return `<div class="pearl-box my-[3.75rem] flex w-full flex-col gap-[1.875rem] rounded-[0.625rem] bg-purple px-[4.375rem] py-[3.75rem] max-md:px-[2rem] max-md:py-[3.875rem]">
+  <h2 class="font-lora text-[clamp(1.5rem,1.2857rem_+_1.0714vw,2.25rem)] leading-[1.25] font-medium tracking-[-0.36px] text-black">Pearl of wisdom</h2>
+  <p class="font-inter text-[clamp(0.875rem,0.8036rem_+_0.3571vw,1.125rem)] leading-[1.6] font-normal text-black">${quote}</p>
+</div>`;
+    },
+  },
+};
+---
+
+<Page
+  title={`${mentor.title ?? mentor.guestName ?? 'EdTech Mentor'} — 27zero`}
+  description={mentor.shortDescription}
+  navVariant="white"
+>
+  <!-- 1. HERO -->
+  <section
+    class="section section--hero-cms bg-[#D9D9D9] bg-cover bg-center mt-[clamp(6rem,3.7857rem_+_11.0714vw,13.75rem)] pt-[clamp(2.5rem,7rem_-_5vw,6rem)] pb-[clamp(6.25rem,8.6607rem_-_2.6786vw,8.125rem)]"
+  >
+    <div class:list={[CONTAINER, 'gap-[2.5rem]']}>
+      <div class="hero-cms-content flex flex-col gap-[1.5625rem]">
+        <div
+          class:list={[
+            AVATAR_CIRCLE,
+            'size-[clamp(5.25rem,4.6964rem_+_2.7679vw,7.1875rem)] border border-solid border-black/15',
+          ]}
+        >
+          {
+            heroAvatar ? (
+              <img src={heroAvatar.src} alt={heroAvatar.alt} class="size-full object-cover" width="230" height="230" />
+            ) : (
+              <span class="font-inter text-[0.79em] font-semibold tracking-[0.0625rem] text-black/35 uppercase">
+                {initials}
+              </span>
+            )
+          }
+        </div>
+
+        <nav
+          class="breadcrumb flex items-center gap-xs font-inter text-[clamp(0.625rem,0.5rem_+_0.625vw,1.0625rem)] leading-[1.6] font-normal text-black"
+          aria-label="Breadcrumb"
+        >
+          <a href="/" class="underline hover:text-indigo">Home</a>
+          <span>&gt;</span>
+          <a href="/edtech-mentor" class="underline hover:text-indigo">Edtech mentor interviews</a>
+          {
+            mentor.guestName && (
+              <>
+                <span>&gt;</span>
+                <span aria-current="page">{mentor.guestName}</span>
+              </>
+            )
+          }
+        </nav>
+
+        {
+          mentor.guestName && (
+            <span class="font-lora text-[clamp(1.5rem,1.2857rem_+_1.0714vw,2.25rem)] leading-[1.4] font-medium text-black">
+              {mentor.guestName}
+            </span>
+          )
+        }
+
+        <h1
+          class="font-lora text-h1 leading-[1.25] font-medium tracking-[clamp(-0.02rem,-0.0171rem_-_0.0143vw,-0.03rem)] text-black"
+        >
+          {mentor.title}
+        </h1>
+      </div>
+
+      {
+        (mentor.linkedinUrl || mentor.mediumUrl) && (
+          <div class="hero-cms-buttons flex flex-row gap-sm max-md:flex-col max-md:items-baseline">
+            {mentor.linkedinUrl && (
+              <Button href={mentor.linkedinUrl} target="_blank" rel="noopener" variant="blackWhite">
+                Subscribe on LinkedIn
+              </Button>
+            )}
+            {mentor.mediumUrl && (
+              <Button href={mentor.mediumUrl} target="_blank" rel="noopener" variant="blackWhite">
+                Follow on Medium
+              </Button>
+            )}
+          </div>
+        )
+      }
+    </div>
+  </section>
+
+  <!-- 2. FEATURED — imagen + resumen + highlight -->
+  {
+    (introImage || introCopy || mentor.highlightTitle) && (
+      <section class="section section--featured-cms bg-white pt-[5.625rem] pb-[6.875rem]">
+        <div class:list={[CONTAINER, 'gap-[7.1875rem]']}>
+          {(introImage || introCopy) && (
+            <div class="featured-grid grid grid-cols-[1.25fr_1fr] items-start gap-[2.8125rem] max-md:grid-cols-1">
+              {introImage && (
+                <img
+                  src={introImage.src}
+                  alt={introImage.alt}
+                  class="h-full min-h-[28em] w-full rounded-[0.57em] object-cover max-md:min-h-[16em]"
+                  loading="lazy"
+                />
+              )}
+              {introCopy && (
+                <p class="font-inter text-body leading-[1.6] font-normal text-black">{introCopy}</p>
+              )}
+            </div>
+          )}
+
+          {mentor.highlightTitle && (
+            <p class="featured-highlight text-center font-lora text-[clamp(1.5rem,1.2857rem_+_1.0714vw,2.25rem)] leading-[1.5] font-normal text-purple">
+              {mentor.highlightTitle}
+            </p>
+          )}
+        </div>
+      </section>
+    )
+  }
+
+  <!-- 3. CUERPO DEL ARTÍCULO -->
+  {
+    hasContent(mentor.body) && (
+      <section class="section section--article-cms bg-[#D9D9D9] pt-[4.375rem] pb-[2.8125rem]">
+        <div class="container mx-auto flex w-full max-w-(--container-max-width) flex-col gap-[5.625rem] px-[2.5rem]">
+          <PortableText
+            value={mentor.body}
+            classes={ARTICLE_CLASSES}
+            components={ARTICLE_COMPONENTS}
+            class="text-block mx-auto w-full max-w-[90%] max-md:max-w-full"
+          />
+
+          {/* Cierre estático: es copy de la publicación, igual en toda entrevista
+              (CLAUDE.md §4 — no va a Sanity). */}
+          <div class="text-block--full mx-auto flex w-[90%] max-w-[90%] flex-col gap-[1.25rem] max-md:w-full max-md:max-w-full">
+            <hr class="w-full border-0 border-t border-solid border-black" />
+            <p class="font-inter text-[clamp(0.875rem,0.8036rem_+_0.3571vw,1.125rem)] leading-[1.6] font-normal text-black">
+              The EdTech Mentor is a <a href="/" class="text-purple underline">27zero</a> publication.
+              Let's start a{' '}
+              <a href="/contact" class="text-purple underline">
+                transformative EdTech marketing conversation today.
+              </a>
+            </p>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- 4. RAPID FIRE QUESTIONS -->
+  {
+    questions.length > 0 && (
+      <section class="section section--rapid-fire-cms bg-white py-[clamp(2.4131rem,2.0301rem_+_1.9152vw,3.7538rem)]">
+        <div
+          class:list={[
+            CONTAINER,
+            'grid! grid-cols-[1fr_1.2fr] items-stretch gap-[clamp(2.8125rem,2.3661rem_+_2.2321vw,4.375rem)] max-md:grid-cols-1',
+          ]}
+        >
+          <div class="rapid-fire-intro flex flex-col">
+            <h2 class="font-lora text-[clamp(1.4456rem,1.2162rem_+_1.1473vw,2.2487rem)] leading-[1.25] font-medium tracking-[-0.36px] text-black mb-[clamp(1.2881rem,1.0837rem_+_1.0223vw,2.0038rem)] max-md:text-[1.5rem]">
+              Rapid fire questions
+            </h2>
+            {mentor.rapidFire?.description && (
+              <p class="font-inter text-body leading-[1.6] font-normal text-black mb-[clamp(2.4131rem,2.0301rem_+_1.9152vw,3.7538rem)]">
+                {mentor.rapidFire.description}
+              </p>
+            )}
+            {rapidFireImage && (
+              <img
+                src={rapidFireImage.src}
+                alt={rapidFireImage.alt}
+                class="w-full flex-1 rounded-[0.57em] object-cover max-md:h-[16em] max-md:flex-none"
+                loading="lazy"
+              />
+            )}
+          </div>
+
+          <div class="rapid-fire-chat flex flex-col gap-[clamp(1.2881rem,1.0837rem_+_1.0223vw,2.0038rem)]">
+            {questions.map((item) => (
+              <div class="chat-pair flex flex-col gap-[clamp(0.6806rem,0.5726rem_+_0.5402vw,1.0587rem)]">
+                {item.question && (
+                  <div class="flex justify-start">
+                    <span class="rounded-[50em] bg-purple px-[clamp(1.2881rem,1.0837rem_+_1.0223vw,2.0038rem)] py-sm font-lora text-[0.9375rem] leading-[1.4] font-normal text-black max-md:text-[0.875rem]">
+                      {item.question}
+                    </span>
+                  </div>
+                )}
+                {item.answer && (
+                  <div class="flex items-center justify-end gap-[clamp(0.4838rem,0.407rem_+_0.3839vw,0.7525rem)]">
+                    <span class="rounded-[50em] bg-black px-[clamp(1.2881rem,1.0837rem_+_1.0223vw,2.0038rem)] py-sm font-lora text-[0.9375rem] leading-[1.4] font-normal text-white max-md:text-[0.875rem]">
+                      {item.answer}
+                    </span>
+                    <div
+                      class:list={[
+                        AVATAR_CIRCLE,
+                        'size-[clamp(3rem,3.1607rem_-_0.1786vw,3.125rem)]',
+                      ]}
+                    >
+                      {chatAvatar ? (
+                        <img src={chatAvatar.src} alt="" class="size-full object-cover" loading="lazy" />
+                      ) : (
+                        <span class="font-inter text-[0.7em] font-semibold tracking-[0.0625rem] text-black/35 uppercase">
+                          {initials}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- 5. READ MORE! -->
+  {
+    related.length > 0 && (
+      <section class="section section--read-more-cms bg-indigo pt-[clamp(4.0162rem,3.3787rem_+_3.1875vw,6.2475rem)] pb-[clamp(2.5313rem,1.5391rem_+_4.9607vw,6.0038rem)] text-white">
+        <div class:list={[CONTAINER, 'gap-sm']}>
+          <h2 class="font-lora text-[clamp(1.4456rem,1.2162rem_+_1.1473vw,2.2487rem)] leading-[1.25] font-medium tracking-[-0.36px] max-md:text-[1.5rem]">
+            Read more!
+            <br />
+            Growth experts insight you.
+          </h2>
+          <p class="font-inter text-body-sm leading-[1.6] font-normal">
+            Pearls of wisdom from seasoned EdTech Leaders.
+          </p>
+          <div class="flex flex-wrap gap-gap max-md:flex-col max-md:items-baseline">
+            <Button href="/edtech-mentor" variant="whiteIndigo">
+              See all EdTech Mentor
+            </Button>
+          </div>
+        </div>
+
+        <div class="sliders-container pt-[clamp(4.0162rem,3.3787rem_+_3.1875vw,6.2475rem)]">
+          <CardsSlider arrowVariant="light">
+            {related.map((item) => (
+              <EdtechMentorCard {...item} />
+            ))}
+          </CardsSlider>
+        </div>
+      </section>
+    )
+  }
+</Page>

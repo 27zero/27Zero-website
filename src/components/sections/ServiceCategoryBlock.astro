@@ -17,9 +17,9 @@
  */
 import ServiceCard from '../ui/ServiceCard.astro';
 import ServiceIcon from '../ui/ServiceIcon.astro';
-import type { ServiceCategory } from '../../lib/mockData/servicesByCategory';
+import type { ServiceGroup } from '../../types/ui';
 
-type Props = ServiceCategory;
+type Props = ServiceGroup;
 
 const { title, services } = Astro.props;
 

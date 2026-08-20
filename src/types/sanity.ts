@@ -3,3 +3,496 @@
 // modifique un schema en el Studio, actualizar este archivo en el mismo
 // ciclo de trabajo (mismos nombres de campo, mismos tipos, misma opcionalidad).
 // Ver CLAUDE.md sección 8 — "Contrato de tipos".
+//
+// Estado: espejo del schema tal como quedó curado en Etapa 5 (ver
+// `brief-cierre-etapa-5.md` §3 y §4).
+//
+// Criterio de opcionalidad: solo los campos con `Rule.required()` en el schema van
+// como no-opcionales. Todo lo demás es `?`, incluso si hoy está cargado en los
+// documentos reales — el editor puede vaciarlo desde el Studio sin que TypeScript
+// se entere.
+
+/* ────────────────────────────── Primitivas ────────────────────────────── */
+
+/** Referencia sin expandir. Cuando la query usa `->`, el tipo pasa a ser el documento. */
+export interface SanityReference {
+  _ref: string;
+  _type: 'reference';
+}
+
+export interface SanitySlug {
+  _type: 'slug';
+  current: string;
+}
+
+/**
+ * Imagen de Sanity. `alt` y `caption` son campos custom que agrega el schema, no
+ * parte del tipo `image` nativo — por eso no están en todas: `settings.logo`,
+ * `client.logo` y `edtechMarketingPractice.heroImage` no los declaran.
+ */
+export interface SanityImage {
+  _type: 'image';
+  asset: SanityReference;
+  hotspot?: { x: number; y: number; height: number; width: number };
+  crop?: { top: number; bottom: number; left: number; right: number };
+  alt?: string;
+  caption?: string;
+}
+
+/**
+ * Portable Text. Se tipa estructuralmente en vez de importar `@portabletext/types`:
+ * hoy ningún componente lo renderiza (eso entra con las páginas de detalle), así que
+ * sumar la dependencia solo por el tipo sería adelantar una decisión de renderer.
+ */
+export interface PortableTextBlock {
+  _type: string;
+  _key: string;
+  [key: string]: unknown;
+}
+
+/** Campos que Sanity agrega a todo documento. */
+export interface SanityDocument {
+  _id: string;
+  _type: string;
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+}
+
+/* ──────────────────────── Object types compartidos ────────────────────── */
+
+/** `seo.ts` — embebido en todo documentType que renderiza una página propia. */
+export interface Seo {
+  title?: string;
+  description?: string;
+  ogImage?: SanityImage;
+  canonicalUrl?: string;
+  noIndex?: boolean;
+}
+
+/* ──────────────────────────── Taxonomías ──────────────────────────────── */
+
+/**
+ * `edtechMentor.interviewCategory` — `string` + `options.list` en el schema.
+ * Conjunto cerrado: el editor elige de un radio, no puede inventar valores, así que
+ * la union de TS no puede desalinearse sin que alguien toque el schema.
+ * (Typo `essencial` → `essential` ya corregido en Etapa 5.)
+ */
+export type InterviewCategory = 'essential' | 'investor' | 'founders';
+
+/**
+ * `edtechMarketingService.category` y `edtechMarketingPractice.relatedServiceCategory`
+ * — la misma lista de 8 valores, declarada por separado en cada schema.
+ *
+ * ⚠️ Taxonomía INDEPENDIENTE de `workCategory`: no comparte doctype, campo ni valores
+ * (esta tiene "Project Management", "Content Development" y "Others"; `workCategory`
+ * tiene "Thought Leadership Programs" y "Content Marketing"). Se parecen de nombre en
+ * algunos casos y no son lo mismo.
+ */
+export type ServiceCategoryId =
+  | 'ux-ui-web-design'
+  | 'brand-messaging-strategy'
+  | 'project-management'
+  | 'events'
+  | 'content-development'
+  | 'marketing-programs'
+  | 'strategic-services'
+  | 'others';
+
+/** Labels de `ServiceCategoryId`, en el orden en que se muestran en EdTech Marketing. */
+export const SERVICE_CATEGORY_LABELS: Record<ServiceCategoryId, string> = {
+  'ux-ui-web-design': 'UX/UI & Web Design',
+  'brand-messaging-strategy': 'Brand & Messaging Strategy',
+  'project-management': 'Project Management',
+  events: 'Events',
+  'content-development': 'Content Development',
+  'marketing-programs': 'Marketing Programs',
+  'strategic-services': 'Strategic Services',
+  others: 'Others',
+};
+
+/** Orden de aparición de las categorías en el menú de servicios (orden del vanilla). */
+export const SERVICE_CATEGORY_ORDER: ServiceCategoryId[] = [
+  'ux-ui-web-design',
+  'brand-messaging-strategy',
+  'project-management',
+  'events',
+  'content-development',
+  'marketing-programs',
+  'strategic-services',
+  'others',
+];
+
+/** Íconos de `ServiceIcon.astro` — espejo de `ICON_OPTIONS` del schema. */
+export type ServiceIconId = 'asterisk' | 'quatrefoil' | 'arc';
+
+/** Íconos de `PracticeIcon.astro` — espejo de `ICON_OPTIONS` del schema. */
+export type PracticeIconId = 'waves' | 'spiral' | 'square-circle';
+
+/** Labels de `InterviewCategory`, tal como se muestran en los pills de EdTech Mentor. */
+export const INTERVIEW_CATEGORY_LABELS: Record<InterviewCategory, string> = {
+  essential: 'Essential',
+  investor: 'Investor',
+  founders: 'Founders',
+};
+
+/* ───────────────────────────── documentTypes ──────────────────────────── */
+
+/**
+ * `workCategory` — taxonomía de Work, pero como DOCUMENTO, no como lista cerrada.
+ *
+ * Por eso `slug.current` queda `string` y no una union de los 7 valores actuales: el
+ * editor puede crear una categoría nueva desde el Studio y la union mentiría en el
+ * primer alta. La lista de 7 sale siempre de la query, nunca de un tipo. (Contraste
+ * con `InterviewCategory`/`ServiceCategoryId`, que sí son `options.list` cerradas.)
+ */
+export interface WorkCategory extends SanityDocument {
+  _type: 'workCategory';
+  title: string;
+  slug: SanitySlug;
+  description?: string;
+  color?: string;
+}
+
+/** `client` — marca. Fuente de verdad del nombre de cliente en `work` y `testimonial`. */
+export interface Client extends SanityDocument {
+  _type: 'client';
+  name: string;
+  url?: string;
+  logo?: SanityImage;
+  logoLight?: SanityImage;
+  isFeatured?: boolean;
+  logoHeight?: number;
+  logoOrder?: number;
+  description?: string;
+}
+
+/** `work` — un case study. Alimenta Work, Clientes y la interna compartida. */
+export interface Work extends SanityDocument {
+  _type: 'work';
+
+  // Overview
+  title: string;
+  slug: SanitySlug;
+  client: SanityReference | Client;
+  clientLogo?: SanityImage;
+  category: SanityReference | WorkCategory;
+  services?: string[];
+  projectType?: string;
+  agencyRole?: string;
+  year?: number;
+  excerpt: string;
+  clientTagline?: string;
+
+  // Metadata
+  /** Asumió el rol del slider "Los mejores" — no es una categoría más (Etapa 5). */
+  isFeatured?: boolean;
+  order?: number;
+
+  // Media
+  thumbnail?: SanityImage;
+  heroImage?: SanityImage;
+  heroVideo?: string;
+  gallery?: SanityImage[];
+
+  // Case study
+  brief?: string;
+  description?: {
+    projectTitle?: string;
+    projectContent?: PortableTextBlock[];
+    projectImages?: SanityImage[];
+  };
+  challenge?: {
+    challengeTitle?: string;
+    challengeContent?: PortableTextBlock[];
+    challengeImages?: SanityImage[];
+  };
+  solution?: {
+    headline?: string;
+    body?: PortableTextBlock[];
+    solutionImages?: SanityImage[];
+  };
+  impact?: { _key: string; verb?: string; result?: string }[];
+  results?: { _key: string; number?: string; description?: string }[];
+  contentSections?: {
+    _key: string;
+    title?: string;
+    body?: string;
+    images?: SanityImage[];
+  }[];
+  contributions?: string[];
+  location?: string;
+
+  seo?: Seo;
+}
+
+/**
+ * `testimonial` — un slide del slider de Home.
+ *
+ * `workProject` es el único vínculo con `work`: el objeto embebido `work.testimonial`
+ * se eliminó en Etapa 5, así que traer los testimonios de un `work` es una query
+ * INVERSA desde acá (`*[_type == "testimonial" && workProject._ref == $workId]`).
+ */
+export interface Testimonial extends SanityDocument {
+  _type: 'testimonial';
+  quote: string;
+  /** Si hay `client`, el nombre canónico sale de `client->name` vía `coalesce()`. */
+  authorName?: string;
+  authorRole?: string;
+  avatarPhoto?: SanityImage;
+  backgroundPhoto?: SanityImage;
+  isFeatured?: boolean;
+  order?: number;
+  client?: SanityReference | Client;
+  workProject?: SanityReference | Work;
+}
+
+/** `team` — un integrante del equipo. Grid de About. */
+export interface Team extends SanityDocument {
+  _type: 'team';
+  name: string;
+  role: string;
+  photo?: SanityImage;
+  isActive?: boolean;
+  order?: number;
+}
+
+/** `resource` — un artículo de Resources. */
+export interface Resource extends SanityDocument {
+  _type: 'resource';
+  title?: string;
+  slug?: SanitySlug;
+  /** Bajada corta de la card. Distinta de `description` (el body largo del hero). */
+  shortDescription?: string;
+  description?: string;
+  publishedAt?: string;
+  /** Imagen de la card en el listado (ex `featuredImage`, renombrada en Etapa 5). */
+  cardThumbnail?: SanityImage;
+  /** Imagen del hero de la interna — NO se usa en el listado. */
+  heroBanner?: SanityImage;
+  body?: PortableTextBlock[];
+  seo?: Seo;
+}
+
+/** Bloque insertable dentro de `edtechMentor.body` (Portable Text). */
+export interface PearlOfWisdomBlock {
+  _type: 'pearlOfWisdom';
+  _key: string;
+  quote?: string;
+}
+
+/** `edtechMentor` — una entrevista de The EdTech Mentor. */
+export interface EdtechMentor extends SanityDocument {
+  _type: 'edtechMentor';
+
+  // Guest
+  guestName?: string;
+  guestCompany?: string;
+  guestRole?: string;
+  guestPhoto?: SanityImage;
+
+  // Content
+  title?: string;
+  shortDescription?: string;
+  thumbnail?: SanityImage;
+  highlightTitle?: string;
+  bannerPost?: SanityImage;
+  /** Fieldset `interviewIntro`. */
+  introText?: string;
+  /** Fieldset `interviewIntro`. */
+  mainImage?: SanityImage;
+  body?: (PortableTextBlock | PearlOfWisdomBlock)[];
+  pearlOfWisdom?: string;
+  rapidFire?: {
+    description?: string;
+    image?: SanityImage;
+    questions?: { _key: string; question?: string; answer?: string }[];
+  };
+
+  // Metadata
+  slug?: SanitySlug;
+  interviewCategory?: InterviewCategory;
+  isFeatured?: boolean;
+  publishedAt?: string;
+  linkedinUrl?: string;
+  mediumUrl?: string;
+
+  seo?: Seo;
+}
+
+/** `edtechMarketingPractice` — una de las 3 prácticas. Card en EdTech Marketing + interna. */
+export interface EdtechMarketingPractice extends SanityDocument {
+  _type: 'edtechMarketingPractice';
+
+  // Card
+  title: string;
+  slug: SanitySlug;
+  shortDescription: string;
+  description?: string;
+  iconId?: PracticeIconId;
+  order?: number;
+  relatedServiceCategory?: ServiceCategoryId;
+
+  // Hero — fieldset `intro`
+  introTitle?: string;
+  introDescription?: string;
+  capabilities?: string[];
+
+  // Hero
+  heroHeadline?: string;
+  heroText?: string;
+  heroImage?: SanityImage;
+  closingCtaHeadline?: string;
+
+  // Fieldset `clients`
+  clientSectionTitle?: string;
+  clientNames?: string[];
+
+  // Credibility
+  credibilityHeadline?: string;
+  credibilityText?: string;
+  credibilityItems?: string[];
+
+  // Conversation Engine
+  conversationItems?: {
+    _key: string;
+    title?: string;
+    body?: string;
+    ctaLabel?: string;
+    ctaHref?: string;
+  }[];
+
+  // Fieldset `practiceScopes`
+  practiceScopesTitle?: string;
+  practiceScopes?: {
+    _key: string;
+    title?: string;
+    description?: string;
+    ctaLabel?: string;
+    ctaHref?: string;
+  }[];
+
+  // Fieldset `pageCta`
+  ctaTitle?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+}
+
+/** `edtechMarketingService` — un servicio del menú de EdTech Marketing + interna. */
+export interface EdtechMarketingService extends SanityDocument {
+  _type: 'edtechMarketingService';
+  title: string;
+  slug: SanitySlug;
+  category: ServiceCategoryId;
+  iconId?: ServiceIconId;
+  description?: string;
+
+  // Fieldset `intro`
+  introTitle?: string;
+  introDescription?: string;
+
+  // Fieldset `features`
+  featuresTitle?: string;
+  features?: { _key: string; title?: string; description?: string }[];
+
+  // Fieldset `proofPoint`
+  proofPointTitle?: string;
+  proofPointDescription?: string;
+  proofPointImage?: SanityImage;
+
+  // Fieldset `pageCta`
+  ctaTitle?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+
+  seo?: Seo;
+}
+
+/* ──────────────────────────────── Singleton ───────────────────────────── */
+
+interface LinkItem {
+  _key: string;
+  label?: string;
+  href?: string;
+}
+
+/**
+ * `settings` — singleton de configuración del sitio.
+ *
+ * ⚠️ El `name` del documentType en el Studio es `settings`, NO `siteSettings`:
+ * `CLAUDE.md` §4 y §8 lo llaman `siteSettings` por su rol, pero las queries GROQ
+ * tienen que filtrar por `_type == "settings"`.
+ */
+export interface Settings extends SanityDocument {
+  _type: 'settings';
+
+  // Identity
+  siteTitle?: string;
+  siteDescription?: string;
+  siteUrl?: string;
+  logo?: SanityImage;
+
+  seo?: Seo;
+
+  // Analytics
+  gaId?: string;
+  hubspotId?: string;
+
+  // Social
+  linkedinUrl?: string;
+  twitterUrl?: string;
+
+  // Navbar
+  navbarCta?: { text?: string; url?: string; micro?: string };
+  navbarWorkDropdown?: { items?: LinkItem[] };
+
+  // Footer
+  footerCta?: { eyebrow?: string; headline?: string; text?: string; buttonText?: string };
+  footerNavigation?: { links?: LinkItem[] };
+  footerCopyright?: { year?: string };
+
+  // Home
+  homeHero?: { headline?: string; subtitle?: string; video?: string; poster?: SanityImage };
+  homeWork?: { headline?: string; subtitle?: string; showreelUrl?: string };
+  homeMentor?: { headline?: string; subtitle?: string };
+  homeApart?: {
+    headline?: string;
+    description?: string;
+    slides?: { _key: string; title?: string; text?: string }[];
+  };
+  homeNewsletter?: { headline?: string; placeholder?: string };
+
+  // About
+  aboutHero?: { headline?: string; text?: string; image?: SanityImage };
+  aboutDna?: { headline?: string; text?: string };
+  aboutProofPoint?: { title?: string; text?: string; image?: SanityImage };
+  aboutTeam?: { headline?: string; text?: string };
+
+  // Work
+  workHero?: { eyebrow?: string; headline?: string; subtitle?: string };
+
+  // Mentor
+  mentorHero?: { headline?: string; text?: string };
+  mentorCta?: { headline?: string; text?: string };
+
+  // Resources
+  resourcesHero?: { headline?: string; subtitle?: string };
+
+  // Contact
+  contactHero?: { headline?: string; text?: string };
+  contactEmail?: string;
+  officeUSNew?: { address?: string; phone?: string; email?: string };
+  officeCONew?: { address?: string; phone?: string; email?: string };
+  /** Legacy plano — reemplazado por `officeUSNew`, todavía en el schema. */
+  officeUS?: string;
+  /** Legacy plano — reemplazado por `officeCONew`, todavía en el schema. */
+  officeCO?: string;
+
+  // EdTech Marketing
+  agencyHero?: { headline?: string; text?: string };
+  agencyPracticesSection?: { headline?: string; text?: string };
+  agencyClosingCta?: { headline?: string };
+  /** Fieldset `services` — intro del menú de servicios (agregado en Etapa 5). */
+  servicesTitle?: string;
+  servicesDescription?: string;
+}

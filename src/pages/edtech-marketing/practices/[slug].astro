@@ -1,0 +1,270 @@
+---
+/**
+ * EdTech Marketing — interna de una práctica — 27zero
+ * Portado 1:1 de `/edtech-marketing-practice/index.html` +
+ * `/edtech-marketing-practice/style.css` del repo vanilla.
+ *
+ * La ruta es `/edtech-marketing/practices/[slug]` (plural), que es lo que emite
+ * `practiceUrl()` y lo que las cards de la página EdTech Marketing ya linkean desde 6B.
+ *
+ * Campos: solo los fieldsets curados en Etapa 5 (`intro`, `clients`, `practiceScopes`,
+ * `pageCta`). Los campos viejos del schema que modelan las mismas secciones
+ * (`credibility*`, `conversationItems`, `closingCtaHeadline`) NO se leen — ver la nota
+ * en `practiceDetailQuery` y el reporte de entrega.
+ *
+ *   `intro`          → sección Credibility
+ *   `clients`        → sección Brand Logos
+ *   `practiceScopes` → acordeón "From a single conversation to a content engine"
+ *   `pageCta`        → Closing CTA
+ *
+ * El menú de servicios reusa `ServiceMenu` de la página EdTech Marketing, con un solo
+ * bloque: el de la categoría que la práctica declara en `relatedServiceCategory`.
+ *
+ * Valores fluidos con la curva del proyecto: mobile = `em × 9` @320px,
+ * desktop = `em × 14` @1440px, salvo donde el vanilla fija un valor mobile propio.
+ */
+import Page from '../../../layouts/Page.astro';
+import ServiceMenu from '../../../components/sections/ServiceMenu.astro';
+import Button from '../../../components/ui/Button.astro';
+import Dropdown from '../../../components/ui/Dropdown.astro';
+import { sanityClient } from '../../../lib/sanity/client';
+import { toImage } from '../../../lib/sanity/image';
+import { practiceDetailQuery } from '../../../lib/sanity/queries';
+import { serviceUrl, toStaticPaths } from '../../../lib/utils/routes';
+import type {
+  PracticeIconId,
+  SanityImage,
+  ServiceCategoryId,
+  ServiceIconId,
+} from '../../../types/sanity';
+import { SERVICE_CATEGORY_LABELS } from '../../../types/sanity';
+import type { ServiceGroup } from '../../../types/ui';
+
+export interface PracticeDetail {
+  _id: string;
+  title?: string;
+  slug?: string;
+  shortDescription?: string;
+  description?: string;
+  iconId?: PracticeIconId;
+  relatedServiceCategory?: ServiceCategoryId;
+  heroHeadline?: string;
+  heroText?: string;
+  heroImage?: SanityImage;
+  introTitle?: string;
+  introDescription?: string;
+  capabilities?: string[];
+  clientSectionTitle?: string;
+  clientNames?: string[];
+  practiceScopesTitle?: string;
+  practiceScopes?: { _key: string; title?: string; description?: string; ctaLabel?: string; ctaHref?: string }[];
+  ctaTitle?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+  services?: { _id: string; title: string; slug: string; category: ServiceCategoryId; iconId?: ServiceIconId }[];
+}
+
+export async function getStaticPaths() {
+  const practices = await sanityClient.fetch<PracticeDetail[]>(practiceDetailQuery);
+  return toStaticPaths(practices, {
+    label: 'edtech-marketing/practices/[slug]',
+    slugOf: (p) => p.slug,
+  });
+}
+
+const practice = Astro.props as PracticeDetail;
+
+const heroImage = toImage(practice.heroImage, { width: 1920 });
+
+/* El hero cae al `title` del documento si `heroHeadline` está vacío: es el único texto
+   que la práctica tiene garantizado por schema (`title` es requerido) y una interna sin
+   `h1` no es navegable ni indexable. Misma lógica para la bajada. */
+const heroHeadline = practice.heroHeadline ?? practice.title;
+const heroText = practice.heroText ?? practice.shortDescription;
+
+const capabilities = (practice.capabilities ?? []).filter(Boolean);
+const clientNames = (practice.clientNames ?? []).filter(Boolean);
+const scopes = (practice.practiceScopes ?? []).filter((scope) => scope.title || scope.description);
+
+/* Mismo criterio de íconos que la página EdTech Marketing: sale de `iconId` y, sin él,
+   rota entre los 3 marcos de marca. */
+const ICON_ROTATION: ServiceIconId[] = ['asterisk', 'quatrefoil', 'arc'];
+
+const serviceGroup: ServiceGroup[] =
+  (practice.services ?? []).length > 0 && practice.relatedServiceCategory
+    ? [
+        {
+          title: SERVICE_CATEGORY_LABELS[practice.relatedServiceCategory],
+          services: (practice.services ?? []).map((service, index) => ({
+            href: serviceUrl(service.slug),
+            title: service.title,
+            iconId: service.iconId ?? ICON_ROTATION[index % ICON_ROTATION.length],
+          })),
+        },
+      ]
+    : [];
+
+const CONTAINER = 'container mx-auto flex w-full max-w-(--container-max-width) flex-col gap-gap px-container-x';
+
+const BODY = 'font-inter text-body leading-[1.6] font-medium tracking-normal';
+const BODY_SM = 'font-inter text-body-sm leading-[1.6] font-normal tracking-normal';
+const H2 = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px]';
+---
+
+<Page
+  title={`${practice.title ?? 'EdTech Marketing'} — 27zero`}
+  description={practice.shortDescription ?? practice.description}
+  navVariant="white"
+>
+  <!-- HERO -->
+  <section
+    class="section section--hero-marketing relative mt-[clamp(6rem,5.2143rem_+_3.9286vw,8.75rem)] overflow-hidden pt-[clamp(6rem,8.3304rem_-_2.5893vw,7.8125rem)] pb-[clamp(7.8125rem,11.8304rem_-_4.4643vw,10.9375rem)]"
+  >
+    <div class="hero-marketing-bg absolute inset-0 z-0 flex items-center justify-center bg-gray">
+      {
+        heroImage && (
+          <img src={heroImage.src} alt={heroImage.alt} class="size-full object-cover" />
+        )
+      }
+    </div>
+
+    <div
+      class:list={[CONTAINER, 'hero-marketing-container relative z-[1] gap-[clamp(1.2038rem,1.0127rem_+_0.9554vw,1.8725rem)]']}
+    >
+      <div class="hero-marketing-text flex max-w-[50%] flex-col gap-xs max-md:max-w-full">
+        <h1 class="font-lora text-h1 leading-[1.25] font-medium tracking-[-0.48px]">{heroHeadline}</h1>
+        {heroText && <p class:list={[BODY, 'max-w-[90%] text-black']}>{heroText}</p>}
+      </div>
+
+      <div class="hero-home-cta mr-auto flex flex-col items-center gap-xs">
+        <Button href="/contact" variant="white" class="border-white!">Book a strategy session</Button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CREDIBILITY — fieldset `intro` -->
+  {
+    (practice.introTitle || practice.introDescription || capabilities.length > 0) && (
+      <section class="section section--credibility pt-[clamp(1.8056rem,1.519rem_+_1.433vw,2.8087rem)] pb-[clamp(3.8588rem,3.2462rem_+_3.0625vw,6.0025rem)]">
+        <div class:list={[CONTAINER, 'items-center gap-[clamp(1.4063rem,1.183rem_+_1.1161vw,2.1875rem)]']}>
+          <div class="credibility-intro flex flex-col items-center gap-[clamp(0.9619rem,0.8092rem_+_0.7634vw,1.4962rem)] text-center">
+            {practice.introTitle && (
+              <h2 class:list={[H2, 'max-w-[55%] text-black max-md:max-w-full']}>{practice.introTitle}</h2>
+            )}
+            {practice.introDescription && (
+              <p class:list={[BODY_SM, 'max-w-[80%] text-black max-md:max-w-full']}>
+                {practice.introDescription}
+              </p>
+            )}
+          </div>
+
+          {capabilities.length > 0 && (
+            <div class="credibility-list flex max-w-[80%] flex-wrap items-center justify-center gap-[clamp(0.6019rem,0.5063rem_+_0.4777vw,0.9363rem)] max-md:max-w-full">
+              {capabilities.map((capability, index) => (
+                <>
+                  {index > 0 && (
+                    <span class="size-[clamp(0.2025rem,0.1704rem_+_0.1607vw,0.315rem)] shrink-0 rounded-full bg-purple" />
+                  )}
+                  <span class="text-center font-lora text-[clamp(0.9375rem,0.9018rem_+_0.1786vw,1.0625rem)] leading-[1.25] font-medium tracking-[-0.01em] text-black">
+                    {capability}
+                  </span>
+                </>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+    )
+  }
+
+  <!-- BRAND LOGOS — fieldset `clients` -->
+  {
+    clientNames.length > 0 && (
+      <section class="section section--brand-logos bg-indigo py-[clamp(4.8206rem,4.0554rem_+_3.8259vw,7.4988rem)]">
+        <div class:list={[CONTAINER, 'gap-[clamp(3.2119rem,2.7021rem_+_2.5491vw,4.9962rem)]']}>
+          {practice.clientSectionTitle && (
+            <h2 class:list={[H2, 'max-w-[30%] text-white max-md:max-w-full']}>
+              {practice.clientSectionTitle}
+            </h2>
+          )}
+
+          {/* `clientNames` es un array de strings, no de referencias a `client`: el
+              schema lo modela así desde antes de Etapa 5, así que no hay logo ni bajada
+              por cliente y la grilla muestra solo el nombre. */}
+          <div class="brand-logos-grid grid grid-cols-3 gap-[clamp(3.2119rem,2.7021rem_+_2.5491vw,4.9962rem)] max-md:grid-cols-1">
+            {clientNames.map((name) => (
+              <div class="brand-logos-item flex flex-col items-start gap-[clamp(1.2038rem,1.0127rem_+_0.9554vw,1.8725rem)]">
+                <span class:list={[H2, 'text-white']}>{name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- FROM A SINGLE CONVERSATION — fieldset `practiceScopes` -->
+  {
+    scopes.length > 0 && (
+      <section class="section section--conversation-engine bg-black pt-[clamp(4.6181rem,3.8851rem_+_3.6652vw,7.1838rem)] pb-[clamp(3.2119rem,2.7021rem_+_2.5491vw,4.9962rem)]">
+        <div class="container conversation-engine-container mx-auto grid w-full max-w-(--container-max-width) grid-cols-[0.45fr_1fr] items-start gap-[clamp(4.6181rem,3.8851rem_+_3.6652vw,7.1838rem)] px-container-x max-md:grid-cols-1 max-md:gap-[clamp(2.4131rem,2.0301rem_+_1.9152vw,3.7538rem)]">
+          <h2 class:list={[H2, 'text-white']}>
+            {practice.practiceScopesTitle ?? 'From a single conversation to a content engine.'}
+          </h2>
+
+          <div class="conversation-engine-dropdowns flex flex-col gap-0">
+            {scopes.map((scope) => (
+              <Dropdown title={scope.title ?? ''}>
+                {scope.description && <p>{scope.description}</p>}
+                {scope.ctaLabel && scope.ctaHref && (
+                  <Button href={scope.ctaHref} variant="purple" class="dropdown-cta mt-xs mr-auto">
+                    {scope.ctaLabel}
+                  </Button>
+                )}
+              </Dropdown>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- MENU — servicios de la categoría relacionada -->
+  {
+    serviceGroup.length > 0 && (
+      <section class="section section--menu bg-black pt-0 pb-[clamp(3.2119rem,2.7021rem_+_2.5491vw,4.9962rem)]">
+        <div class="container menu-container mx-auto grid w-full max-w-(--container-max-width) grid-cols-[0.45fr_1fr] items-start gap-[clamp(4.6181rem,3.8851rem_+_3.6652vw,7.1838rem)] px-container-x max-md:grid-cols-1 max-md:gap-[clamp(2.4131rem,2.0301rem_+_1.9152vw,3.7538rem)]">
+          <div class="menu-intro flex flex-col items-start gap-[clamp(1.4063rem,1.183rem_+_1.1161vw,2.1875rem)]">
+            <h2 class="font-lora text-[clamp(1.4456rem,1.2162rem_+_1.1473vw,2.2487rem)] leading-[1.25] font-medium tracking-[-0.36px] text-white max-md:text-[1.75rem]">
+              What's on the menu?
+            </h2>
+            <Button href="/edtech-marketing" variant="purple">For all</Button>
+          </div>
+
+          <ServiceMenu categories={serviceGroup} />
+        </div>
+      </section>
+    )
+  }
+
+  <!-- CLOSING CTA — fieldset `pageCta` -->
+  {
+    practice.ctaTitle && (
+      <section class="section section--closing-cta bg-white py-[clamp(3.75rem,3.3929rem_+_1.7857vw,5rem)] text-center">
+        <div
+          class:list={[
+            CONTAINER,
+            'closing-cta-container items-center gap-[clamp(1.2038rem,1.0127rem_+_0.9554vw,1.8725rem)]',
+          ]}
+        >
+          <h2 class:list={[H2, 'max-w-[50%] text-black max-md:max-w-full']}>{practice.ctaTitle}</h2>
+          {practice.ctaLabel && (
+            <Button href={practice.ctaHref ?? '/contact'} variant="dark" class="text-white!">
+              {practice.ctaLabel}
+            </Button>
+          )}
+        </div>
+      </section>
+    )
+  }
+</Page>
