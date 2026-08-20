@@ -4,10 +4,29 @@
  * Portado 1:1 de `/components/edtech-mentor-card` del repo vanilla. Sin JS: todo el
  * efecto de hover es CSS puro.
  *
- * Estructura: header transparente (avatar + rol/nombre) + body (la card real, gris,
- * con overlay de gradiente que aparece en hover junto con el título).
+ * Estructura: header transparente (avatar + rol/nombre) + body (la card real, con la
+ * `thumbnail` del episodio de fondo — gris si no hay — y overlay de gradiente que
+ * aparece en hover junto con el título).
+ *
+ * El overlay va de `transparent` a `rgba(0,0,0,.75)`: oscurece la mitad inferior para
+ * que el título blanco se lea, pero deja ver la `thumbnail` en vez de taparla — antes
+ * arrancaba en el gris opaco del design system y borraba la imagen entera.
+ *
+ * El texto del hover es el TÍTULO DEL EPISODIO (`title`), no el nombre del invitado:
+ * ese va en el header, en `name`.
  * En mobile no hay hover, así que gradiente, título y flecha quedan en su estado
  * "hover" por default — igual que en el vanilla.
+ *
+ * Fade-up del título: la transición declara `opacity,translate`, NO `transform`.
+ * Tailwind v4 emite `translate-y-*` sobre la propiedad `translate` (`translate: x y`),
+ * no dentro de `transform`, así que `transition-[opacity,transform]` no alcanzaba al
+ * desplazamiento: el texto se desvanecía en 300ms pero saltaba de golpe a su posición.
+ *
+ * `transform-gpu` (título y overlay): el fade del gradiente y el fade-up del título
+ * corren en el mismo frame sobre la misma caja. Sin promover ninguno de los dos a capa
+ * propia, cada frame del gradiente obliga a re-rasterizar el texto que tiene encima.
+ * `translateZ(0)` los separa en capas y el compositor resuelve opacity/translate sin
+ * repintar. Es la única razón de esas dos clases.
  *
  * Props genéricas, sin acoplar al schema de Sanity (Etapa 5).
  */
@@ -17,17 +36,19 @@ interface Props {
   name?: string;
   role?: string;
   tag?: string;
+  /** Fondo de `.card-edtech-mentor-body` (`edtechMentor.thumbnail`). Sin ella, gris. */
+  image?: { src: string; alt: string };
   avatar?: { src: string; alt: string };
   /** Alternativa al avatar: iniciales dentro del círculo. */
   avatarInitials?: string;
 }
 
-const { href, title, name, role, tag, avatar, avatarInitials } = Astro.props;
+const { href, title, name, role, tag, image, avatar, avatarInitials } = Astro.props;
 ---
 
 <a
   href={href}
-  class="card card--edtech-mentor group/card relative flex w-card shrink-0 cursor-pointer flex-col gap-gap overflow-hidden rounded-card bg-transparent text-black no-underline"
+  class="card card--edtech-mentor group/card relative flex w-card shrink-0 cursor-pointer flex-col gap-gap rounded-card bg-transparent text-black no-underline"
 >
   <div
     class="card-edtech-mentor-header flex items-center gap-[clamp(0.4838rem,0.407rem_+_0.3839vw,0.7525rem)] bg-transparent p-0"
@@ -64,8 +85,21 @@ const { href, title, name, role, tag, avatar, avatarInitials } = Astro.props;
   </div>
 
   <div
-    class="card-edtech-mentor-body relative flex size-card flex-col justify-between overflow-hidden rounded-card bg-gray p-sm after:absolute after:inset-0 after:z-0 after:bg-[linear-gradient(180deg,var(--color-gray)_0%,var(--color-black)_100%)] after:opacity-0 after:transition-opacity after:duration-300 after:ease-in-out after:content-[''] group-hover/card:after:opacity-100 max-md:after:opacity-100"
+    class="card-edtech-mentor-body relative flex size-card flex-col justify-between overflow-hidden rounded-card bg-gray p-sm after:absolute after:inset-0 after:z-0 after:bg-[linear-gradient(180deg,transparent_0%,rgba(0,0,0,0.75)_100%)] after:opacity-0 after:transition-opacity after:duration-300 after:ease-in-out after:content-[''] after:transform-gpu group-hover/card:after:opacity-100 max-md:after:opacity-100"
   >
+    {/* Fondo. Va antes que el `::after` en orden de pintado y sin z-index propio, así el
+        gradiente de hover queda por encima de la imagen y el contenido (z-1) por encima
+        de ambos. Sin `thumbnail` cargada, queda el `bg-gray` del body. */}
+    {
+      image && (
+        <img
+          src={image.src}
+          alt={image.alt}
+          class="card-edtech-mentor-bg absolute inset-0 size-full object-cover"
+        />
+      )
+    }
+
     {
       tag && (
         <span class="card-edtech-mentor-tag relative z-[1] font-inter text-card-tag leading-[1.5] font-normal tracking-normal text-black">
@@ -75,15 +109,15 @@ const { href, title, name, role, tag, avatar, avatarInitials } = Astro.props;
     }
 
     <div
-      class="card-edtech-mentor-footer relative z-[1] flex items-end justify-between gap-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)]"
+      class="card-edtech-mentor-footer relative z-[1] mt-auto flex items-end justify-between gap-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)]"
     >
       <h3
-        class="card-edtech-mentor-title translate-y-xs font-inter text-card-headline leading-[1.4] font-medium tracking-normal text-white opacity-0 transition-[opacity,transform] duration-300 ease-in-out group-hover/card:translate-y-0 group-hover/card:opacity-100 max-md:translate-y-0 max-md:opacity-100"
+        class="card-edtech-mentor-title transform-gpu translate-y-xs font-inter text-card-headline leading-[1.4] font-medium tracking-normal text-white opacity-0 transition-[opacity,translate] duration-300 ease-in-out group-hover/card:translate-y-0 group-hover/card:opacity-100 max-md:translate-y-0 max-md:opacity-100"
       >
         {title}
       </h3>
       <div
-        class="card-edtech-mentor-arrow flex size-icon-btn shrink-0 items-center justify-center rounded-full border-[0.125rem] border-black bg-transparent text-black transition-[background-color,color] duration-200 ease-in-out group-hover/card:border-white group-hover/card:text-white max-md:border-white max-md:text-white hover:border-white! hover:bg-white! hover:text-black!"
+        class="card-edtech-mentor-arrow flex size-icon-btn shrink-0 items-center justify-center rounded-full border-[0.0625rem] border-black bg-transparent text-black transition-[background-color,border-color,color] duration-200 ease-in-out group-hover/card:border-white group-hover/card:text-white max-md:border-white max-md:text-white hover:border-white! hover:bg-white! hover:text-black!"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <line x1="7" y1="17" x2="17" y2="7"></line>

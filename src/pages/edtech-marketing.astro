@@ -20,9 +20,10 @@ import Button from '../components/ui/Button.astro';
 import PracticeIcon from '../components/ui/PracticeIcon.astro';
 import PracticesCard from '../components/ui/PracticesCard.astro';
 import { sanityClient } from '../lib/sanity/client';
+import { toImage } from '../lib/sanity/image';
 import { edtechMarketingQuery } from '../lib/sanity/queries';
 import { practiceUrl, serviceUrl } from '../lib/utils/routes';
-import type { PracticeIconId, ServiceCategoryId, ServiceIconId } from '../types/sanity';
+import type { PracticeIconId, SanityImage, ServiceCategoryId, ServiceIconId } from '../types/sanity';
 import { SERVICE_CATEGORY_LABELS, SERVICE_CATEGORY_ORDER } from '../types/sanity';
 import type { ServiceGroup } from '../types/ui';
 
@@ -33,7 +34,7 @@ const { practices, services, settings } = await sanityClient.fetch<{
     slug: string;
     shortDescription?: string;
     description?: string;
-    iconId?: PracticeIconId;
+    cardImage?: SanityImage;
   }[];
   services: { _id: string; title: string; slug: string; category: ServiceCategoryId; iconId?: ServiceIconId }[];
   settings: { servicesTitle?: string; servicesDescription?: string } | null;
@@ -46,8 +47,24 @@ const PRACTICES = practices.map((practice) => ({
   href: practiceUrl(practice.slug),
   title: practice.title,
   body: practice.shortDescription ?? practice.description ?? undefined,
-  iconId: practice.iconId,
+  /* `toImage()` devuelve `undefined` si falta el asset o el `alt` (CLAUDE.md §8.1) y ahí
+     la card cae a su placeholder. Hoy es el caso de las 3: `cardImage` está vacía en
+     todos los documentos. */
+  image: toImage(practice.cardImage, { width: 700 }),
 }));
+
+/* Los 3 íconos de `.practices-card` son fijos y POSICIONALES: el primero de la grilla
+   siempre lleva `waves`, el segundo `spiral` y el tercero `square-circle`, sin importar
+   qué práctica caiga en cada posición. Es el mismo orden en que están hardcodeados en
+   `/edtech-marketing/index.html` del vanilla.
+
+   No salen de Sanity a propósito. Antes se leía `practice.iconId`, que está vacío en los
+   3 documentos, así que el slot nunca recibía contenido y las tres cards se construían
+   con el `.practices-card-icon` VACÍO (la fallback del `<slot>` tampoco se disparaba:
+   Astro no resuelve un `slot="icon"` que vive dentro de una expresión condicional).
+   Son 3 íconos de marca atados a la maquetación, no contenido editable — CLAUDE.md §4
+   los deja del lado estático. */
+const PRACTICE_ICONS: PracticeIconId[] = ['waves', 'spiral', 'square-circle'];
 
 /* El orden de las 8 categorías es de diseño, no un dato del CMS: `category` es una
    `options.list` sin campo de orden, así que se recorre `SERVICE_CATEGORY_ORDER` (el
@@ -159,11 +176,9 @@ const PLACEHOLDER_LABEL =
         class="practices-grid grid grid-cols-3 gap-[clamp(1.2038rem,1.0127rem_+_0.9554vw,1.8725rem)] max-md:flex max-md:snap-x max-md:snap-mandatory max-md:overflow-x-auto max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden max-md:[&_.practices-card]:h-[23.75rem] max-md:[&_.practices-card]:w-[18.75rem] max-md:[&_.practices-card]:flex-[0_0_18.75rem] max-md:[&_.practices-card]:snap-start"
       >
         {
-          PRACTICES.map((practice) => (
-            <PracticesCard href={practice.href} title={practice.title} body={practice.body}>
-              {/* Sin `iconId` cargado, no se pasa el slot y `PracticesCard` cae a su
-                  ícono por defecto en vez de renderizar un `<svg>` vacío. */}
-              {practice.iconId && <PracticeIcon slot="icon" iconId={practice.iconId} />}
+          PRACTICES.map((practice, index) => (
+            <PracticesCard href={practice.href} title={practice.title} body={practice.body} image={practice.image}>
+              <PracticeIcon slot="icon" iconId={PRACTICE_ICONS[index % PRACTICE_ICONS.length]} />
             </PracticesCard>
           ))
         }
@@ -205,9 +220,7 @@ const PLACEHOLDER_LABEL =
       <h2 class="max-w-[50%] font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px] text-black max-md:max-w-full">
         Let's partner to articulate and unpack meaningful results.
       </h2>
-      {/* `.btn-dark` acá va con texto blanco en vez del purple de la variante; el hover
-          a negro ya es el default de `dark`. */}
-      <Button href="/contact" variant="dark" class="text-white!">Book a strategy session</Button>
+      <Button href="/contact" variant="blackWhite">Book a strategy session</Button>
     </div>
   </section>
 </Page>

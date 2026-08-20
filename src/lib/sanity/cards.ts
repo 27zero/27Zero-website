@@ -107,8 +107,9 @@ export function toWorkCard(work: WorkCardProjection, eyebrow?: string): WorkCard
  * "Tag" porque no había dato detrás; ahora que `interviewCategory` existe, es lo que
  * ese chip estaba esperando.
  *
- * `title` cae a `guestName` cuando falta: hay documentos reales cargados a medias, y
- * una card sin ningún texto no es navegable.
+ * `title` es el título del episodio y es lo que la card muestra en el hover; el nombre
+ * del invitado va aparte, en `name`. Cae a `guestName` solo cuando `title` está vacío:
+ * hay documentos reales cargados a medias, y una card sin ningún texto no es navegable.
  */
 export function toMentorCard(mentor: MentorCardProjection): MentorCardData {
   const avatar = toImage(mentor.guestPhoto, { width: 128, height: 128 });
@@ -119,6 +120,9 @@ export function toMentorCard(mentor: MentorCardProjection): MentorCardData {
     tag: mentor.interviewCategory ? INTERVIEW_CATEGORY_LABELS[mentor.interviewCategory] : undefined,
     role: mentor.guestRole ?? mentor.guestCompany,
     name: mentor.guestName,
+    /* Fondo de la card. Es `thumbnail` y NO `guestPhoto`: esa última es la foto de la
+       persona y ya se usa como avatar del header, acá arriba. */
+    image: toImage(mentor.thumbnail, { width: 700 }),
     avatar,
     avatarInitials: avatar ? undefined : getInitials(mentor.guestName),
   };

@@ -203,11 +203,20 @@ export const mentorListQuery = `{
  * `services` viene plano y ordenado por título; el agrupado por categoría lo hace la
  * página siguiendo `SERVICE_CATEGORY_ORDER` (el orden del Figma), porque el orden de
  * las 8 categorías es de diseño y no un dato del CMS.
+ *
+ * `practices` NO trae `iconId`: los 3 íconos de `.practices-card` son fijos y
+ * posicionales, resueltos en la página (`PRACTICE_ICONS` en `edtech-marketing.astro`).
+ * El campo sigue existiendo en el schema, pero ningún listado lo lee.
+ *
+ * `practices` SÍ trae `cardImage` (campo nuevo, `27zero-sanity@612215b`): es el fondo de
+ * la `.practices-card`, el `.practices-card-bg` que en el vanilla era placeholder. Va
+ * cruda, como el resto de las imágenes, para que la página la resuelva con `toImage()`.
+ * Ningún documento la tiene cargada todavía, así que hoy la card cae al placeholder.
  */
 export const edtechMarketingQuery = `{
   "practices": *[_type == "edtechMarketingPractice"]
     | order(order asc, title asc) {
-      _id, title, "slug": slug.current, shortDescription, description, iconId
+      _id, title, "slug": slug.current, shortDescription, description, cardImage
     },
 
   "services": *[_type == "edtechMarketingService" && defined(slug.current)]
@@ -275,10 +284,14 @@ export const workDetailQuery = `
 /**
  * `edtechMentor` — interna de una entrevista.
  *
- * NO trae `imageSquare`, `imageHighlight` ni `interviewer`: los tres se eliminaron del
- * schema en Etapa 5. El `interviewer` que sobrevive en el JSON crudo de "Ready
- * Education" es dato huérfano, no editable desde el Studio — pedirlo sería renderizar
- * algo que ningún editor puede corregir.
+ * NO trae `imageSquare`, `imageHighlight`, `interviewer` ni el campo plano
+ * `pearlOfWisdom`: los tres primeros se eliminaron del schema en Etapa 5 y el cuarto en
+ * `27zero-sanity@432cb5c`. Ojo: el que SÍ sigue vivo es el bloque inline `pearlOfWisdom`
+ * de `body` (Portable Text) — viaja adentro de `body` y lo serializa la interna.
+ *
+ * El `interviewer` que sobrevive en el JSON crudo de "Ready Education" es dato huérfano,
+ * no editable desde el Studio — pedirlo sería renderizar algo que ningún editor puede
+ * corregir.
  *
  * `related` son las otras entrevistas para el slider "Read more!" del final: se resuelve
  * acá y no con una query aparte por página, y se excluye a sí misma con `_id != ^._id`.
@@ -298,7 +311,6 @@ export const mentorDetailQuery = `
     mainImage,
     bannerPost,
     body,
-    pearlOfWisdom,
     rapidFire{description, image, questions[]{_key, question, answer}},
     interviewCategory,
     publishedAt,

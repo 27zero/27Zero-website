@@ -52,7 +52,7 @@ const SLIDER_ARROW =
 
   <div class="slider-track-wrap w-full">
     <div
-      class="slider-track flex cursor-grab gap-sm overflow-x-auto scroll-smooth pr-container-x pl-[max(var(--spacing-container-x),calc((99.5vw_-_var(--container-max-width))/2_+_var(--spacing-container-x)))] select-none [scrollbar-width:none] [&.dragging]:cursor-grabbing [&.dragging]:scroll-auto [&::-webkit-scrollbar]:hidden"
+      class="slider-track flex cursor-grab gap-sm overflow-x-auto scroll-smooth pr-container-x pl-[max(var(--spacing-container-x),calc((99.5vw_-_var(--container-max-width))/2_+_var(--spacing-container-x)))] select-none [scrollbar-width:none] [&_img]:[-webkit-user-drag:none] [&.dragging]:cursor-grabbing [&.dragging]:scroll-auto [&::-webkit-scrollbar]:hidden"
     >
       <slot />
     </div>
@@ -82,22 +82,44 @@ const SLIDER_ARROW =
   // Drag por pointer events + navegación con flechas.
   // ============================
 
+  /**
+   * Umbral en px a partir del cual el gesto se considera arrastre y no click.
+   * Por debajo, el pointer NUNCA se captura y el `click` llega intacto al `<a>` de la
+   * card. Ese es el motivo de que exista: capturar el pointer en `pointerdown` (como
+   * estaba antes) retargetea los eventos de mouse al track, así que el `click` no se
+   * disparaba nunca sobre la card y ninguna card del slider navegaba, aunque el `href`
+   * estuviera bien puesto.
+   */
+  const DRAG_THRESHOLD = 5;
+
   function enableSliderDrag(track: HTMLElement) {
     let isDown = false;
     let startX = 0;
     let startSL = 0;
+    let dragDistance = 0;
 
     track.addEventListener('pointerdown', (e) => {
       isDown = true;
-      track.classList.add('dragging');
+      dragDistance = 0;
       startX = e.pageX;
       startSL = track.scrollLeft;
-      track.setPointerCapture(e.pointerId);
     });
 
     track.addEventListener('pointermove', (e) => {
       if (!isDown) return;
-      track.scrollLeft = startSL - (e.pageX - startX);
+
+      const delta = e.pageX - startX;
+      dragDistance = Math.abs(delta);
+
+      /* La captura se pide recién cuando el gesto ya es un arrastre: así el track sigue
+         recibiendo los pointermove aunque el cursor salga de él, sin robarle el click a
+         la card en un tap simple. */
+      if (dragDistance > DRAG_THRESHOLD && !track.hasPointerCapture(e.pointerId)) {
+        track.classList.add('dragging');
+        track.setPointerCapture(e.pointerId);
+      }
+
+      track.scrollLeft = startSL - delta;
     });
 
     const stopDrag = () => {
@@ -108,6 +130,20 @@ const SLIDER_ARROW =
     track.addEventListener('pointerup', stopDrag);
     track.addEventListener('pointerleave', stopDrag);
     track.addEventListener('pointercancel', stopDrag);
+
+    /* Cierre del otro lado: si hubo arrastre real, se cancela el click para que soltar
+       el mouse sobre una card al final de un swipe no navegue. En fase de captura, antes
+       de que el `<a>` lo reciba. */
+    track.addEventListener(
+      'click',
+      (e) => {
+        if (dragDistance > DRAG_THRESHOLD) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      },
+      true
+    );
   }
 
   function enableSliderArrows(footer: HTMLElement, track: HTMLElement) {

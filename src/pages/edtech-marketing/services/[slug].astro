@@ -187,7 +187,7 @@ const H2 = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px]';
         >
           <h2 class:list={[H2, 'max-w-[50%] text-black max-md:max-w-full']}>{service.ctaTitle}</h2>
           {service.ctaLabel && (
-            <Button href={service.ctaHref ?? '/contact'} variant="dark" class="text-white!">
+            <Button href={service.ctaHref ?? '/contact'} variant="blackWhite">
               {service.ctaLabel}
             </Button>
           )}

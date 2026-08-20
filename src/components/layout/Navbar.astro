@@ -27,13 +27,13 @@ const BTN_NAV_MOBILE = 'self-start shrink-0';
 
 const NAV_LINKS = [
   { href: '/edtech-marketing', label: 'Edtech Marketing' },
-  { href: '/the-edtech-mentor', label: 'The EdTech Mentor' },
+  { href: '/edtech-mentor', label: 'The EdTech Mentor' },
   { href: '/resources', label: 'Resources' },
   { href: '/about', label: 'About' },
 ];
 
 const LINK_BASE =
-  'text-button leading-[1.25] font-medium no-underline transition-[font-weight] duration-200 hover:font-bold';
+  'text-button leading-[1.25] font-medium no-underline transition-opacity duration-200 hover:opacity-70';
 ---
 
 <header
@@ -58,7 +58,7 @@ const LINK_BASE =
     <nav class="nav-links flex items-center gap-gap max-nav:hidden">
       <div class="nav-dropdown group/dd relative">
         <button
-          class="nav-dropdown-toggle m-0 flex cursor-pointer items-center gap-[clamp(0.1969rem,0.1656rem_+_0.1562vw,0.3062rem)] border-0 bg-transparent p-0 font-inter text-button leading-[1.25] font-medium text-current transition-[font-weight] duration-200 hover:font-bold"
+          class="nav-dropdown-toggle m-0 flex cursor-pointer items-center gap-[clamp(0.1969rem,0.1656rem_+_0.1562vw,0.3062rem)] border-0 bg-transparent p-0 font-inter text-button leading-[1.25] font-medium text-current transition-opacity duration-200 hover:opacity-70"
           aria-expanded="false"
         >
           Work
@@ -76,17 +76,17 @@ const LINK_BASE =
           </svg>
         </button>
         <div
-          class="nav-dropdown-content pointer-events-none absolute top-full left-0 z-10 mt-[clamp(0.4781rem,0.4022rem_+_0.3795vw,0.7438rem)] flex min-w-[clamp(5.625rem,4.7321rem_+_4.4643vw,8.75rem)] -translate-y-[clamp(0.1969rem,0.1656rem_+_0.1562vw,0.3062rem)] flex-col gap-xs rounded-[clamp(0.3375rem,0.2839rem_+_0.2679vw,0.525rem)] border border-[#0000001a] bg-white p-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] opacity-0 shadow-[0_0.4375rem_1.3125rem_rgba(16,16,16,0.08)] transition-[opacity,transform] duration-200 ease-in-out group-[.is-open]/dd:pointer-events-auto group-[.is-open]/dd:translate-y-0 group-[.is-open]/dd:opacity-100"
+          class="nav-dropdown-content pointer-events-none absolute top-full left-0 z-10 mt-[clamp(0.4781rem,0.4022rem_+_0.3795vw,0.7438rem)] flex min-w-[clamp(5.625rem,4.7321rem_+_4.4643vw,8.75rem)] -translate-y-[clamp(0.1969rem,0.1656rem_+_0.1562vw,0.3062rem)] flex-col gap-xs rounded-[clamp(0.3375rem,0.2839rem_+_0.2679vw,0.525rem)] border border-[#0000001a] bg-white p-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] opacity-0 shadow-[0_0.4375rem_1.3125rem_rgba(16,16,16,0.08)] transition-[opacity,translate] duration-200 ease-in-out group-[.is-open]/dd:pointer-events-auto group-[.is-open]/dd:translate-y-0 group-[.is-open]/dd:opacity-100"
         >
           <a
-            href="/work?view=projects"
-            class="nav-dropdown-link p-[clamp(0.1969rem,0.1656rem_+_0.1562vw,0.3062rem)] text-[clamp(0.5906rem,0.4969rem_+_0.4688vw,0.9188rem)] font-medium text-black no-underline transition-[font-weight] duration-200 hover:font-bold"
+            href="/work"
+            class="nav-dropdown-link p-[clamp(0.1969rem,0.1656rem_+_0.1562vw,0.3062rem)] text-[clamp(0.5906rem,0.4969rem_+_0.4688vw,0.9188rem)] font-medium text-black no-underline transition-opacity duration-200 hover:opacity-70"
             >by projects</a
           >
           <div class="nav-dropdown-divider h-px bg-[#0000001a]"></div>
           <a
-            href="/work?view=clients"
-            class="nav-dropdown-link p-[clamp(0.1969rem,0.1656rem_+_0.1562vw,0.3062rem)] text-[clamp(0.5906rem,0.4969rem_+_0.4688vw,0.9188rem)] font-medium text-black no-underline transition-[font-weight] duration-200 hover:font-bold"
+            href="/clientes"
+            class="nav-dropdown-link p-[clamp(0.1969rem,0.1656rem_+_0.1562vw,0.3062rem)] text-[clamp(0.5906rem,0.4969rem_+_0.4688vw,0.9188rem)] font-medium text-black no-underline transition-opacity duration-200 hover:opacity-70"
             >by clients</a
           >
         </div>
@@ -150,7 +150,7 @@ const LINK_BASE =
     <nav class="nav-mobile-links flex flex-col">
       <div class="nav-mobile-group group/mgrp border-t-0 pt-0 pb-5">
         <button
-          class="nav-mobile-group-toggle m-0 flex w-full cursor-pointer items-center gap-xs border-0 bg-transparent p-0 text-left font-inter text-[1.5rem] leading-[1.6] font-medium text-black transition-[font-weight] duration-200 hover:font-medium"
+          class="nav-mobile-group-toggle m-0 flex w-full cursor-pointer items-center gap-xs border-0 bg-transparent p-0 text-left font-inter text-[1.5rem] leading-[1.6] font-medium text-black transition-opacity duration-200 hover:opacity-70"
           aria-expanded="false"
         >
           Work
@@ -172,13 +172,13 @@ const LINK_BASE =
             class="nav-mobile-group-inner flex flex-col gap-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] pt-[clamp(0.7031rem,0.5915rem_+_0.558vw,1.0938rem)]"
           >
             <a
-              href="/work?view=projects"
-              class="nav-mobile-sublink block pl-xs text-[0.875rem] font-normal text-black no-underline transition-[font-weight] duration-200 hover:font-bold"
+              href="/work"
+              class="nav-mobile-sublink block pl-xs text-[0.875rem] font-normal text-black no-underline transition-opacity duration-200 hover:opacity-70"
               >by projects</a
             >
             <a
-              href="/work?view=clients"
-              class="nav-mobile-sublink block pl-xs text-[0.875rem] font-normal text-black no-underline transition-[font-weight] duration-200 hover:font-bold"
+              href="/clientes"
+              class="nav-mobile-sublink block pl-xs text-[0.875rem] font-normal text-black no-underline transition-opacity duration-200 hover:opacity-70"
               >by Clients</a
             >
           </div>
@@ -189,7 +189,7 @@ const LINK_BASE =
         NAV_LINKS.map((link) => (
           <a
             href={link.href}
-            class="nav-mobile-link block border-t border-[#0000001a] py-5 font-inter text-[1.5rem] leading-[1.6] font-medium text-black no-underline transition-[font-weight] duration-200 hover:font-bold"
+            class="nav-mobile-link block border-t border-[#0000001a] py-5 font-inter text-[1.5rem] leading-[1.6] font-medium text-black no-underline transition-opacity duration-200 hover:opacity-70"
           >
             {link.label}
           </a>

@@ -43,6 +43,8 @@ export interface MentorCardData {
   href: string;
   title: string;
   tag?: string;
+  /** Fondo de `.card-edtech-mentor-body`, desde `edtechMentor.thumbnail`. */
+  image?: { src: string; alt: string };
   role?: string;
   name?: string;
   avatar?: { src: string; alt: string };

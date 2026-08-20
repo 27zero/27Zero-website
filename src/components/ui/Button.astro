@@ -27,6 +27,17 @@
  *                confirma `color: var(--color-white)` en hover, así que el texto SÍ
  *                cambia de color, igual que `white`, solo que parte de un color base
  *                distinto (indigo en vez de negro).
+ *  - `whiteOnDark` → variante de `white` para uso sobre fondo oscuro (la sección
+ *                `.section--mentor-home`, indigo, en Home y About). Mismo estado base
+ *                que `white` salvo el borde, que nace blanco en vez de negro. La
+ *                diferencia real está en el hover: `white` se RELLENA de negro (lee
+ *                bien sobre fondo claro, se pierde sobre uno oscuro), mientras que esta
+ *                se VACÍA — fondo transparente que deja ver la sección, borde y texto
+ *                blancos. Es el mismo hover de `whiteIndigo`, con texto base negro en
+ *                vez de indigo. Existe como variante y no como override del consumidor
+ *                porque pisar el hover de `white` desde afuera exige tres utilidades
+ *                `!important` (border, bg y text), que es justo lo que este componente
+ *                centraliza.
  *  - `purple`  → `.btn-purple`, fondo purple con texto negro, hover a outline negro
  *                sobre fondo transparente. Agregada en Etapa 4 (Contact la usa en el
  *                submit del formulario).
@@ -43,7 +54,7 @@
  * `submit`. `type` solo aplica en este segundo caso.
  */
 interface Props {
-  variant: 'nav' | 'dark' | 'outline' | 'white' | 'whiteIndigo' | 'purple' | 'blackWhite';
+  variant: 'nav' | 'dark' | 'outline' | 'white' | 'whiteOnDark' | 'whiteIndigo' | 'purple' | 'blackWhite';
   /** Con `href` renderiza `<a>`. Sin `href`, renderiza `<button>` (ver `type`). */
   href?: string;
   /** Solo se usa cuando no hay `href` (renderiza `<button type={type}>`). */
@@ -85,6 +96,7 @@ const VARIANTS = {
   dark: 'border-black bg-black text-purple hover:border-black hover:bg-transparent hover:text-black',
   outline: 'border-black bg-transparent text-black hover:border-black hover:bg-black hover:text-white',
   white: 'border-black bg-white text-black hover:border-black hover:bg-black hover:text-white',
+  whiteOnDark: 'border-white bg-white text-black hover:border-white hover:bg-transparent hover:text-white',
   whiteIndigo: 'border-white bg-white text-indigo hover:border-white hover:bg-transparent hover:text-white',
   purple: 'border-purple bg-purple text-black hover:border-black hover:bg-transparent hover:text-black',
   blackWhite: 'border-black bg-black text-white hover:border-black hover:bg-transparent hover:text-black',

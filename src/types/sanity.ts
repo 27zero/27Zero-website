@@ -302,7 +302,6 @@ export interface EdtechMentor extends SanityDocument {
   /** Fieldset `interviewIntro`. */
   mainImage?: SanityImage;
   body?: (PortableTextBlock | PearlOfWisdomBlock)[];
-  pearlOfWisdom?: string;
   rapidFire?: {
     description?: string;
     image?: SanityImage;
@@ -330,6 +329,8 @@ export interface EdtechMarketingPractice extends SanityDocument {
   shortDescription: string;
   description?: string;
   iconId?: PracticeIconId;
+  /** Fondo de la card de la práctica en el índice de EdTech Marketing (800×600). */
+  cardImage?: SanityImage;
   order?: number;
   relatedServiceCategory?: ServiceCategoryId;
 

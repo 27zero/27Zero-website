@@ -3,6 +3,9 @@
  * Practices Card — 27zero
  * Portado 1:1 de `/components/practices-card` del repo vanilla. Sin JS: hover CSS puro.
  *
+ * El fondo (`.practices-card-bg`) es la `cardImage` del documento; sin imagen cargada
+ * cae al placeholder `[image]` del vanilla, que es el estado en que se entregó el spec.
+ *
  * El ícono es intercambiable (así está documentado en design-system-components.md):
  * va por `<slot name="icon">`, con el ícono de 3 rombos del vanilla como fallback.
  * "Explore the practice" es un label fijo de UI, por eso queda hardcodeado
@@ -24,8 +27,19 @@ const { href, title, body, image } = Astro.props;
   href={href}
   class="practices-card group/card relative flex w-full cursor-pointer flex-col justify-between gap-[clamp(5.625rem,4.7321rem_+_4.4643vw,8.75rem)] overflow-hidden rounded-card bg-gray px-[clamp(1.0463rem,0.8802rem_+_0.8304vw,1.6275rem)] py-[clamp(1.6087rem,1.3534rem_+_1.2768vw,2.5025rem)] text-black no-underline"
 >
+  {/* Fondo de la card: `cardImage` del CMS y, sin ella, el placeholder de wireframe del
+      vanilla (`.practices-card-bg span`, "[image]" sobre gris al 40%). El placeholder es
+      el estado real de hoy — ningún `edtechMarketingPractice` tiene la imagen cargada. */}
   <div class="practices-card-bg absolute inset-0 z-0 flex items-center justify-center bg-gray">
-    {image && <img src={image.src} alt={image.alt} class="size-full object-cover" />}
+    {
+      image ? (
+        <img src={image.src} alt={image.alt} class="size-full object-cover" />
+      ) : (
+        <span class="font-inter text-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] font-semibold tracking-[1px] text-black uppercase opacity-40">
+          [image]
+        </span>
+      )
+    }
   </div>
 
   <div

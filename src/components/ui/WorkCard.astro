@@ -3,6 +3,11 @@
  * Work Card — 27zero
  * Portado 1:1 de `/components/work-card` del repo vanilla. Sin JS: el hover es CSS puro.
  *
+ * El fondo lleva SIEMPRE un overlay negro al 50% y todo el texto de la card es blanco:
+ * la `thumbnail` es una foto arbitraria del proyecto y el texto negro original quedaba
+ * ilegible encima. El overlay se aplica también sin imagen (sobre el gris) para que las
+ * cards de un mismo slider no mezclen tratamiento claro y oscuro.
+ *
  * Props genéricas, todavía sin acoplar al schema de Sanity (eso es Etapa 5).
  * Las imágenes se reciben como `{ src, alt }` para que el `alt` sea obligatorio
  * a nivel de tipo (CLAUDE.md §8.1). Sin imagen, la card cae al fondo gris del
@@ -26,7 +31,12 @@ const { href, title, eyebrow, image, clientName, clientLogo, clientInitials } = 
   href={href}
   class="card card--work group/card relative flex size-card shrink-0 cursor-pointer flex-col overflow-hidden rounded-card text-black no-underline"
 >
-  <div class="card-work-bg absolute inset-0 z-0 flex items-center justify-center bg-gray">
+  {/* Overlay negro al 50% sobre el fondo — es lo que hace legible el texto claro sobre
+      una `thumbnail` cualquiera. Va en el `::after` del propio `.card-work-bg` y no como
+      div aparte para no sumar un nodo por card. */}
+  <div
+    class="card-work-bg absolute inset-0 z-0 flex items-center justify-center bg-gray after:absolute after:inset-0 after:bg-black/50 after:content-['']"
+  >
     {image && <img src={image.src} alt={image.alt} class="size-full object-cover" />}
   </div>
 
@@ -36,12 +46,12 @@ const { href, title, eyebrow, image, clientName, clientLogo, clientInitials } = 
     <div class="card-work-content flex flex-col gap-[clamp(0.4219rem,0.3549rem_+_0.3348vw,0.6563rem)]">
       {
         eyebrow && (
-          <span class="card-work-eyebrow font-inter text-card-eyebrow leading-[1.5] font-normal tracking-normal text-black capitalize">
+          <span class="card-work-eyebrow font-inter text-card-eyebrow leading-[1.5] font-normal tracking-normal text-white capitalize">
             {eyebrow}
           </span>
         )
       }
-      <h3 class="card-work-title m-0 font-inter text-card-title leading-[1.4] font-medium tracking-normal text-black">
+      <h3 class="card-work-title m-0 font-inter text-card-title leading-[1.4] font-medium tracking-normal text-white">
         {title}
       </h3>
       {
@@ -59,7 +69,7 @@ const { href, title, eyebrow, image, clientName, clientLogo, clientInitials } = 
               </div>
             )}
             {clientName && (
-              <span class="card-work-client-name font-inter text-card-client font-medium text-black capitalize">
+              <span class="card-work-client-name font-inter text-card-client font-medium text-white capitalize">
                 {clientName}
               </span>
             )}
@@ -70,7 +80,7 @@ const { href, title, eyebrow, image, clientName, clientLogo, clientInitials } = 
 
     <div class="card-work-footer flex items-center justify-end">
       <div
-        class="card-work-arrow flex size-icon-btn shrink-0 items-center justify-center rounded-full border-[0.0875rem] border-black bg-transparent text-black transition-all duration-200 ease-in-out group-hover/card:bg-black group-hover/card:text-white"
+        class="card-work-arrow flex size-icon-btn shrink-0 items-center justify-center rounded-full border-[0.0875rem] border-white bg-transparent text-white transition-all duration-200 ease-in-out group-hover/card:bg-white group-hover/card:text-black"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <line x1="7" y1="17" x2="17" y2="7"></line>

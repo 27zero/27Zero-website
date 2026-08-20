@@ -11,7 +11,8 @@
  *
  * El bloque "Pearl of wisdom" se renderiza como tipo custom dentro del Portable Text de
  * `body` (`pearlOfWisdom` insertable, Etapa 5). El campo plano `pearlOfWisdom` que
- * todavía existe en el schema NO se renderiza — ver reporte de entrega.
+ * convivía con él se eliminó del schema en `27zero-sanity@432cb5c`; el serializer de
+ * abajo es del bloque inline, que sigue vigente.
  *
  * Secciones que se omiten enteras si el documento no tiene el dato: los dos botones del
  * hero, la imagen y la bajada del bloque Featured, el highlight, Rapid Fire y el slider
@@ -71,9 +72,15 @@ const mentor = Astro.props as MentorDetail;
    tamaños distintos. `toImage()` devuelve `undefined` sin `alt` cargado (CLAUDE.md
    §8.1), y ahí el círculo cae a las iniciales — que es el estado real de 7 de las 8
    entrevistas de hoy. */
-const heroAvatar = toImage(mentor.guestPhoto, { width: 230, height: 230 });
+/* `guestPhoto` ya NO se usa en el hero (la foto del invitado no está en el diseño):
+   sobrevive solo como avatar del chat de Rapid Fire. */
 const chatAvatar = toImage(mentor.guestPhoto, { width: 100, height: 100 });
 const initials = getInitials(mentor.guestName);
+
+/* Fondo del hero. Mismo patrón que el hero de `edtech-marketing/practices/[slug]`:
+   capa `<img>` absoluta en vez de `background-image`, para que el `alt` siga siendo
+   obligatorio (CLAUDE.md §8.1). Sin `bannerPost` cargado queda el gris del diseño. */
+const heroBackground = toImage(mentor.bannerPost, { width: 1600 });
 
 const introImage = toImage(mentor.mainImage, { width: 900 });
 const rapidFireImage = toImage(mentor.rapidFire?.image, { width: 700 });
@@ -132,27 +139,14 @@ const ARTICLE_COMPONENTS = {
 >
   <!-- 1. HERO -->
   <section
-    class="section section--hero-cms bg-[#D9D9D9] bg-cover bg-center mt-[clamp(6rem,3.7857rem_+_11.0714vw,13.75rem)] pt-[clamp(2.5rem,7rem_-_5vw,6rem)] pb-[clamp(6.25rem,8.6607rem_-_2.6786vw,8.125rem)]"
+    class="section section--hero-cms relative overflow-hidden bg-[#D9D9D9] mt-[clamp(4.8rem,3.0286rem_+_8.8571vw,11rem)] pt-[25rem] pb-[4rem]"
   >
-    <div class:list={[CONTAINER, 'gap-[2.5rem]']}>
-      <div class="hero-cms-content flex flex-col gap-[1.5625rem]">
-        <div
-          class:list={[
-            AVATAR_CIRCLE,
-            'size-[clamp(5.25rem,4.6964rem_+_2.7679vw,7.1875rem)] border border-solid border-black/15',
-          ]}
-        >
-          {
-            heroAvatar ? (
-              <img src={heroAvatar.src} alt={heroAvatar.alt} class="size-full object-cover" width="230" height="230" />
-            ) : (
-              <span class="font-inter text-[0.79em] font-semibold tracking-[0.0625rem] text-black/35 uppercase">
-                {initials}
-              </span>
-            )
-          }
-        </div>
+    <div class="hero-cms-bg absolute inset-0 z-0">
+      {heroBackground && <img src={heroBackground.src} alt={heroBackground.alt} class="size-full object-cover object-top" />}
+    </div>
 
+    <div class:list={[CONTAINER, 'relative z-[1] gap-[2.5rem]']}>
+      <div class="hero-cms-content flex flex-col gap-[1.5625rem]">
         <nav
           class="breadcrumb flex items-center gap-xs font-inter text-[clamp(0.625rem,0.5rem_+_0.625vw,1.0625rem)] leading-[1.6] font-normal text-black"
           aria-label="Breadcrumb"

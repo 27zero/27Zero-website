@@ -21,7 +21,7 @@ const LINK_COLUMNS: FooterLink[][] = [
     { href: '/about', label: 'About' },
   ],
   [
-    { href: '/the-edtech-mentor', label: 'The EdTech Mentor' },
+    { href: '/edtech-mentor', label: 'The EdTech Mentor' },
     { href: '/careers', label: 'Careers' },
     { href: '/contact', label: "Let's Talk!" },
   ],
@@ -53,7 +53,7 @@ const LINK_COLUMNS: FooterLink[][] = [
                   href={link.href}
                   target={link.external ? '_blank' : undefined}
                   rel={link.external ? 'noopener' : undefined}
-                  class="font-inter text-body-sm leading-[1.6] font-normal tracking-normal text-white no-underline transition-[font-weight] duration-200 hover:font-bold"
+                  class="font-inter text-body-sm leading-[1.6] font-normal tracking-normal text-white no-underline transition-opacity duration-200 hover:opacity-70"
                 >
                   {link.label}
                 </a>
