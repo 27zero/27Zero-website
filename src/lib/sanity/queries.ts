@@ -204,9 +204,10 @@ export const mentorListQuery = `{
  * página siguiendo `SERVICE_CATEGORY_ORDER` (el orden del Figma), porque el orden de
  * las 8 categorías es de diseño y no un dato del CMS.
  *
- * `practices` NO trae `iconId`: los 3 íconos de `.practices-card` son fijos y
- * posicionales, resueltos en la página (`PRACTICE_ICONS` en `edtech-marketing.astro`).
- * El campo sigue existiendo en el schema, pero ningún listado lo lee.
+ * `practices` NO trae `iconId` ni `description`: los dos se borraron del schema. Los 3
+ * íconos de `.practices-card` son fijos y posicionales, resueltos en la página
+ * (`PRACTICE_ICONS` en `edtech-marketing.astro`), y el body de la card sale de
+ * `shortDescription`, que es requerido por schema.
  *
  * `practices` SÍ trae `cardImage` (campo nuevo, `27zero-sanity@612215b`): es el fondo de
  * la `.practices-card`, el `.practices-card-bg` que en el vanilla era placeholder. Va
@@ -216,7 +217,7 @@ export const mentorListQuery = `{
 export const edtechMarketingQuery = `{
   "practices": *[_type == "edtechMarketingPractice"]
     | order(order asc, title asc) {
-      _id, title, "slug": slug.current, shortDescription, description, cardImage
+      _id, title, "slug": slug.current, shortDescription, cardImage
     },
 
   "services": *[_type == "edtechMarketingService" && defined(slug.current)]
@@ -344,16 +345,19 @@ export const resourceDetailQuery = `
 /**
  * `edtechMarketingPractice` — interna de una práctica.
  *
- * Proyecta SOLO los fieldsets curados en Etapa 5 (`intro`, `clients`, `practiceScopes`,
- * `pageCta`). Los campos viejos que modelan las mismas secciones (`credibilityHeadline`,
- * `credibilityText`, `credibilityItems`, `conversationItems`, `closingCtaHeadline`)
- * quedan deliberadamente afuera: son duplicados sin borrar del schema, y traerlos con un
- * `coalesce()` dejaría a la página andando con cualquiera de los dos juegos y escondería
- * la limpieza pendiente. Ver reporte de entrega.
+ * Proyecta los fieldsets curados en Etapa 5 (`intro`, `clients`, `practiceScopes`,
+ * `pageCta`). Los campos viejos que modelaban esas mismas secciones (`credibility*`,
+ * `conversationItems`, `closingCtaHeadline`) ya no existen: se borraron del schema junto
+ * con `description` e `iconId`, que tampoco se leían acá.
  *
  * `services` trae los `edtechMarketingService` de la categoría que la práctica declara
  * en `relatedServiceCategory`. NO es una `reference`: las dos taxonomías comparten los 8
  * valores pero se declaran por separado en cada schema, así que el join es por valor.
+ *
+ * ⚠️ El schema sumó `relatedServices` (array de references a `edtechMarketingService`,
+ * selección explícita en vez de join por categoría). NO se proyecta todavía a propósito:
+ * el menú sigue saliendo de `relatedServiceCategory` hasta que se decida cuál de los dos
+ * mecanismos queda.
  */
 export const practiceDetailQuery = `
   *[_type == "edtechMarketingPractice"] {
@@ -361,8 +365,6 @@ export const practiceDetailQuery = `
     title,
     "slug": slug.current,
     shortDescription,
-    description,
-    iconId,
     relatedServiceCategory,
     heroHeadline,
     heroText,

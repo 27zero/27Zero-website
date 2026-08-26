@@ -7,10 +7,10 @@
  * La ruta es `/edtech-marketing/practices/[slug]` (plural), que es lo que emite
  * `practiceUrl()` y lo que las cards de la página EdTech Marketing ya linkean desde 6B.
  *
- * Campos: solo los fieldsets curados en Etapa 5 (`intro`, `clients`, `practiceScopes`,
- * `pageCta`). Los campos viejos del schema que modelan las mismas secciones
- * (`credibility*`, `conversationItems`, `closingCtaHeadline`) NO se leen — ver la nota
- * en `practiceDetailQuery` y el reporte de entrega.
+ * Campos: los fieldsets curados en Etapa 5 (`intro`, `clients`, `practiceScopes`,
+ * `pageCta`). Los campos viejos que modelaban esas mismas secciones (`credibility*`,
+ * `conversationItems`, `closingCtaHeadline`) se borraron del schema, igual que
+ * `description` e `iconId` — ver la nota en `practiceDetailQuery`.
  *
  *   `intro`          → sección Credibility
  *   `clients`        → sección Brand Logos
@@ -31,12 +31,7 @@ import { sanityClient } from '../../../lib/sanity/client';
 import { toImage } from '../../../lib/sanity/image';
 import { practiceDetailQuery } from '../../../lib/sanity/queries';
 import { serviceUrl, toStaticPaths } from '../../../lib/utils/routes';
-import type {
-  PracticeIconId,
-  SanityImage,
-  ServiceCategoryId,
-  ServiceIconId,
-} from '../../../types/sanity';
+import type { SanityImage, ServiceCategoryId, ServiceIconId } from '../../../types/sanity';
 import { SERVICE_CATEGORY_LABELS } from '../../../types/sanity';
 import type { ServiceGroup } from '../../../types/ui';
 
@@ -45,8 +40,6 @@ export interface PracticeDetail {
   title?: string;
   slug?: string;
   shortDescription?: string;
-  description?: string;
-  iconId?: PracticeIconId;
   relatedServiceCategory?: ServiceCategoryId;
   heroHeadline?: string;
   heroText?: string;
@@ -78,9 +71,14 @@ const heroImage = toImage(practice.heroImage, { width: 1920 });
 
 /* El hero cae al `title` del documento si `heroHeadline` está vacío: es el único texto
    que la práctica tiene garantizado por schema (`title` es requerido) y una interna sin
-   `h1` no es navegable ni indexable. Misma lógica para la bajada. */
+   `h1` no es navegable ni indexable.
+
+   La bajada NO tiene fallback: el `<p>` del `.hero-marketing-text` es `heroText` y nada
+   más. `shortDescription` es el copy de la card (Home y el índice de Agency), no el del
+   hero — usarlo de reemplazo metía texto de card en la interna. Sin `heroText` cargado,
+   el hero queda solo con el `h1`. */
 const heroHeadline = practice.heroHeadline ?? practice.title;
-const heroText = practice.heroText ?? practice.shortDescription;
+const heroText = practice.heroText;
 
 const capabilities = (practice.capabilities ?? []).filter(Boolean);
 const clientNames = (practice.clientNames ?? []).filter(Boolean);
@@ -113,7 +111,7 @@ const H2 = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px]';
 
 <Page
   title={`${practice.title ?? 'EdTech Marketing'} — 27zero`}
-  description={practice.shortDescription ?? practice.description}
+  description={practice.shortDescription}
   navVariant="white"
 >
   <!-- HERO -->

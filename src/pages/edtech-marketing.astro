@@ -33,20 +33,19 @@ const { practices, services, settings } = await sanityClient.fetch<{
     title: string;
     slug: string;
     shortDescription?: string;
-    description?: string;
     cardImage?: SanityImage;
   }[];
   services: { _id: string; title: string; slug: string; category: ServiceCategoryId; iconId?: ServiceIconId }[];
   settings: { servicesTitle?: string; servicesDescription?: string } | null;
 }>(edtechMarketingQuery);
 
-/* El body de la card usa `shortDescription` y cae a `description`: son dos campos
-   distintos en el schema y el brief de Etapa 5 los deja marcados como posible
-   duplicado a revisar con contenido real. */
+/* El body de la card sale de `shortDescription`, sin fallback: `description` era el
+   campo duplicado que el brief de Etapa 5 dejó marcado, y se borró del schema.
+   `shortDescription` es requerido, así que la card siempre tiene copy. */
 const PRACTICES = practices.map((practice) => ({
   href: practiceUrl(practice.slug),
   title: practice.title,
-  body: practice.shortDescription ?? practice.description ?? undefined,
+  body: practice.shortDescription ?? undefined,
   /* `toImage()` devuelve `undefined` si falta el asset o el `alt` (CLAUDE.md §8.1) y ahí
      la card cae a su placeholder. Hoy es el caso de las 3: `cardImage` está vacía en
      todos los documentos. */
@@ -58,12 +57,12 @@ const PRACTICES = practices.map((practice) => ({
    qué práctica caiga en cada posición. Es el mismo orden en que están hardcodeados en
    `/edtech-marketing/index.html` del vanilla.
 
-   No salen de Sanity a propósito. Antes se leía `practice.iconId`, que está vacío en los
-   3 documentos, así que el slot nunca recibía contenido y las tres cards se construían
-   con el `.practices-card-icon` VACÍO (la fallback del `<slot>` tampoco se disparaba:
-   Astro no resuelve un `slot="icon"` que vive dentro de una expresión condicional).
-   Son 3 íconos de marca atados a la maquetación, no contenido editable — CLAUDE.md §4
-   los deja del lado estático. */
+   No salen de Sanity a propósito. Antes se leía `practice.iconId`, que casi ningún
+   documento tenía cargado, así que el slot no recibía contenido y las cards se
+   construían con el `.practices-card-icon` VACÍO (la fallback del `<slot>` tampoco se
+   disparaba: Astro no resuelve un `slot="icon"` que vive dentro de una expresión
+   condicional). Son 3 íconos de marca atados a la maquetación, no contenido editable
+   — CLAUDE.md §4 los deja del lado estático, y el campo ya se borró del schema. */
 const PRACTICE_ICONS: PracticeIconId[] = ['waves', 'spiral', 'square-circle'];
 
 /* El orden de las 8 categorías es de diseño, no un dato del CMS: `category` es una

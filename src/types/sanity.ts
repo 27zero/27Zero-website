@@ -126,7 +126,11 @@ export const SERVICE_CATEGORY_ORDER: ServiceCategoryId[] = [
 /** Íconos de `ServiceIcon.astro` — espejo de `ICON_OPTIONS` del schema. */
 export type ServiceIconId = 'asterisk' | 'quatrefoil' | 'arc';
 
-/** Íconos de `PracticeIcon.astro` — espejo de `ICON_OPTIONS` del schema. */
+/**
+ * Íconos de `PracticeIcon.astro`. Ya NO es espejo de nada: `edtechMarketingPractice`
+ * perdió su campo `iconId`, porque los 3 íconos de la grilla son fijos y posicionales
+ * (`PRACTICE_ICONS` en `edtech-marketing.astro`), no contenido editable.
+ */
 export type PracticeIconId = 'waves' | 'spiral' | 'square-circle';
 
 /** Labels de `InterviewCategory`, tal como se muestran en los pills de EdTech Mentor. */
@@ -327,14 +331,12 @@ export interface EdtechMarketingPractice extends SanityDocument {
   title: string;
   slug: SanitySlug;
   shortDescription: string;
-  description?: string;
-  iconId?: PracticeIconId;
   /** Fondo de la card de la práctica en el índice de EdTech Marketing (800×600). */
   cardImage?: SanityImage;
   order?: number;
   relatedServiceCategory?: ServiceCategoryId;
 
-  // Hero — fieldset `intro`
+  // Page Content — fieldset `intro`
   introTitle?: string;
   introDescription?: string;
   capabilities?: string[];
@@ -343,25 +345,10 @@ export interface EdtechMarketingPractice extends SanityDocument {
   heroHeadline?: string;
   heroText?: string;
   heroImage?: SanityImage;
-  closingCtaHeadline?: string;
 
   // Fieldset `clients`
   clientSectionTitle?: string;
   clientNames?: string[];
-
-  // Credibility
-  credibilityHeadline?: string;
-  credibilityText?: string;
-  credibilityItems?: string[];
-
-  // Conversation Engine
-  conversationItems?: {
-    _key: string;
-    title?: string;
-    body?: string;
-    ctaLabel?: string;
-    ctaHref?: string;
-  }[];
 
   // Fieldset `practiceScopes`
   practiceScopesTitle?: string;
