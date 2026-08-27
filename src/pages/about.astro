@@ -69,7 +69,7 @@ const WORKS: WorkCardData[] = works.map((work) => toWorkCard(work));
 
 const FEATURED_MENTOR_POST: MentorCardData | null = featuredMentor ? toMentorCard(featuredMentor) : null;
 
-const MENTOR_POSTS: MentorCardData[] = mentorPosts.map(toMentorCard);
+const MENTOR_POSTS: MentorCardData[] = mentorPosts.map((mentor) => toMentorCard(mentor));
 
 /* `.container` del design system global. El `gap` NO va acá — cada sección declara
    el suyo (mismo criterio que index.astro). */

@@ -129,7 +129,7 @@ const introCopy = mentor.introText ?? mentor.shortDescription;
 
 const questions = (mentor.rapidFire?.questions ?? []).filter((item) => item.question || item.answer);
 
-const related = (mentor.related ?? []).map(toMentorCard);
+const related = (mentor.related ?? []).map((related) => toMentorCard(related));
 
 const CONTAINER = 'container mx-auto flex w-full max-w-(--container-max-width) flex-col px-container-x';
 
@@ -269,9 +269,16 @@ const ARTICLE_COMPONENTS = {
   }
 
   <!-- 3. CUERPO DEL ARTÍCULO -->
+  <!-- `bg-gray` (#F5F5F5, token existente) y no el #D9D9D9 del vanilla: sobre ese gris
+       oscuro el link del bloque de cierre daba 1,99:1 de contraste (Etapa 8, a11y). Con
+       el fondo claro y el link en indigo queda 11,17:1. No hay nada apoyado en este fondo
+       que asuma que es oscuro: el cuerpo del artículo, el `hr` y el párrafo de cierre son
+       todos `text-black`, y el `pearl-box` trae su propio fondo. El hero de la página
+       sigue en #D9D9D9 y no es adyacente a esta sección (entre las dos va
+       `section--featured-cms`, que es blanca). -->
   {
     hasContent(mentor.body) && (
-      <section class="section section--article-cms bg-[#D9D9D9] pt-[4.375rem] pb-[2.8125rem]">
+      <section class="section section--article-cms bg-gray pt-[4.375rem] pb-[2.8125rem]">
         <div class="container mx-auto flex w-full max-w-(--container-max-width) flex-col gap-[5.625rem] px-[2.5rem]">
           <PortableText
             value={mentor.body}
@@ -285,9 +292,9 @@ const ARTICLE_COMPONENTS = {
           <div class="text-block--full mx-auto flex w-[90%] max-w-[90%] flex-col gap-[1.25rem] max-md:w-full max-md:max-w-full">
             <hr class="w-full border-0 border-t border-solid border-black" />
             <p class="font-inter text-[clamp(0.875rem,0.8036rem_+_0.3571vw,1.125rem)] leading-[1.6] font-normal text-black">
-              The EdTech Mentor is a <a href="/" class="text-purple underline">27zero</a> publication.
+              The EdTech Mentor is a <a href="/" class="text-indigo underline">27zero</a> publication.
               Let's start a{' '}
-              <a href="/contact" class="text-purple underline">
+              <a href="/contact" class="text-indigo underline">
                 transformative EdTech marketing conversation today.
               </a>
             </p>

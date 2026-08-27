@@ -45,7 +45,7 @@ const FEATURED_WORKS: WorkCardData[] = featuredWorks.map((work) => toWorkCard(wo
 /* La `FeaturedCard` de la sección EdTech Mentor: la entrevista destacada más reciente. */
 const FEATURED_MENTOR_POST: MentorCardData | null = featuredMentor ? toMentorCard(featuredMentor) : null;
 
-const MENTOR_POSTS: MentorCardData[] = mentorPosts.map(toMentorCard);
+const MENTOR_POSTS: MentorCardData[] = mentorPosts.map((mentor) => toMentorCard(mentor));
 
 /* `avatarPhoto` se pasa como `{ src, alt }` o `null`: sin foto, `TestimonialsSlider`
    deriva las iniciales del nombre, igual que el placeholder del vanilla. */

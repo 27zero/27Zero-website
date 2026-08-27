@@ -76,6 +76,28 @@ export default defineConfig({
       filter: (page) => !noIndexPaths.has(normalizePath(new URL(page).pathname)),
     }),
   ],
+  build: {
+    /* El CSS del sitio entero es UN archivo de 71,7 KB (14,9 KB gzip) y bloqueaba el
+       render en las 28 páginas. Inlinearlo lo saca del camino crítico: no hay request que
+       esperar antes de pintar.
+
+       Medido con Lighthouse (mobile emulado con throttling, build servido local), FCP
+       antes → después: Home 2,5s → 0,9s, /work 2,2s → 1,0s, /work/busuu 2,5s → 1,0s,
+       la interna de mentor 2,0s → 0,9s. `render-blocking-insight` pasa de fallar en las 6
+       páginas auditadas a pasar en las 6, y Performance sube entre 2 y 4 puntos.
+
+       El costo es real y es de caché: el CSS deja de ser un archivo cacheado una vez y
+       viaja en cada HTML. Primera visita a una página: 22,2 KB gzip inline vs 22,3 KB
+       externo — igual, los bytes solo cambian de lugar. Navegando 5 páginas: 111 KB vs
+       52 KB. Se acepta porque este es un sitio de agencia donde la mayoría de las visitas
+       entran desde búsqueda o LinkedIn a UNA página, y ahí inlinear es 1,5s de FCP
+       gratis; el que recorre 5 páginas paga 59 KB, que a esa altura ya no es first paint.
+
+       Si el CSS crece mucho (con `astro build` mirar el tamaño de `dist/_astro/*.css`
+       antes de inlinear), revisar esta decisión: el umbral no es el peso del CSS sino
+       cuántas páginas navega un visitante típico. */
+    inlineStylesheets: 'always',
+  },
   vite: {
     plugins: [tailwindcss()],
   },

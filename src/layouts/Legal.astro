@@ -1,0 +1,218 @@
+---
+/**
+ * Legal — 27zero
+ * Layout de las páginas de copy legal (`privacy`, `security-policy`). Se apoya en
+ * `Page.astro` (Navbar + Footer + Base) y solo agrega la maquetación del documento:
+ * hero de título y una columna de texto con medida de lectura acotada.
+ *
+ * Es un layout y no markup repetido en cada página porque las dos son el mismo
+ * documento con distinto contenido (CLAUDE.md §8, "páginas que comparten estructura").
+ *
+ * El contenido entra como DATOS (`sections`) y no por `<slot />`: las utilidades de
+ * Tailwind de un layout no alcanzan al markup slotteado, así que un slot obligaría a
+ * repetir las clases de `p`/`h2`/`li` en cada página. Así la tipografía vive en un solo
+ * lugar y cada página aporta solo texto.
+ *
+ * Sin documentType en Sanity: copy legal es siempre estático (CLAUDE.md §4, "Siempre
+ * estático"). El `seo` sale de una constante en el frontmatter de cada página, que es
+ * el patrón de §8.1 para estáticas — no existe `{page}Seo` en `settings` para estas dos
+ * y crearlo sería la segunda fuente que §8 prohíbe.
+ *
+ * El repo vanilla nunca tuvo estas dos páginas: el copy es el de producción de
+ * `27zero.agency` (Webflow), transcrito verbatim. La escala tipográfica es la de las
+ * internas de artículo (`text-body-article`), la única del design system pensada para
+ * texto largo.
+ */
+import Page from './Page.astro';
+import type { SiteSeoSettings } from '../lib/sanity/settings';
+import type { ResolvedSeo } from '../lib/seo/resolveSeo';
+
+/** Ítem de lista. `items` es la sub-lista anidada, siempre bullets en el original. */
+export interface LegalListItem {
+  text: string;
+  items?: string[];
+}
+
+/**
+ * Un bloque del documento. Es una unión y no un objeto con campos opcionales porque el
+ * ORDEN importa: en el original hay secciones que alternan párrafo → lista → párrafo, y
+ * un `{ body, list }` obligaría a poner siempre la lista al final.
+ */
+export type LegalNode =
+  | { type: 'p'; text: string }
+  | { type: 'ul' | 'ol'; items: LegalListItem[] };
+
+export interface LegalSection {
+  heading?: string;
+  /**
+   * `3` para los sub-encabezados que en el original cuelgan de otra sección
+   * ("Consultations:", "Complaints:", dentro de 4.1). El texto no cambia; solo baja un
+   * nivel de heading para que la jerarquía del documento sea real y no solo visual.
+   */
+  level?: 2 | 3;
+  content: LegalNode[];
+}
+
+interface Props {
+  seo?: ResolvedSeo;
+  siteSettings: SiteSeoSettings;
+  /** Título del documento — es el `<h1>` visible, no el meta title. */
+  title: string;
+  /** Nombre formal del documento, bajo el `<h1>`. */
+  subtitle?: string;
+  /**
+   * Fecha de última actualización, ya formateada. Se omite la línea entera si no
+   * viene: ninguna de las dos páginas de producción publica fecha, y una inventada en
+   * un documento legal es peor que ninguna.
+   */
+  lastUpdated?: string;
+  sections: LegalSection[];
+}
+
+const { seo, siteSettings, title, subtitle, lastUpdated, sections } = Astro.props;
+
+const CONTAINER = 'container mx-auto w-full max-w-(--container-max-width) px-container-x';
+
+/* Medida de lectura: 288px @320 → 736px @1440, misma curva fluida que el resto del
+   proyecto. Sin tope, el texto legal se estira a los 90rem del container y queda
+   ilegible en desktop. */
+const MEASURE = 'max-w-[clamp(18rem,10rem_+_40vw,46rem)]';
+
+const H2 =
+  'font-lora text-[clamp(1.375rem,1.2679rem_+_0.5357vw,1.75rem)] leading-[1.3] font-medium text-black';
+const H3 = 'font-lora text-h4 leading-[1.3] font-medium text-black';
+/* `break-words` en el cuerpo: el copy trae URLs y emails (`www.27ZERO.co`,
+   `contacto@27ZERO.co`) que son tokens sin espacios. Sin esto, a 375px con zoom al 200%
+   el link no entra en la línea y empuja el layout 7px a la derecha — overflow
+   horizontal, justo lo que el check de zoom de CLAUDE.md §10 tiene que dar en falso. */
+const P = 'font-inter text-body-article leading-[1.6] font-normal break-words text-black';
+const LI = 'font-inter text-[clamp(0.9375rem,0.9196rem_+_0.0893vw,1rem)] leading-[1.6] break-words text-black';
+const LINK = 'text-indigo underline underline-offset-2';
+const LIST_BASE =
+  'flex flex-col gap-[clamp(0.3375rem,0.2839rem_+_0.2679vw,0.525rem)] pl-[clamp(0.8438rem,0.7098rem_+_0.6696vw,1.3125rem)]';
+const SUBLIST = 'mt-[clamp(0.3375rem,0.2839rem_+_0.2679vw,0.525rem)]';
+
+/**
+ * Parte un texto en tramos de string y de link, para que las URLs y los emails del copy
+ * queden clickeables sin meter HTML dentro de los datos.
+ *
+ * Se resuelve así y no con `set:html` a propósito: el texto se renderiza siempre como
+ * texto (Astro lo escapa) y lo único que puede volverse `<a>` es lo que matchea el
+ * regex, así que el contenido no tiene forma de inyectar markup.
+ *
+ * La puntuación final se recorta del match y vuelve al string: en el original la coma de
+ * "www.27ZERO.co, informing…" está FUERA del `<a>`, y sin esto entraría al href.
+ */
+type Segment = string | { text: string; href: string };
+
+const LINK_RE = /([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})|((?:https?:\/\/|www\.)[^\s<]+)/g;
+
+function segments(text: string): Segment[] {
+  const out: Segment[] = [];
+  let last = 0;
+
+  for (const match of text.matchAll(LINK_RE)) {
+    const start = match.index ?? 0;
+    const isEmail = Boolean(match[1]);
+    const value = match[0].replace(/[.,;:)\]]+$/, '');
+
+    if (start > last) out.push(text.slice(last, start));
+
+    out.push({
+      text: value,
+      /* `http://` y no `https://` en las URLs sin esquema: es el href literal de la
+         página de producción. El dominio legacy (`27ZERO.co`) es contenido del copy y
+         no se corrige desde acá. */
+      href: isEmail ? `mailto:${value}` : value.startsWith('http') ? value : `http://${value}`,
+    });
+
+    last = start + value.length;
+  }
+
+  if (last < text.length) out.push(text.slice(last));
+  return out;
+}
+---
+
+<Page seo={seo} siteSettings={siteSettings} navVariant="white">
+  <!-- HERO — título del documento -->
+  <section
+    class="section section--legal-hero pt-[clamp(4.5rem,2.4821rem_+_10.0893vw,11.5625rem)] pb-[clamp(1.6875rem,1.4196rem_+_1.3393vw,2.625rem)]"
+  >
+    <div class={CONTAINER}>
+      <div class:list={[MEASURE, 'flex flex-col gap-[clamp(0.675rem,0.5679rem_+_0.5357vw,1.05rem)]']}>
+        <h1
+          class="font-lora text-h1 leading-[1.25] font-medium tracking-[clamp(-0.03rem,-0.0171rem_-_0.0143vw,-0.02rem)]"
+        >
+          {title}
+        </h1>
+        {
+          subtitle && (
+            <p class="font-inter text-body leading-[1.6] font-medium tracking-normal text-black/70">
+              {subtitle}
+            </p>
+          )
+        }
+        {
+          lastUpdated && (
+            <p class="font-inter text-body-sm leading-[1.6] font-normal tracking-normal text-black/60">
+              Last updated: {lastUpdated}
+            </p>
+          )
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- CUERPO DEL DOCUMENTO -->
+  <section class="section section--legal-body pt-0 pb-[clamp(3.6563rem,3.0759rem_+_2.9018vw,5.6875rem)]">
+    <div class={CONTAINER}>
+      <div class:list={[MEASURE, 'flex flex-col gap-md']}>
+        {
+          sections.map((section) => (
+            <div class="legal-section flex flex-col gap-sm">
+              {section.heading &&
+                (section.level === 3 ? <h3 class={H3}>{section.heading}</h3> : <h2 class={H2}>{section.heading}</h2>)}
+
+              {section.content.map((node) => {
+                if (node.type === 'p') {
+                  return (
+                    <p class={P}>
+                      {segments(node.text).map((seg) =>
+                        typeof seg === 'string' ? seg : <a href={seg.href} rel="noopener" class={LINK}>{seg.text}</a>
+                      )}
+                    </p>
+                  );
+                }
+
+                /* Tag dinámico: `ul` u `ol` según el original. En mayúscula porque Astro
+                   resuelve el valor de la variable como nombre de tag; duplicar el
+                   bloque entero solo para cambiar dos letras era la alternativa. */
+                const List = node.type;
+
+                return (
+                  <List class:list={[LIST_BASE, node.type === 'ol' ? 'list-decimal' : 'list-disc']}>
+                    {node.items.map((item) => (
+                      <li class={LI}>
+                        {segments(item.text).map((seg) =>
+                          typeof seg === 'string' ? seg : <a href={seg.href} rel="noopener" class={LINK}>{seg.text}</a>
+                        )}
+                        {item.items && (
+                          <ul class:list={[LIST_BASE, 'list-disc', SUBLIST]}>
+                            {item.items.map((sub) => (
+                              <li class={LI}>{sub}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </li>
+                    ))}
+                  </List>
+                );
+              })}
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+</Page>

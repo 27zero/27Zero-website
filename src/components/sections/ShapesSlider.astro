@@ -17,26 +17,43 @@
  * de inyectarse con `innerHTML`. El DOM resultante es el mismo, pero queda en el HTML
  * estático (SEO/no-JS). El JS conserva 1:1 la lógica de interacción.
  */
+import { Image } from 'astro:assets';
 import Button from '../ui/Button.astro';
+import creativity from '../../assets/creativity.png';
+import execution from '../../assets/execution.png';
+import researchEnhanced from '../../assets/research-enhanced.png';
+
+/**
+ * Ancho al que se pide cada shape. El slot mide 19,25rem (308px) en desktop y hasta
+ * ~70vw en mobile, así que 640px cubre 2x en ambos casos. Los PNG de origen vienen a
+ * 1409-1787px de ancho: se servían 4,5x más grandes de lo que se renderizan
+ * (`image-delivery-insight`, ~141 KB de más entre las tres).
+ *
+ * Con `astro:assets` el resize y la conversión a WebP los hace Astro en build. Es la
+ * excepción a la regla de CLAUDE.md §2 de no usar `<Image>`: esa regla es para los
+ * assets REMOTOS de Sanity, que ya resuelve el Image CDN. Estas tres son locales, no
+ * pasan por Sanity y nadie más las estaba optimizando.
+ */
+const SHAPE_WIDTH = 640;
 
 const SHAPES = [
   {
     modifier: 'apart-shape--purple',
-    src: '/assets/research-enhanced.png',
+    src: researchEnhanced,
     alt: 'Research Enhanced',
     title: 'Research Enhanced Insights',
     text: 'Lorem ipsum is simply dummy text of the printing and typesetting industry standard, used here as placeholder copy.',
   },
   {
     modifier: 'apart-shape--indigo',
-    src: '/assets/execution.png',
+    src: execution,
     alt: 'Execution',
     title: 'Execution that Scales',
     text: 'We deliver the complete capability of a full-service agency with the focus of a boutique partner — with regional expertise in North America and Europe, and agile production in Latin America.',
   },
   {
     modifier: 'apart-shape--black',
-    src: '/assets/creativity.png',
+    src: creativity,
     alt: 'Creativity',
     title: 'Creativity Without Limits',
     text: 'Lorem ipsum is simply dummy text of the printing and typesetting industry standard, used here as placeholder copy.',
@@ -65,7 +82,9 @@ const NAV_ZONE =
       Our foundations connect insight, creativity, and efficient execution — helping EdTech brands turn purpose into
       lasting impact.
     </p>
-    <Button href="/services" variant="dark" class="mt-xs">Our services</Button>
+    {/* `/edtech-marketing` y no `/services`: esa ruta nunca existió, venía del
+        vanilla y daba 404 (Etapa 8, Hallazgo 1). No se crea página nueva. */}
+    <Button href="/edtech-marketing" variant="dark" class="mt-xs">Our services</Button>
   </div>
 
   <div
@@ -95,9 +114,10 @@ const NAV_ZONE =
               data-shape-title={shape.title}
               data-shape-text={shape.text}
             >
-              <img
+              <Image
                 src={shape.src}
                 alt={shape.alt}
+                width={SHAPE_WIDTH}
                 class="block h-auto w-full max-w-[clamp(12.375rem,10.4107rem_+_9.8214vw,19.25rem)] max-md:max-w-full"
               />
             </div>

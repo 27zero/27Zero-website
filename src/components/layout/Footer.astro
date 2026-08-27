@@ -3,10 +3,30 @@
  * Footer — 27zero
  * Portado 1:1 de `/components/footer` del repo vanilla. Markup puro, sin JS.
  *
- * Los links son estáticos: cambiarlos implica cambiar rutas, así que no van a
- * `siteSettings` (CLAUDE.md §8). Se conservan exactamente los del vanilla,
- * incluidos los placeholder (`/services`, `/careers`, `/privacy`).
+ * Los links de navegación siguen siendo estáticos: cambiarlos implica cambiar rutas,
+ * así que no van a `siteSettings` (CLAUDE.md §8). El de LinkedIn sí sale del singleton
+ * (`settings.linkedinUrl`): es una red social, el caso textual del §8 — cambia sin que
+ * cambie el diseño y el cliente lo edita sin tocar código.
+ *
+ * Etapa 8, Hallazgo 1 — las 3 rutas rotas heredadas del vanilla quedan resueltas acá:
+ *  - `/services`  → `/edtech-marketing` (no se crea página nueva)
+ *  - `/careers`   → comentada, no borrada: la página va a existir, todavía no está
+ *                   diseñada
+ *  - `/privacy`   → el link combinado "Privacy Security Policy" se abre en dos links
+ *                   separados contra `privacy.astro` y `security-policy.astro`
  */
+interface Props {
+  /**
+   * `settings.linkedinUrl` de Sanity, que baja desde `Page.astro`. Sin valor el link
+   * no se renderiza: un `https://linkedin.com` genérico de fallback (lo que había
+   * hardcodeado hasta Etapa 8) es peor que no tener link — manda al usuario al home de
+   * LinkedIn en vez de a la empresa.
+   */
+  linkedinUrl?: string;
+}
+
+const { linkedinUrl } = Astro.props;
+
 interface FooterLink {
   href: string;
   label: string;
@@ -17,16 +37,42 @@ const LINK_COLUMNS: FooterLink[][] = [
   [
     { href: '/', label: 'Home' },
     { href: '/work', label: 'Work' },
-    { href: '/services', label: 'Services' },
+    { href: '/edtech-marketing', label: 'Services' },
     { href: '/about', label: 'About' },
   ],
   [
     { href: '/edtech-mentor', label: 'The EdTech Mentor' },
-    { href: '/careers', label: 'Careers' },
+    /* TODO: /careers — restaurar cuando la página exista, ver PLANNING.md Etapa 8 */
+    // { href: '/careers', label: 'Careers' },
     { href: '/contact', label: "Let's Talk!" },
   ],
-  [{ href: 'https://linkedin.com', label: 'Linkedin', external: true }],
 ];
+
+/* La columna social se arma aparte porque depende de una prop y no de una constante
+   de módulo. `twitterUrl` no entra: el cliente solo tiene LinkedIn (Etapa 8). */
+const COLUMNS: FooterLink[][] = linkedinUrl
+  ? [...LINK_COLUMNS, [{ href: linkedinUrl, label: 'Linkedin', external: true }]]
+  : LINK_COLUMNS;
+
+/* Dos links, no uno: el vanilla traía "Privacy Security Policy" apuntando a un solo
+   `/privacy`, que además no existía. */
+const LEGAL_LINKS: FooterLink[] = [
+  { href: '/privacy', label: 'Privacy Policy' },
+  { href: '/security-policy', label: 'Security Policy' },
+];
+
+/* Año dinámico, resuelto en build. No contradice la nota de `lib/sanity/client.ts`
+   sobre no usar `new Date()`: esa regla es para la `apiVersion` de Sanity, que tiene
+   que quedar pinneada a una fecha fija. Acá se quiere justamente lo contrario, que el
+   año se actualice solo. Sin campo editable en Sanity — eso es Etapa 10 si el cliente
+   lo pide. */
+const YEAR = new Date().getFullYear();
+
+const LINK_CLASS =
+  'font-inter text-body-sm leading-[1.6] font-normal tracking-normal text-white no-underline transition-opacity duration-200 hover:opacity-70';
+
+const LEGAL_CLASS =
+  'footer-legal font-inter text-body-sm leading-[1.6] font-normal tracking-normal text-white/60 no-underline transition-colors duration-200 hover:text-white';
 ---
 
 <footer class="footer bg-black">
@@ -37,23 +83,27 @@ const LINK_COLUMNS: FooterLink[][] = [
       class="footer-top mb-lg flex items-start justify-between gap-[clamp(1.125rem,0.6964rem_+_2.1429vw,2.625rem)] max-md:flex-col"
     >
       <a href="/" class="footer-logo block">
+        {/* Dimensiones intrínsecas del SVG (230×45), para el aspect-ratio previo a la
+            descarga. Acá el CSS fija el ancho fluido y `h-auto` sale del ratio. */}
         <img
           src="/assets/logo-27zero.svg"
           alt="27zero"
+          width="230"
+          height="45"
           class="block h-auto w-[clamp(6.2269rem,5.2385rem_+_4.942vw,9.6863rem)] invert"
         />
       </a>
 
       <nav class="footer-links flex gap-[clamp(1.4063rem,0.683rem_+_3.6161vw,3.9375rem)] max-md:flex-wrap">
         {
-          LINK_COLUMNS.map((column) => (
+          COLUMNS.map((column) => (
             <div class="footer-links-col flex flex-col gap-[clamp(0.9619rem,0.8092rem_+_0.7634vw,1.4962rem)]">
               {column.map((link) => (
                 <a
                   href={link.href}
                   target={link.external ? '_blank' : undefined}
                   rel={link.external ? 'noopener' : undefined}
-                  class="font-inter text-body-sm leading-[1.6] font-normal tracking-normal text-white no-underline transition-opacity duration-200 hover:opacity-70"
+                  class={LINK_CLASS}
                 >
                   {link.label}
                 </a>
@@ -68,14 +118,11 @@ const LINK_COLUMNS: FooterLink[][] = [
 
     <div class="footer-bottom flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-[clamp(0.4219rem,0.3549rem_+_0.3348vw,0.6563rem)]">
       <span class="footer-copy font-inter text-body-sm leading-[1.6] font-normal tracking-normal text-white/60">
-        2025 27zero. All rights reserved.
+        {YEAR} 27zero. All rights reserved.
       </span>
-      <a
-        href="/privacy"
-        class="footer-legal font-inter text-body-sm leading-[1.6] font-normal tracking-normal text-white/60 no-underline transition-colors duration-200 hover:text-white"
-      >
-        Privacy Security Policy
-      </a>
+      <div class="footer-legal-links flex items-center gap-[clamp(0.8438rem,0.7098rem_+_0.6696vw,1.3125rem)]">
+        {LEGAL_LINKS.map((link) => <a href={link.href} class={LEGAL_CLASS}>{link.label}</a>)}
+      </div>
     </div>
   </div>
 </footer>

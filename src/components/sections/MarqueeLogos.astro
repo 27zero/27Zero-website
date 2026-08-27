@@ -11,17 +11,22 @@
  * exactamente los 5 logos del vanilla (contenido real, no data de ejemplo).
  */
 interface Props {
-  logos?: { src: string; alt: string }[];
+  /**
+   * `width`/`height` son las dimensiones intrínsecas del SVG, obligatorias: el JS clona
+   * cada logo varias veces para cubrir el viewport, así que un logo sin medidas
+   * multiplica el reflow por la cantidad de clones (`unsized-images`, CLAUDE.md §10).
+   */
+  logos?: { src: string; alt: string; width: number; height: number }[];
   /** Velocidad del loop en píxeles por segundo. */
   speed?: number;
 }
 
 const DEFAULT_LOGOS = [
-  { src: '/assets/logos/doctums.svg', alt: 'Doctums' },
-  { src: '/assets/logos/scholarship-magic.svg', alt: 'Scholarship Magic' },
-  { src: '/assets/logos/skillwell.svg', alt: 'Skillwell' },
-  { src: '/assets/logos/student-first.svg', alt: 'Student First' },
-  { src: '/assets/logos/world-learning.svg', alt: 'World Learning' },
+  { src: '/assets/logos/doctums.svg', alt: 'Doctums', width: 176, height: 48 },
+  { src: '/assets/logos/scholarship-magic.svg', alt: 'Scholarship Magic', width: 221, height: 50 },
+  { src: '/assets/logos/skillwell.svg', alt: 'Skillwell', width: 170, height: 27 },
+  { src: '/assets/logos/student-first.svg', alt: 'Student First', width: 215, height: 52 },
+  { src: '/assets/logos/world-learning.svg', alt: 'World Learning', width: 170, height: 40 },
 ];
 
 const { logos = DEFAULT_LOGOS, speed = 60 } = Astro.props;
@@ -37,6 +42,8 @@ const { logos = DEFAULT_LOGOS, speed = 60 } = Astro.props;
           class="marquee-logo max-h-[clamp(2.0081rem,1.6894rem_+_1.5938vw,3.1237rem)] w-auto shrink-0 object-contain"
           src={logo.src}
           alt={logo.alt}
+          width={logo.width}
+          height={logo.height}
         />
       ))
     }

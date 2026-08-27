@@ -146,16 +146,32 @@ const ARROW =
     </button>
   </div>
 
+  {/* El `<button>` mide 1.5rem (24px) y el punto visible es el `<span>` de adentro, que
+      conserva el tamaño del vanilla (6,3 → 9,8px). Antes el botón ERA el punto, así que
+      el área táctil medía 6,6px y `target-size` fallaba (mínimo 24×24, WCAG 2.5.8).
+
+      Un pseudo-elemento no servía: `axe` mide el `getBoundingClientRect()` del elemento
+      y un `::before` no lo agranda — el audit habría seguido en rojo aunque el click
+      funcionara.
+
+      El `gap` del container pasa a 0 por la misma regla: con áreas de 24px y el gap
+      anterior (5,4 → 10,8px) las áreas de dots vecinos se superpondrían y el click caería
+      en el dot equivocado. Sin gap quedan exactamente pegadas, sin solaparse, y los
+      puntos visibles terminan a 24px de centro a centro en vez de ~18px. */}
   <div
-    class="testimonials-dots mt-[clamp(1.9688rem,1.6563rem_+_1.5625vw,3.0625rem)] flex items-center justify-center gap-[clamp(0.3375rem,0.2839rem_+_0.2679vw,0.525rem)] max-md:gap-[0.675rem]"
+    class="testimonials-dots mt-[clamp(1.9688rem,1.6563rem_+_1.5625vw,3.0625rem)] flex items-center justify-center gap-0"
   >
     {
       testimonials.map((_, i) => (
         <button
-          class="testimonial-dot size-[clamp(0.3937rem,0.3312rem_+_0.3125vw,0.6125rem)] cursor-pointer rounded-full border-[0.0625rem] border-white bg-transparent p-0 transition-all duration-200 ease-in-out [&.testimonial-dot--active]:border-purple [&.testimonial-dot--active]:bg-purple"
+          class="testimonial-dot group/dot flex size-[1.5rem] cursor-pointer items-center justify-center border-0 bg-transparent p-0"
           data-index={i}
           aria-label={`Go to slide ${i + 1}`}
-        />
+        >
+          <span
+            class="block size-[clamp(0.3937rem,0.3312rem_+_0.3125vw,0.6125rem)] rounded-full border-[0.0625rem] border-white bg-transparent transition-all duration-200 ease-in-out group-[.testimonial-dot--active]/dot:border-purple group-[.testimonial-dot--active]/dot:bg-purple"
+          />
+        </button>
       ))
     }
   </div>

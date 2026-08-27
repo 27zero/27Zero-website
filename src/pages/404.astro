@@ -1,0 +1,61 @@
+---
+/**
+ * 404 — 27zero
+ * Astro sirve esta página automáticamente en cualquier ruta que no exista (build
+ * estático: emite `dist/404.html`, que Netlify usa como página de error por defecto sin
+ * configuración extra).
+ *
+ * Sin precedente en el vanilla: el diseño es propio, armado sobre el design system
+ * existente (Lora para el título, Inter para el cuerpo, `Button` variante `dark`).
+ * Copy genérico en inglés — label de UI, no copy legal ni de producto (CLAUDE.md §4,
+ * "Siempre estático": copy legal, 404, labels de UI).
+ *
+ * `noIndex: true`: una página de error no tiene que entrar al índice de Google. El
+ * sitemap se verifica aparte — si `@astrojs/sitemap` llegara a incluir `/404`, la
+ * contradicción sitemap-vs-meta que describe `lib/seo/noIndexRoutes.ts` se resuelve
+ * ahí, no acá.
+ */
+import Page from '../layouts/Page.astro';
+import Button from '../components/ui/Button.astro';
+import { getSeoSettings } from '../lib/sanity/settings';
+
+const siteSettings = await getSeoSettings();
+
+const seo = {
+  title: 'Page not found — 27zero',
+  description: 'The page you were looking for does not exist.',
+  noIndex: true,
+};
+
+const CONTAINER = 'container mx-auto w-full max-w-(--container-max-width) px-container-x';
+---
+
+<Page seo={seo} siteSettings={siteSettings} navVariant="white">
+  <section
+    class="section section--404 flex min-h-[70vh] items-center pt-[clamp(4.5rem,2.4821rem_+_10.0893vw,11.5625rem)] pb-[clamp(3.6563rem,3.0759rem_+_2.9018vw,5.6875rem)]"
+  >
+    <div class={CONTAINER}>
+      <div
+        class="mx-auto flex max-w-[clamp(18rem,10rem_+_40vw,46rem)] flex-col items-center gap-[clamp(0.675rem,0.5679rem_+_0.5357vw,1.05rem)] text-center"
+      >
+        <span
+          class="font-inter text-card-eyebrow leading-[1.6] font-medium tracking-[0.08em] text-indigo uppercase"
+        >
+          Error 404
+        </span>
+
+        <h1
+          class="font-lora text-h1 leading-[1.25] font-medium tracking-[clamp(-0.03rem,-0.0171rem_-_0.0143vw,-0.02rem)]"
+        >
+          This page doesn't exist.
+        </h1>
+
+        <p class="font-inter text-body leading-[1.6] font-normal tracking-normal text-black/70">
+          The page you were looking for may have been moved or removed. Let's get you back on track.
+        </p>
+
+        <Button href="/" variant="dark" class="mt-xs">Back to home</Button>
+      </div>
+    </div>
+  </section>
+</Page>

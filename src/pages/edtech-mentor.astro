@@ -70,7 +70,7 @@ const CATEGORY_COPY: { id: InterviewCategory; heading: string; headingAccent: st
 
 const MENTORS_BY_CATEGORY: MentorGroup[] = CATEGORY_COPY.map((category) => ({
   ...category,
-  items: mentors.filter((mentor) => mentor.interviewCategory === category.id).map(toMentorCard),
+  items: mentors.filter((mentor) => mentor.interviewCategory === category.id).map((mentor) => toMentorCard(mentor)),
 }));
 
 const [essential, investor, founders] = MENTORS_BY_CATEGORY;
