@@ -4,13 +4,21 @@
  * Instancia única compartida por todas las páginas. Astro corre en SSG, así que
  * cada `client.fetch()` se resuelve en build time y nada de esto llega al navegador.
  *
- * `useCdn: true`: todo el contenido de este sitio es público y publicado — no hay
- * drafts ni contenido privado en el frontend (CLAUDE.md §4). El CDN devuelve el
- * último documento publicado y evita pegarle a la API cruda en cada build.
+ * `useCdn: false`: el CDN de Sanity invalida su caché POR QUERY, no por dataset. Dentro
+ * de un mismo build eso deja ver estados inconsistentes durante ~2 min después de una
+ * publicación: una query ya trae el documento nuevo y otra sigue sirviendo caché vieja.
+ * Se comprobó en la verificación de Etapa 6 — `edtechMarketingQuery` listaba un servicio
+ * recién publicado mientras `serviceDetailQuery` todavía no lo veía, así que la card
+ * salió en el menú apuntando a una interna que `getStaticPaths()` nunca generó. Un link
+ * roto sin que nadie toque código.
  *
- * Sin `token`: el dataset `production` es de lectura pública. El `SANITY_API_TOKEN`
- * del `.env` existe para scripts de migración contra el Studio, no para este cliente
- * — pasarlo acá desactivaría el CDN sin ganar nada.
+ * Importa acá y no en un sitio cualquiera porque el build lo dispara el deploy hook de
+ * Sanity EN el momento de publicar, que es justo la ventana en la que el CDN está
+ * inconsistente. Y el CDN no compraba nada a cambio: esto es SSG, las queries corren una
+ * vez por build, no una vez por visita.
+ *
+ * Sin `token`: el dataset `production` es de lectura pública. El `SANITY_API_TOKEN` del
+ * `.env` existe para scripts de migración contra el Studio, no para este cliente.
  */
 import { createClient } from '@sanity/client';
 
@@ -30,6 +38,6 @@ export const sanityClient = createClient({
      API en el momento en que se escribió el código. Una fecha dinámica haría que un
      build futuro estrene features de GROQ sin que nadie las haya probado. */
   apiVersion: '2026-08-20',
-  useCdn: true,
+  useCdn: false,
   perspective: 'published',
 });

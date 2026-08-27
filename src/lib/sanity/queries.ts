@@ -353,11 +353,8 @@ export const resourceDetailQuery = `
  * `services` trae los `edtechMarketingService` de la categoría que la práctica declara
  * en `relatedServiceCategory`. NO es una `reference`: las dos taxonomías comparten los 8
  * valores pero se declaran por separado en cada schema, así que el join es por valor.
- *
- * ⚠️ El schema sumó `relatedServices` (array de references a `edtechMarketingService`,
- * selección explícita en vez de join por categoría). NO se proyecta todavía a propósito:
- * el menú sigue saliendo de `relatedServiceCategory` hasta que se decida cuál de los dos
- * mecanismos queda.
+ * Es el único mecanismo — el `relatedServices` (array de references) que convivió con
+ * este un rato se borró del schema sin haberse renderizado nunca.
  */
 export const practiceDetailQuery = `
   *[_type == "edtechMarketingPractice"] {
