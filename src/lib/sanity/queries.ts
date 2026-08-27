@@ -74,7 +74,7 @@ const TESTIMONIAL_FIELDS = `
  * interna de `work`, que se arma en la sesión de detalle.
  */
 /**
- * `settings` — solo lo que consume el SEO.
+ * `settings` — solo lo que consumen el SEO y el structured data.
  *
  * Proyección acotada a propósito: el singleton tiene ~40 campos de copy de sección
  * que no tienen nada que ver con metadata. La resuelve `getPageSeo()` /
@@ -90,6 +90,11 @@ export const siteSettingsSeoQuery = `
     siteTitle,
     siteUrl,
     seo,
+    logo,
+    linkedinUrl,
+    twitterUrl,
+    officeUSNew,
+    officeCONew,
     homeSeo,
     aboutSeo,
     workSeo,
@@ -344,6 +349,7 @@ export const mentorDetailQuery = `
     body,
     rapidFire{description, image, questions[]{_key, question, answer}},
     interviewCategory,
+    author->{_id, name, role, linkedin},
     publishedAt,
     linkedinUrl,
     mediumUrl,
@@ -355,7 +361,7 @@ export const mentorDetailQuery = `
 /**
  * `resource` — interna de un artículo.
  *
- * Trae `heroBanner` (imagen del hero de la interna) y NO `cardThumbnail`, que es la del
+ * Trae `heroBanner` (imagen del hero de la interna) y también `cardThumbnail`, que es la del
  * listado. La tabla de contenidos no es un campo: se deriva de los `h2` de `body` en la
  * página (`getHeadings()` de `utils/portableText`).
  */
@@ -367,8 +373,10 @@ export const resourceDetailQuery = `
     seo,
     shortDescription,
     description,
+    author->{_id, name, role, linkedin},
     publishedAt,
     heroBanner,
+    cardThumbnail,
     body
   }
 `;

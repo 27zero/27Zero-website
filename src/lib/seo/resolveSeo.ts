@@ -10,7 +10,7 @@
  * interfaz para ambas fuentes"). Toda la traducción Sanity → SEO pasa por acá, así
  * que la `ogImage` se pide al CDN con un solo criterio en todo el sitio.
  */
-import type { Seo } from '../../types/sanity';
+import type { SanityImage, Seo } from '../../types/sanity';
 import { urlFor } from '../sanity/image';
 
 /** Mismo shape que `Seo`, con `ogImage` ya resuelta a URL absoluta del CDN. */
@@ -26,6 +26,26 @@ export interface ResolvedSeo {
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
 
+/**
+ * Imagen de Sanity → URL absoluta del CDN al ratio de OG. Se exporta porque el
+ * `image` del nodo `Article` del JSON-LD quiere exactamente lo mismo que el
+ * `og:image`, y resolverlo distinto en cada lado daría dos URLs para la misma imagen.
+ *
+ * Acepta varias fuentes en orden de preferencia y devuelve la primera que tenga
+ * asset. Es variadica y no un `??` en el llamador por una razón concreta del dataset:
+ * un campo de imagen tocado y vaciado en el Studio queda como `{_type: 'image'}` SIN
+ * asset — no `undefined` — así que `a ?? b` se queda con `a` y devuelve una imagen
+ * vacía teniendo `b` cargada. Pasó exacto con `resource.heroBanner`.
+ *
+ * `urlFor()` sobre un objeto sin asset tira, de ahi el chequeo de `_ref`.
+ */
+export function ogImageUrl(...sources: (SanityImage | null | undefined)[]): string | undefined {
+  const source = sources.find((candidate) => candidate?.asset?._ref);
+  if (!source) return undefined;
+
+  return urlFor(source).width(OG_WIDTH).height(OG_HEIGHT).fit('crop').auto('format').url();
+}
+
 export function resolveSeo(seo: Seo | null | undefined): ResolvedSeo | undefined {
   if (!seo) return undefined;
 
@@ -34,10 +54,6 @@ export function resolveSeo(seo: Seo | null | undefined): ResolvedSeo | undefined
     description: seo.description,
     canonicalUrl: seo.canonicalUrl,
     noIndex: seo.noIndex,
-    /* `_ref` y no solo `ogImage`: un campo de imagen tocado y vaciado en el Studio
-       deja el objeto `{_type: 'image'}` sin asset, y `urlFor()` sobre eso tira. */
-    ogImage: seo.ogImage?.asset?._ref
-      ? urlFor(seo.ogImage).width(OG_WIDTH).height(OG_HEIGHT).fit('crop').auto('format').url()
-      : undefined,
+    ogImage: ogImageUrl(seo.ogImage),
   };
 }

@@ -158,6 +158,26 @@ export interface WorkCategory extends SanityDocument {
   color?: string;
 }
 
+/**
+ * `author` — quién escribió el contenido. Referenciado desde `resource` y
+ * `edtechMentor`, requerido en ambos desde Etapa 7 (lo necesita el `author` del
+ * JSON-LD de Article).
+ *
+ * Ojo en `edtechMentor`: el author es 27zero, no el entrevistado — el guest es el
+ * sujeto del artículo (`about` en schema.org), no su autor.
+ */
+export interface Author extends SanityDocument {
+  _type: 'author';
+  name: string;
+  slug: SanitySlug;
+  role?: string;
+  company?: string;
+  photo?: SanityImage;
+  bio?: string;
+  linkedin?: string;
+  email?: string;
+}
+
 /** `client` — marca. Fuente de verdad del nombre de cliente en `work` y `testimonial`. */
 export interface Client extends SanityDocument {
   _type: 'client';
@@ -270,6 +290,8 @@ export interface Resource extends SanityDocument {
   shortDescription?: string;
   description?: string;
   publishedAt?: string;
+  /** Requerido en el schema — `SanityReference` sin `->`, `Author` con `->`. */
+  author: SanityReference | Author;
   /** Imagen de la card en el listado (ex `featuredImage`, renombrada en Etapa 5). */
   cardThumbnail?: SanityImage;
   /** Imagen del hero de la interna — NO se usa en el listado. */
@@ -317,6 +339,8 @@ export interface EdtechMentor extends SanityDocument {
   interviewCategory?: InterviewCategory;
   isFeatured?: boolean;
   publishedAt?: string;
+  /** Requerido en el schema — `SanityReference` sin `->`, `Author` con `->`. */
+  author: SanityReference | Author;
   linkedinUrl?: string;
   mediumUrl?: string;
 

@@ -12,24 +12,32 @@
  * por página, `white` / `black`). Si más adelante las 13 páginas terminan repitiendo
  * el mismo par, el lugar para absorberlo es un `Page.astro` sobre este layout.
  *
- * SEO (Etapa 7): todo el `<head>` de metadata lo emite `Metadata.astro`. Este layout
+ * SEO (Etapa 7): todo el `<head>` de metadata lo emiten `Metadata.astro` (meta tags)
+ * y `JsonLd.astro` (structured data). Este layout
  * ya no toma `title`/`description` sueltos — eran una segunda fuente de SEO por
  * página, justo lo que CLAUDE.md §8 prohíbe. Las páginas pasan un objeto `seo` y el
  * `siteSettings` que resuelve el fallback, y nada más.
  */
+import JsonLd from '../components/seo/JsonLd.astro';
 import Metadata from '../components/seo/Metadata.astro';
 import type { SiteSeoSettings } from '../lib/sanity/settings';
+import type { ArticleInput } from '../lib/seo/generateJsonLd';
 import type { OgType } from '../lib/seo/ogType';
 import type { ResolvedSeo } from '../lib/seo/resolveSeo';
+import type { Crumb } from '../lib/utils/breadcrumbs';
 import '../styles/global.css';
 
 interface Props {
   seo?: ResolvedSeo;
   siteSettings: SiteSeoSettings;
   ogType?: OgType;
+  /** Nodo `Article` del JSON-LD — solo el detalle de `resource` y `edtechMentor`. */
+  article?: ArticleInput;
+  /** Trail para el `BreadcrumbList` — las 5 internas. */
+  breadcrumb?: Crumb[];
 }
 
-const { seo, siteSettings, ogType } = Astro.props;
+const { seo, siteSettings, ogType, article, breadcrumb } = Astro.props;
 ---
 
 <!doctype html>
@@ -41,6 +49,7 @@ const { seo, siteSettings, ogType } = Astro.props;
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" href="/favicon.ico" />
     <Metadata seo={seo} siteSettings={siteSettings} ogType={ogType} />
+    <JsonLd siteSettings={siteSettings} article={article} breadcrumb={breadcrumb} />
   </head>
   <body class="bg-white font-inter text-black antialiased">
     <slot />

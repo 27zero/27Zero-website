@@ -15,17 +15,30 @@
  *
  * Nunca las dos para la misma página (CLAUDE.md §8, "nunca ambas fuentes").
  */
-import type { Seo } from '../../types/sanity';
-import { resolveSeo, type ResolvedSeo } from '../seo/resolveSeo';
+import type { SanityImage, Seo } from '../../types/sanity';
+import { ogImageUrl, resolveSeo, type ResolvedSeo } from '../seo/resolveSeo';
 import { sanityClient } from './client';
 import { siteSettingsSeoQuery } from './queries';
 
-/** Lo que `Metadata.astro` necesita del sitio, con la `ogImage` ya resuelta. */
+/** Una oficina, para el nodo `ProfessionalService` del JSON-LD. */
+export interface Office {
+  /** Código ISO del país — lo sabemos por el campo, no se parsea de la dirección. */
+  country: 'US' | 'CO';
+  label: string;
+  address?: string;
+  phone?: string;
+}
+
+/** Lo que `Metadata.astro` y el JSON-LD necesitan del sitio, con imágenes resueltas. */
 export interface SiteSeoSettings {
   siteTitle?: string;
   siteUrl?: string;
   /** Fallback global: cubre cualquier campo que la página deje vacío. */
   seo?: ResolvedSeo;
+  /** Structured data — hoy todos vacíos en Sanity salvo las oficinas. */
+  logoUrl?: string;
+  sameAs?: string[];
+  offices?: Office[];
 }
 
 /** Las 8 páginas estáticas/shell que no tienen documento propio en Sanity. */
@@ -44,6 +57,11 @@ interface SettingsSeoProjection {
   siteTitle?: string;
   siteUrl?: string;
   seo?: Seo;
+  logo?: SanityImage;
+  linkedinUrl?: string;
+  twitterUrl?: string;
+  officeUSNew?: { address?: string; phone?: string; email?: string };
+  officeCONew?: { address?: string; phone?: string; email?: string };
   homeSeo?: Seo;
   aboutSeo?: Seo;
   workSeo?: Seo;
@@ -63,11 +81,23 @@ async function load(): Promise<{
      justamente lo que el fallback tiene que absorber. */
   const settings = (await sanityClient.fetch<SettingsSeoProjection | null>(siteSettingsSeoQuery)) ?? {};
 
+  /* `sameAs` con un hueco adentro es peor que sin la propiedad: se filtra acá y, si
+     no queda ninguna, el nodo la omite entera en vez de emitir un array vacío. */
+  const socialUrls = [settings.linkedinUrl, settings.twitterUrl].filter(
+    (url): url is string => Boolean(url)
+  );
+
   return {
     siteSettings: {
       siteTitle: settings.siteTitle,
       siteUrl: settings.siteUrl,
       seo: resolveSeo(settings.seo),
+      logoUrl: ogImageUrl(settings.logo),
+      sameAs: socialUrls.length ? socialUrls : undefined,
+      offices: [
+        {country: 'US' as const, label: 'United States', ...settings.officeUSNew},
+        {country: 'CO' as const, label: 'Colombia', ...settings.officeCONew},
+      ].filter((office) => office.address || office.phone),
     },
     pages: {
       home: resolveSeo(settings.homeSeo),

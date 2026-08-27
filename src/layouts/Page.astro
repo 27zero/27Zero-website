@@ -9,7 +9,7 @@
  * inicial al tope de la página, antes del scroll). Ver Navbar.astro para el resto del
  * comportamiento (nav--scrolled, menú mobile).
  *
- * Las props de SEO (`seo`, `siteSettings`, `ogType`) pasan de largo hasta
+ * Las props de SEO (`seo`, `siteSettings`, `ogType`, `article`, `breadcrumb`) pasan de largo hasta
  * `Base.astro` → `Metadata.astro`; este layout no las mira. Las páginas las obtienen
  * de `lib/sanity/settings.ts` (`getPageSeo()` las 8 estáticas/shell,
  * `getSeoSettings()` las 5 internas).
@@ -20,21 +20,25 @@
 import Navbar from '../components/layout/Navbar.astro';
 import Footer from '../components/layout/Footer.astro';
 import type { SiteSeoSettings } from '../lib/sanity/settings';
+import type { ArticleInput } from '../lib/seo/generateJsonLd';
 import type { OgType } from '../lib/seo/ogType';
 import type { ResolvedSeo } from '../lib/seo/resolveSeo';
+import type { Crumb } from '../lib/utils/breadcrumbs';
 import Base from './Base.astro';
 
 interface Props {
   seo?: ResolvedSeo;
   siteSettings: SiteSeoSettings;
   ogType?: OgType;
+  article?: ArticleInput;
+  breadcrumb?: Crumb[];
   navVariant?: 'white' | 'black';
 }
 
-const { seo, siteSettings, ogType, navVariant = 'white' } = Astro.props;
+const { seo, siteSettings, ogType, article, breadcrumb, navVariant = 'white' } = Astro.props;
 ---
 
-<Base seo={seo} siteSettings={siteSettings} ogType={ogType}>
+<Base seo={seo} siteSettings={siteSettings} ogType={ogType} article={article} breadcrumb={breadcrumb}>
   <Navbar variant={navVariant} />
   <slot />
   <Footer />

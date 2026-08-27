@@ -1,0 +1,38 @@
+---
+/**
+ * JsonLd — 27zero
+ * Emite el `@graph` de structured data en el `<head>`. Un solo `<script>` por
+ * página; el armado vive en `lib/seo/generateJsonLd.ts` y este componente solo lo
+ * serializa.
+ *
+ * Nada de esto llega como JS ejecutable: `application/ld+json` es un bloque de datos
+ * que el navegador no evalúa, y el objeto se arma en build.
+ *
+ * La base absoluta sale de `settings.siteUrl` y cae a `Astro.site` — misma cadena
+ * que el canonical de `Metadata.astro`, para que las URLs del grafo y las del `<link
+ * rel="canonical">` no puedan divergir.
+ */
+import type { SiteSeoSettings } from '../../lib/sanity/settings';
+import { generateJsonLd, type ArticleInput } from '../../lib/seo/generateJsonLd';
+import type { Crumb } from '../../lib/utils/breadcrumbs';
+
+interface Props {
+  siteSettings: SiteSeoSettings;
+  article?: ArticleInput;
+  breadcrumb?: Crumb[];
+}
+
+const { siteSettings, article, breadcrumb } = Astro.props;
+
+const siteUrl = siteSettings.siteUrl ?? Astro.site?.href ?? '';
+const pageUrl = `${siteUrl.replace(/\/+$/, '')}${Astro.url.pathname}`;
+
+const jsonLd = siteUrl ? generateJsonLd({ siteSettings, siteUrl, pageUrl, article, breadcrumb }) : null;
+
+/* `<` escapado: un `</script>` dentro de cualquier string del grafo (el title de un
+   documento, una dirección) cerraría el bloque antes de tiempo y volcaría el resto
+   como markup. Es la única transformación que necesita `application/ld+json`. */
+const serialized = jsonLd ? JSON.stringify(jsonLd).replace(/</g, '\u003c') : null;
+---
+
+{serialized && <script type="application/ld+json" is:inline set:html={serialized} />}

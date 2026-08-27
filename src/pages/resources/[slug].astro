@@ -20,9 +20,11 @@ import PortableText from '../../components/ui/PortableText.astro';
 import { sanityClient } from '../../lib/sanity/client';
 import { resourceDetailQuery } from '../../lib/sanity/queries';
 import { getSeoSettings } from '../../lib/sanity/settings';
+import type { ArticleInput } from '../../lib/seo/generateJsonLd';
 import { ogTypeFor } from '../../lib/seo/ogType';
-import { resolveSeo } from '../../lib/seo/resolveSeo';
+import { ogImageUrl, resolveSeo } from '../../lib/seo/resolveSeo';
 import { getHeadings } from '../../lib/utils/portableText';
+import { detailTrail } from '../../lib/utils/breadcrumbs';
 import { toStaticPaths } from '../../lib/utils/routes';
 import type { PortableTextBlock, SanityImage, Seo } from '../../types/sanity';
 
@@ -34,7 +36,11 @@ export interface ResourceDetail {
   shortDescription?: string;
   description?: string;
   publishedAt?: string;
+  /** Expandido con `author->`. Opcional acá aunque el schema lo exija: los
+   *  documentos cargados antes de Etapa 7 todavía no lo tienen asignado. */
+  author?: { _id: string; name?: string; role?: string; linkedin?: string };
   heroBanner?: SanityImage;
+  cardThumbnail?: SanityImage;
   body?: PortableTextBlock[];
 }
 
@@ -52,6 +58,22 @@ const resource = Astro.props as ResourceDetail;
    segunda — y recién después cae al fallback global de `settings`. Sin esto las 5
    internas compartirían el title genérico del sitio mientras el SEO esté vacío. */
 const siteSettings = await getSeoSettings();
+/* Nodo `Article` del JSON-LD. `author` puede venir vacío mientras no se asigne en
+   el Studio; el generador omite la propiedad en vez de emitirla hueca. */
+const article: ArticleInput = {
+  headline: resource.title,
+  datePublished: resource.publishedAt,
+  /* Coalesce y no solo `heroBanner`: el único resource cargado lo tiene vacío y la
+     imagen real está en `cardThumbnail`. Sin esto el Article sale sin `image`
+     habiendo una disponible. */
+  image: ogImageUrl(resource.heroBanner, resource.cardThumbnail),
+  authorName: resource.author?.name,
+};
+
+/* Fuente única del breadcrumb: alimenta el `BreadcrumbList` del JSON-LD y,
+   donde el diseño lo tiene, el `<nav>` visible. */
+const breadcrumb = detailTrail('resource', { label: resource.title });
+
 const seo = {
   ...resolveSeo(resource.seo),
   title: resource.seo?.title ?? `${resource.title ?? 'Resource'} — 27zero`,
@@ -78,7 +100,7 @@ const ARTICLE_CLASSES = {
 };
 ---
 
-<Page seo={seo} siteSettings={siteSettings} ogType={ogTypeFor('resource')} navVariant="white">
+<Page seo={seo} siteSettings={siteSettings} breadcrumb={breadcrumb} article={article} ogType={ogTypeFor('resource')} navVariant="white">
   <!-- 1. HERO -->
   <section
     class="section section--hero-resources-cms bg-[#D9D9D9] mt-[clamp(7.0313rem,5.9152rem_+_5.5804vw,10.9375rem)] py-[clamp(11.25rem,16.875rem_-_6.25vw,15.625rem)]"

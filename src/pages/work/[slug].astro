@@ -29,6 +29,7 @@ import { ogTypeFor } from '../../lib/seo/ogType';
 import { resolveSeo } from '../../lib/seo/resolveSeo';
 import { getInitials } from '../../lib/utils/format';
 import { hasContent } from '../../lib/utils/portableText';
+import { detailTrail } from '../../lib/utils/breadcrumbs';
 import { toStaticPaths } from '../../lib/utils/routes';
 import type { PortableTextBlock, SanityImage, Seo } from '../../types/sanity';
 
@@ -83,6 +84,10 @@ const work = Astro.props as WorkDetail;
    segunda — y recién después cae al fallback global de `settings`. Sin esto las 5
    internas compartirían el title genérico del sitio mientras el SEO esté vacío. */
 const siteSettings = await getSeoSettings();
+/* Fuente única del breadcrumb: alimenta el `BreadcrumbList` del JSON-LD y,
+   donde el diseño lo tiene, el `<nav>` visible. */
+const breadcrumb = detailTrail('work', { label: work.title });
+
 const seo = {
   ...resolveSeo(work.seo),
   title: work.seo?.title ?? `${work.title ?? 'Work'} — 27zero`,
@@ -206,7 +211,7 @@ const BODY_CLASSES = (tone: string) => ({
 });
 ---
 
-<Page seo={seo} siteSettings={siteSettings} ogType={ogTypeFor('work')} navVariant="white">
+<Page seo={seo} siteSettings={siteSettings} breadcrumb={breadcrumb} ogType={ogTypeFor('work')} navVariant="white">
   <!-- 1. HERO -->
   <section
     class="section section--hero pt-[clamp(6.75rem,5.6786rem_+_5.3571vw,10.5rem)] pb-[clamp(2.2106rem,1.8597rem_+_1.7545vw,3.4388rem)]"

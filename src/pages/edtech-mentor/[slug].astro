@@ -31,10 +31,12 @@ import { sanityClient } from '../../lib/sanity/client';
 import { toImage } from '../../lib/sanity/image';
 import { mentorDetailQuery } from '../../lib/sanity/queries';
 import { getSeoSettings } from '../../lib/sanity/settings';
+import type { ArticleInput } from '../../lib/seo/generateJsonLd';
 import { ogTypeFor } from '../../lib/seo/ogType';
-import { resolveSeo } from '../../lib/seo/resolveSeo';
+import { ogImageUrl, resolveSeo } from '../../lib/seo/resolveSeo';
 import { getInitials } from '../../lib/utils/format';
 import { hasContent } from '../../lib/utils/portableText';
+import { detailTrail } from '../../lib/utils/breadcrumbs';
 import { toStaticPaths } from '../../lib/utils/routes';
 import type { InterviewCategory, PortableTextBlock, SanityImage, Seo } from '../../types/sanity';
 
@@ -60,6 +62,9 @@ export interface MentorDetail {
   };
   interviewCategory?: InterviewCategory;
   publishedAt?: string;
+  /** Expandido con `author->`. Opcional acá aunque el schema lo exija: los
+   *  documentos cargados antes de Etapa 7 todavía no lo tienen asignado. */
+  author?: { _id: string; name?: string; role?: string; linkedin?: string };
   linkedinUrl?: string;
   mediumUrl?: string;
   related?: MentorCardProjection[];
@@ -77,6 +82,23 @@ const mentor = Astro.props as MentorDetail;
    segunda — y recién después cae al fallback global de `settings`. Sin esto las 5
    internas compartirían el title genérico del sitio mientras el SEO esté vacío. */
 const siteSettings = await getSeoSettings();
+/* Nodo `Article` del JSON-LD. El `author` es 27zero (quien produce la entrevista);
+   el entrevistado va en `about` como sujeto del artículo — marcarlo como autor le
+   atribuiría señales de autoridad de un texto que no escribió. */
+const article: ArticleInput = {
+  headline: mentor.title,
+  datePublished: mentor.publishedAt,
+  /* Solo 3 de las 9 entrevistas tienen `mainImage`; `bannerPost` es el hero de la
+     interna y cubre parte del resto. */
+  image: ogImageUrl(mentor.mainImage, mentor.bannerPost),
+  authorName: mentor.author?.name,
+  aboutPersonName: mentor.guestName,
+};
+
+/* Fuente única del breadcrumb: alimenta el `BreadcrumbList` del JSON-LD y,
+   donde el diseño lo tiene, el `<nav>` visible. */
+const breadcrumb = detailTrail('edtechMentor', { label: mentor.guestName });
+
 const seo = {
   ...resolveSeo(mentor.seo),
   title: mentor.seo?.title ?? `${mentor.title ?? mentor.guestName ?? 'EdTech Mentor'} — 27zero`,
@@ -147,7 +169,7 @@ const ARTICLE_COMPONENTS = {
 };
 ---
 
-<Page seo={seo} siteSettings={siteSettings} ogType={ogTypeFor('edtechMentor')} navVariant="white">
+<Page seo={seo} siteSettings={siteSettings} breadcrumb={breadcrumb} article={article} ogType={ogTypeFor('edtechMentor')} navVariant="white">
   <!-- 1. HERO -->
   <section
     class="section section--hero-cms relative overflow-hidden bg-[#D9D9D9] mt-[clamp(4.8rem,3.0286rem_+_8.8571vw,11rem)] pt-[25rem] pb-[4rem]"
@@ -162,16 +184,22 @@ const ARTICLE_COMPONENTS = {
           class="breadcrumb flex items-center gap-xs font-inter text-[clamp(0.625rem,0.5rem_+_0.625vw,1.0625rem)] leading-[1.6] font-normal text-black"
           aria-label="Breadcrumb"
         >
-          <a href="/" class="underline hover:text-indigo">Home</a>
-          <span>&gt;</span>
-          <a href="/edtech-mentor" class="underline hover:text-indigo">Edtech mentor interviews</a>
           {
-            mentor.guestName && (
+            /* Mismo array que alimenta el `BreadcrumbList` del JSON-LD (`detailTrail`),
+               para que la miga visible y el structured data no puedan divergir. El
+               último ítem viene sin `href`: es la página actual. */
+            breadcrumb.map((crumb, index) => (
               <>
-                <span>&gt;</span>
-                <span aria-current="page">{mentor.guestName}</span>
+                {index > 0 && <span>&gt;</span>}
+                {crumb.href ? (
+                  <a href={crumb.href} class="underline hover:text-indigo">
+                    {crumb.label}
+                  </a>
+                ) : (
+                  <span aria-current="page">{crumb.label}</span>
+                )}
               </>
-            )
+            ))
           }
         </nav>
 
