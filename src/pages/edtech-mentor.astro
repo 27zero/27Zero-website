@@ -19,6 +19,7 @@
  * desktop = `em × 14` @1440px, salvo donde el vanilla fija un valor mobile propio.
  */
 import Page from '../layouts/Page.astro';
+import { getPageSeo } from '../lib/sanity/settings';
 import FilterPills from '../components/sections/FilterPills.astro';
 import MentorCategorySection from '../components/sections/MentorCategorySection.astro';
 import Button from '../components/ui/Button.astro';
@@ -81,9 +82,13 @@ const FILTER_CATEGORIES = MENTORS_BY_CATEGORY.map((category) => ({
   id: category.id,
   label: category.heading.replace(/\s+series$/i, ''),
 }));
+
+/* SEO de esta página: `settings.mentorSeo` en Sanity, con fallback global.
+   `getPageSeo()` memoiza el singleton — una sola query para todo el build. */
+const { seo, siteSettings } = await getPageSeo('mentor');
 ---
 
-<Page title="The EdTech Mentor — 27zero" navVariant="white">
+<Page seo={seo} siteSettings={siteSettings} navVariant="white">
   <!-- HERO / INTRO -->
   <section class="section section--hero pt-[clamp(7.875rem,12.2143rem_-_4.8214vw,11.25rem)] pb-[clamp(0.8438rem,0.4598rem_+_1.9196vw,2.1875rem)]">
     <div class:list={[CONTAINER, 'hero-container gap-xs']}>

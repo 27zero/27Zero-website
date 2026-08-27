@@ -12,18 +12,24 @@
  * por página, `white` / `black`). Si más adelante las 13 páginas terminan repitiendo
  * el mismo par, el lugar para absorberlo es un `Page.astro` sobre este layout.
  *
- * SEO: solo `title` y `description` como placeholder. El componente `Metadata.astro`
- * (OG, Twitter Card, canonical, fallback a `siteSettings`, JSON-LD) es Etapa 7 y se
- * enchufa acá cuando exista — no se adelanta sin su spec.
+ * SEO (Etapa 7): todo el `<head>` de metadata lo emite `Metadata.astro`. Este layout
+ * ya no toma `title`/`description` sueltos — eran una segunda fuente de SEO por
+ * página, justo lo que CLAUDE.md §8 prohíbe. Las páginas pasan un objeto `seo` y el
+ * `siteSettings` que resuelve el fallback, y nada más.
  */
+import Metadata from '../components/seo/Metadata.astro';
+import type { SiteSeoSettings } from '../lib/sanity/settings';
+import type { OgType } from '../lib/seo/ogType';
+import type { ResolvedSeo } from '../lib/seo/resolveSeo';
 import '../styles/global.css';
 
 interface Props {
-  title: string;
-  description?: string;
+  seo?: ResolvedSeo;
+  siteSettings: SiteSeoSettings;
+  ogType?: OgType;
 }
 
-const { title, description } = Astro.props;
+const { seo, siteSettings, ogType } = Astro.props;
 ---
 
 <!doctype html>
@@ -34,8 +40,7 @@ const { title, description } = Astro.props;
     <meta name="generator" content={Astro.generator} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" href="/favicon.ico" />
-    <title>{title}</title>
-    {description && <meta name="description" content={description} />}
+    <Metadata seo={seo} siteSettings={siteSettings} ogType={ogType} />
   </head>
   <body class="bg-white font-inter text-black antialiased">
     <slot />

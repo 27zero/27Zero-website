@@ -30,15 +30,19 @@ import { toMentorCard, type MentorCardProjection } from '../../lib/sanity/cards'
 import { sanityClient } from '../../lib/sanity/client';
 import { toImage } from '../../lib/sanity/image';
 import { mentorDetailQuery } from '../../lib/sanity/queries';
+import { getSeoSettings } from '../../lib/sanity/settings';
+import { ogTypeFor } from '../../lib/seo/ogType';
+import { resolveSeo } from '../../lib/seo/resolveSeo';
 import { getInitials } from '../../lib/utils/format';
 import { hasContent } from '../../lib/utils/portableText';
 import { toStaticPaths } from '../../lib/utils/routes';
-import type { InterviewCategory, PortableTextBlock, SanityImage } from '../../types/sanity';
+import type { InterviewCategory, PortableTextBlock, SanityImage, Seo } from '../../types/sanity';
 
 export interface MentorDetail {
   _id: string;
   title?: string;
   slug?: string;
+  seo?: Seo;
   guestName?: string;
   guestRole?: string;
   guestCompany?: string;
@@ -67,6 +71,17 @@ export async function getStaticPaths() {
 }
 
 const mentor = Astro.props as MentorDetail;
+
+/* El `seo` del documento manda. Si el editor no lo cargó, title y description
+   salen del propio contenido — sigue siendo la misma fuente (el documento), no una
+   segunda — y recién después cae al fallback global de `settings`. Sin esto las 5
+   internas compartirían el title genérico del sitio mientras el SEO esté vacío. */
+const siteSettings = await getSeoSettings();
+const seo = {
+  ...resolveSeo(mentor.seo),
+  title: mentor.seo?.title ?? `${mentor.title ?? mentor.guestName ?? 'EdTech Mentor'} — 27zero`,
+  description: mentor.seo?.description ?? mentor.shortDescription,
+};
 
 /* Avatar del hero y avatares del chat de Rapid Fire salen de la misma foto, en dos
    tamaños distintos. `toImage()` devuelve `undefined` sin `alt` cargado (CLAUDE.md
@@ -132,11 +147,7 @@ const ARTICLE_COMPONENTS = {
 };
 ---
 
-<Page
-  title={`${mentor.title ?? mentor.guestName ?? 'EdTech Mentor'} — 27zero`}
-  description={mentor.shortDescription}
-  navVariant="white"
->
+<Page seo={seo} siteSettings={siteSettings} ogType={ogTypeFor('edtechMentor')} navVariant="white">
   <!-- 1. HERO -->
   <section
     class="section section--hero-cms relative overflow-hidden bg-[#D9D9D9] mt-[clamp(4.8rem,3.0286rem_+_8.8571vw,11rem)] pt-[25rem] pb-[4rem]"

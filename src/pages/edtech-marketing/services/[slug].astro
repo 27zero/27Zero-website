@@ -28,13 +28,17 @@ import ServiceIcon from '../../../components/ui/ServiceIcon.astro';
 import { sanityClient } from '../../../lib/sanity/client';
 import { toImage } from '../../../lib/sanity/image';
 import { serviceDetailQuery } from '../../../lib/sanity/queries';
+import { getSeoSettings } from '../../../lib/sanity/settings';
+import { ogTypeFor } from '../../../lib/seo/ogType';
+import { resolveSeo } from '../../../lib/seo/resolveSeo';
 import { toStaticPaths } from '../../../lib/utils/routes';
-import type { SanityImage, ServiceCategoryId, ServiceIconId } from '../../../types/sanity';
+import type { SanityImage, Seo, ServiceCategoryId, ServiceIconId } from '../../../types/sanity';
 
 export interface ServiceDetail {
   _id: string;
   title?: string;
   slug?: string;
+  seo?: Seo;
   category?: ServiceCategoryId;
   iconId?: ServiceIconId;
   description?: string;
@@ -60,6 +64,17 @@ export async function getStaticPaths() {
 
 const service = Astro.props as ServiceDetail;
 
+/* El `seo` del documento manda. Si el editor no lo cargó, title y description
+   salen del propio contenido — sigue siendo la misma fuente (el documento), no una
+   segunda — y recién después cae al fallback global de `settings`. Sin esto las 5
+   internas compartirían el title genérico del sitio mientras el SEO esté vacío. */
+const siteSettings = await getSeoSettings();
+const seo = {
+  ...resolveSeo(service.seo),
+  title: service.seo?.title ?? `${service.title ?? 'EdTech Marketing'} — 27zero`,
+  description: service.seo?.description ?? service.description,
+};
+
 const proofPointImage = toImage(service.proofPointImage, { width: 1200 });
 
 const features = (service.features ?? []).filter((feature) => feature.title || feature.description);
@@ -71,11 +86,7 @@ const BODY_SM = 'font-inter text-body-sm leading-[1.6] font-normal tracking-norm
 const H2 = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px]';
 ---
 
-<Page
-  title={`${service.title ?? 'EdTech Marketing'} — 27zero`}
-  description={service.description}
-  navVariant="white"
->
+<Page seo={seo} siteSettings={siteSettings} ogType={ogTypeFor('edtechMarketingService')} navVariant="white">
   <!-- HERO -->
   <section
     class="section section--hero-marketing relative mt-[clamp(6rem,5.2143rem_+_3.9286vw,8.75rem)] overflow-hidden pt-[clamp(6rem,8.3304rem_-_2.5893vw,7.8125rem)] pb-[clamp(7.8125rem,11.8304rem_-_4.4643vw,10.9375rem)]"

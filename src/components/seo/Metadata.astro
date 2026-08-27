@@ -1,0 +1,73 @@
+---
+/**
+ * Metadata — 27zero
+ * El único lugar del sitio que emite metadata. Vive dentro del `<head>` de
+ * `Base.astro`, así que ninguna página escribe su propio `<title>`.
+ *
+ * Interfaz única sin importar el origen del dato (CLAUDE.md §8.1): recibe un `seo`
+ * ya plano — la `ogImage` llega resuelta a URL por `lib/seo/resolveSeo.ts` — así que
+ * le da igual si salió del documento de una interna o de `settings.{page}Seo`. Por eso
+ * no importa nada de `lib/sanity/`: es presentación pura.
+ *
+ * Fallback POR CAMPO, no todo-o-nada: una página puede tener `title` propio y heredar
+ * la `description`. La cadena es siempre página → `settings.seo` (fallback global) →
+ * constante de este archivo.
+ *
+ * Ese último eslabón hardcodeado existe porque hoy el singleton `settings` está vacío
+ * en producción: sin él las 13 páginas buildean con `<title>` vacío y Lighthouse SEO
+ * no llega a 100 (CLAUDE.md §10). Queda inerte apenas se cargue el contenido en
+ * Sanity — no es contenido editorial, es la red de que el sitio nunca salga sin title.
+ */
+import type { ResolvedSeo } from '../../lib/seo/resolveSeo';
+import type { SiteSeoSettings } from '../../lib/sanity/settings';
+import { DEFAULT_OG_TYPE, type OgType } from '../../lib/seo/ogType';
+
+interface Props {
+  /** SEO propio de la página. Cada campo vacío cae al fallback global. */
+  seo?: ResolvedSeo;
+  siteSettings: SiteSeoSettings;
+  /** Lo resuelve `ogTypeFor(documentType)` en las internas; ver `lib/seo/ogType.ts`. */
+  ogType?: OgType;
+}
+
+const { seo, siteSettings, ogType = DEFAULT_OG_TYPE } = Astro.props;
+
+/* Último eslabón del fallback — ver docblock. */
+const FALLBACK_TITLE = '27zero — EdTech Marketing Agency';
+const FALLBACK_DESCRIPTION =
+  'The first and only agency built for EdTech. We turn EdTech purpose into brand power.';
+
+const title = seo?.title ?? siteSettings.seo?.title ?? siteSettings.siteTitle ?? FALLBACK_TITLE;
+const description = seo?.description ?? siteSettings.seo?.description ?? FALLBACK_DESCRIPTION;
+const ogImage = seo?.ogImage ?? siteSettings.seo?.ogImage;
+const noIndex = seo?.noIndex ?? false;
+
+/* Base del canonical: `settings.siteUrl` manda, porque es lo que el cliente edita sin
+   tocar código. `Astro.site` (astro.config.mjs) cubre el hueco mientras esté vacío.
+   Se le saca la barra final para que no salga `//about` al concatenar el pathname. */
+const canonicalBase = (siteSettings.siteUrl ?? Astro.site?.href ?? '').replace(/\/+$/, '');
+const canonicalUrl = seo?.canonicalUrl ?? `${canonicalBase}${Astro.url.pathname}`;
+
+/* Twitter degrada a `summary` sin imagen: declarar `summary_large_image` y no mandar
+   `twitter:image` deja la card rota en vez de simplemente chica. */
+const twitterCard = ogImage ? 'summary_large_image' : 'summary';
+---
+
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonicalUrl} />
+{noIndex && <meta name="robots" content="noindex" />}
+
+{/* Open Graph */}
+<meta property="og:type" content={ogType} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonicalUrl} />
+{siteSettings.siteTitle && <meta property="og:site_name" content={siteSettings.siteTitle} />}
+{ogImage && <meta property="og:image" content={ogImage} />}
+
+{/* Twitter Card */}
+<meta name="twitter:card" content={twitterCard} />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+{ogImage && <meta name="twitter:image" content={ogImage} />}

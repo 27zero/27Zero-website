@@ -420,6 +420,7 @@ export interface Settings extends SanityDocument {
   siteUrl?: string;
   logo?: SanityImage;
 
+  /** Fallback global de SEO — hereda cualquier campo que la página deje vacío. */
   seo?: Seo;
 
   // Analytics
@@ -440,6 +441,8 @@ export interface Settings extends SanityDocument {
   footerCopyright?: { year?: string };
 
   // Home
+  /** SEO por página estática/shell (Etapa 7) — fallback a `settings.seo`. */
+  homeSeo?: Seo;
   homeHero?: { headline?: string; subtitle?: string; video?: string; poster?: SanityImage };
   homeWork?: { headline?: string; subtitle?: string; showreelUrl?: string };
   homeMentor?: { headline?: string; subtitle?: string };
@@ -451,22 +454,30 @@ export interface Settings extends SanityDocument {
   homeNewsletter?: { headline?: string; placeholder?: string };
 
   // About
+  aboutSeo?: Seo;
   aboutHero?: { headline?: string; text?: string; image?: SanityImage };
   aboutDna?: { headline?: string; text?: string };
   aboutProofPoint?: { title?: string; text?: string; image?: SanityImage };
   aboutTeam?: { headline?: string; text?: string };
 
   // Work
+  workSeo?: Seo;
   workHero?: { eyebrow?: string; headline?: string; subtitle?: string };
 
+  // Clientes — grupo nuevo en Etapa 7, hoy solo SEO.
+  clientsSeo?: Seo;
+
   // Mentor
+  mentorSeo?: Seo;
   mentorHero?: { headline?: string; text?: string };
   mentorCta?: { headline?: string; text?: string };
 
   // Resources
+  resourcesSeo?: Seo;
   resourcesHero?: { headline?: string; subtitle?: string };
 
   // Contact
+  contactSeo?: Seo;
   contactHero?: { headline?: string; text?: string };
   contactEmail?: string;
   officeUSNew?: { address?: string; phone?: string; email?: string };
@@ -477,6 +488,7 @@ export interface Settings extends SanityDocument {
   officeCO?: string;
 
   // EdTech Marketing
+  agencySeo?: Seo;
   agencyHero?: { headline?: string; text?: string };
   agencyPracticesSection?: { headline?: string; text?: string };
   agencyClosingCta?: { headline?: string };

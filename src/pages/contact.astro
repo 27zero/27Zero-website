@@ -16,6 +16,7 @@
  * una decisión de producto fuera de esta etapa (planning-maquetado-contact.md #1).
  */
 import Page from '../layouts/Page.astro';
+import { getPageSeo } from '../lib/sanity/settings';
 import Button from '../components/ui/Button.astro';
 
 const CONTAINER = 'container mx-auto flex w-full max-w-(--container-max-width) flex-col px-container-x';
@@ -52,9 +53,13 @@ const CONTACT_CARDS = [
    el vanilla. */
 const CARD_ICON_PATH =
   'M38.87 38.86L38.55 24.46C35.42 33.03 28.46 38.75 19.35 38.86L19.06 25.09C15.51 33.29 9.14 38.7 0 38.87V-1.0866e-05C8.93 -0.0700109 15.41 5.42999 19.06 13.54L19.39 0.0299891C28.16 -0.140011 35.55 5.67999 38.5 14.47L38.8 0.00998913C49.45 -0.100011 58.13 8.57999 58.2 19.23C58.27 29.58 50.19 38.58 38.86 38.85L38.87 38.86Z';
+
+/* SEO de esta página: `settings.contactSeo` en Sanity, con fallback global.
+   `getPageSeo()` memoiza el singleton — una sola query para todo el build. */
+const { seo, siteSettings } = await getPageSeo('contact');
 ---
 
-<Page title="Let's Talk — 27zero" navVariant="white">
+<Page seo={seo} siteSettings={siteSettings} navVariant="white">
   <section
     class="section section--main-contact mt-[clamp(5.625rem,4.7321rem_+_4.4643vw,8.75rem)] bg-indigo pt-[clamp(5.6262rem,10.4485rem_-_5.358vw,9.3769rem)] pb-[clamp(3.1275rem,1.5211rem_+_8.0321vw,8.75rem)]"
   >

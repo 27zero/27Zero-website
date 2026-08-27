@@ -19,14 +19,18 @@ import Button from '../../components/ui/Button.astro';
 import PortableText from '../../components/ui/PortableText.astro';
 import { sanityClient } from '../../lib/sanity/client';
 import { resourceDetailQuery } from '../../lib/sanity/queries';
+import { getSeoSettings } from '../../lib/sanity/settings';
+import { ogTypeFor } from '../../lib/seo/ogType';
+import { resolveSeo } from '../../lib/seo/resolveSeo';
 import { getHeadings } from '../../lib/utils/portableText';
 import { toStaticPaths } from '../../lib/utils/routes';
-import type { PortableTextBlock, SanityImage } from '../../types/sanity';
+import type { PortableTextBlock, SanityImage, Seo } from '../../types/sanity';
 
 export interface ResourceDetail {
   _id: string;
   title?: string;
   slug?: string;
+  seo?: Seo;
   shortDescription?: string;
   description?: string;
   publishedAt?: string;
@@ -42,6 +46,17 @@ export async function getStaticPaths() {
 }
 
 const resource = Astro.props as ResourceDetail;
+
+/* El `seo` del documento manda. Si el editor no lo cargó, title y description
+   salen del propio contenido — sigue siendo la misma fuente (el documento), no una
+   segunda — y recién después cae al fallback global de `settings`. Sin esto las 5
+   internas compartirían el title genérico del sitio mientras el SEO esté vacío. */
+const siteSettings = await getSeoSettings();
+const seo = {
+  ...resolveSeo(resource.seo),
+  title: resource.seo?.title ?? `${resource.title ?? 'Resource'} — 27zero`,
+  description: resource.seo?.description ?? resource.shortDescription ?? resource.description,
+};
 
 const headings = getHeadings(resource.body);
 
@@ -63,7 +78,7 @@ const ARTICLE_CLASSES = {
 };
 ---
 
-<Page title={`${resource.title ?? 'Resource'} — 27zero`} description={resource.shortDescription ?? resource.description} navVariant="white">
+<Page seo={seo} siteSettings={siteSettings} ogType={ogTypeFor('resource')} navVariant="white">
   <!-- 1. HERO -->
   <section
     class="section section--hero-resources-cms bg-[#D9D9D9] mt-[clamp(7.0313rem,5.9152rem_+_5.5804vw,10.9375rem)] py-[clamp(11.25rem,16.875rem_-_6.25vw,15.625rem)]"

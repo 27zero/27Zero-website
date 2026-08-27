@@ -17,6 +17,7 @@
  * igual que en Home.
  */
 import Page from '../layouts/Page.astro';
+import { getPageSeo } from '../lib/sanity/settings';
 import CardsSlider from '../components/sections/CardsSlider.astro';
 import ShapesSlider from '../components/sections/ShapesSlider.astro';
 import Button from '../components/ui/Button.astro';
@@ -93,9 +94,13 @@ const MENTOR_HEADING = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-
 const GLOBAL_HEADING = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px]';
 
 const BODY = 'text-body font-inter leading-[1.6] font-normal tracking-normal';
+
+/* SEO de esta página: `settings.aboutSeo` en Sanity, con fallback global.
+   `getPageSeo()` memoiza el singleton — una sola query para todo el build. */
+const { seo, siteSettings } = await getPageSeo('about');
 ---
 
-<Page title="About — 27zero" navVariant="white">
+<Page seo={seo} siteSettings={siteSettings} navVariant="white">
   <!-- HERO -->
   <section
     class="section section--hero-marketing relative mt-[clamp(6rem,5.2143rem_+_3.9286vw,8.75rem)] overflow-hidden pt-[clamp(5.625rem,8.4375rem_-_3.125vw,7.8125rem)] pb-[clamp(5.625rem,12.4554rem_-_7.5893vw,10.9375rem)]"

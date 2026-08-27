@@ -14,6 +14,7 @@
  * valor fijo de mobile (`em × 9`), no como parte del clamp.
  */
 import Page from '../layouts/Page.astro';
+import { getPageSeo } from '../lib/sanity/settings';
 import CardsSlider from '../components/sections/CardsSlider.astro';
 import MarqueeLogos from '../components/sections/MarqueeLogos.astro';
 import ShapesSlider from '../components/sections/ShapesSlider.astro';
@@ -71,9 +72,13 @@ const TEXT_MEDIA_ROW = 'flex items-start justify-between gap-sm max-md:flex-col 
 const TEXT_COLUMN = 'flex flex-[0_0_34%] flex-col items-start gap-sm max-md:flex-auto';
 const HEADING_ACCENT_H2 = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.36px]';
 const BODY_SM = 'text-body--sm font-inter text-body-sm leading-[1.6] font-normal tracking-normal';
+
+/* SEO de esta página: `settings.homeSeo` en Sanity, con fallback global.
+   `getPageSeo()` memoiza el singleton — una sola query para todo el build. */
+const { seo, siteSettings } = await getPageSeo('home');
 ---
 
-<Page title="27zero — EdTech Marketing Agency" navVariant="white">
+<Page seo={seo} siteSettings={siteSettings} navVariant="white">
   <!-- HERO -->
   <section
     class="section section--hero-home mt-[clamp(3.0938rem,2.6027rem_+_2.4554vw,4.8125rem)] bg-gray py-[clamp(10.125rem,9.9829rem_+_0.7107vw,10.6225rem)]"

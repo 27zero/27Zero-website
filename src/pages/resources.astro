@@ -16,6 +16,7 @@
  * global del proyecto para no dejar esta página con un ritmo distinto al resto.
  */
 import Page from '../layouts/Page.astro';
+import { getPageSeo } from '../lib/sanity/settings';
 import ResourceCard from '../components/ui/ResourceCard.astro';
 import ResourceCardFeatured from '../components/ui/ResourceCardFeatured.astro';
 import { toResourceCard } from '../lib/sanity/cards';
@@ -39,9 +40,13 @@ const FEATURED_RESOURCE = featured ? toResourceCard(featured, { imageWidth: 1000
 const RESOURCES = rest.map((resource) => toResourceCard(resource, { imageWidth: 700 }));
 
 const CONTAINER = 'container mx-auto flex w-full max-w-(--container-max-width) flex-col px-container-x';
+
+/* SEO de esta página: `settings.resourcesSeo` en Sanity, con fallback global.
+   `getPageSeo()` memoiza el singleton — una sola query para todo el build. */
+const { seo, siteSettings } = await getPageSeo('resources');
 ---
 
-<Page title="Resources — 27zero" navVariant="white">
+<Page seo={seo} siteSettings={siteSettings} navVariant="white">
   <!-- INTRO + FEATURED CARD -->
   <section
     class="section section--resources-hero pt-[clamp(4.5rem,2.4821rem_+_10.0893vw,11.5625rem)] pb-[clamp(3.7366rem,3.1435rem_+_2.9656vw,5.8125rem)]"

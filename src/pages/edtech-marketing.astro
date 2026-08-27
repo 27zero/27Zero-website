@@ -14,6 +14,7 @@
  * su `@media (max-width: 768px)` — ahí el `clamp()` usa los px reales de cada extremo.
  */
 import Page from '../layouts/Page.astro';
+import { getPageSeo } from '../lib/sanity/settings';
 import ServiceMenu from '../components/sections/ServiceMenu.astro';
 import ShapesSlider from '../components/sections/ShapesSlider.astro';
 import Button from '../components/ui/Button.astro';
@@ -110,9 +111,13 @@ const BODY = 'text-body font-inter text-body leading-[1.6] font-medium tracking-
    que en Home y About. */
 const PLACEHOLDER_LABEL =
   'font-inter text-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] font-semibold tracking-[1px] text-black uppercase opacity-40';
+
+/* SEO de esta página: `settings.agencySeo` en Sanity, con fallback global.
+   `getPageSeo()` memoiza el singleton — una sola query para todo el build. */
+const { seo, siteSettings } = await getPageSeo('agency');
 ---
 
-<Page title="EdTech Marketing — 27zero" navVariant="white">
+<Page seo={seo} siteSettings={siteSettings} navVariant="white">
   <!-- HERO -->
   <section
     class="section section--hero-marketing relative mt-[clamp(6.0019rem,5.2167rem_+_3.9259vw,8.75rem)] overflow-hidden pt-[clamp(3.7538rem,8.9729rem_-_5.7991vw,7.8131rem)] pb-[clamp(7.4988rem,11.9168rem_-_4.9089vw,10.935rem)]"

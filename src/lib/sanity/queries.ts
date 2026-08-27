@@ -73,6 +73,34 @@ const TESTIMONIAL_FIELDS = `
  * pertenecen. La query inversa por `$workId` (`testimonialsByWorkQuery`) es para la
  * interna de `work`, que se arma en la sesión de detalle.
  */
+/**
+ * `settings` — solo lo que consume el SEO.
+ *
+ * Proyección acotada a propósito: el singleton tiene ~40 campos de copy de sección
+ * que no tienen nada que ver con metadata. La resuelve `getPageSeo()` /
+ * `getSeoSettings()` de `lib/sanity/settings.ts`, que memoiza el resultado — esta
+ * query corre UNA vez por build, no una vez por cada una de las 13 páginas.
+ *
+ * `seo` es el fallback global; los 8 `{page}Seo` son el SEO por página
+ * estática/shell (Etapa 7). Las 5 internas no salen de acá: traen su propio `seo`
+ * desde su documento.
+ */
+export const siteSettingsSeoQuery = `
+  *[_type == "settings"][0] {
+    siteTitle,
+    siteUrl,
+    seo,
+    homeSeo,
+    aboutSeo,
+    workSeo,
+    clientsSeo,
+    mentorSeo,
+    resourcesSeo,
+    agencySeo,
+    contactSeo
+  }
+`;
+
 export const homeQuery = `{
   "featuredWorks": *[_type == "work" && isFeatured == true && defined(slug.current)]
     | order(order asc, title asc) {${WORK_CARD_FIELDS}},
@@ -259,6 +287,7 @@ export const workDetailQuery = `
     _id,
     title,
     "slug": slug.current,
+    seo,
     excerpt,
     brief,
     projectType,
@@ -302,6 +331,7 @@ export const mentorDetailQuery = `
     _id,
     title,
     "slug": slug.current,
+    seo,
     guestName,
     guestRole,
     guestCompany,
@@ -334,6 +364,7 @@ export const resourceDetailQuery = `
     _id,
     title,
     "slug": slug.current,
+    seo,
     shortDescription,
     description,
     publishedAt,
@@ -361,6 +392,7 @@ export const practiceDetailQuery = `
     _id,
     title,
     "slug": slug.current,
+    seo,
     shortDescription,
     relatedServiceCategory,
     heroHeadline,
@@ -389,6 +421,7 @@ export const serviceDetailQuery = `
     _id,
     title,
     "slug": slug.current,
+    seo,
     category,
     iconId,
     description,

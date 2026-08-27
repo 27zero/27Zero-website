@@ -1,0 +1,103 @@
+/**
+ * Resolución de SEO desde el singleton `settings` — 27zero.
+ *
+ * Una sola query de `settings` para todo el build, no una por página.
+ * `loadOnce()` cachea la PROMESA (no el resultado) a nivel de módulo: las 13 páginas
+ * se renderizan en el mismo proceso de Node, así que la primera que llame dispara el
+ * fetch y las otras 12 esperan esa misma promesa. Cachear la promesa y no el valor
+ * evita la carrera de que dos páginas entren antes de que la primera resuelva y se
+ * disparen dos requests (CLAUDE.md §10, "queries GROQ repetidas por página").
+ *
+ * Dos puertas de entrada, según de dónde salga el `seo` de la página:
+ *  - `getPageSeo(page)`  → las 8 estáticas/shell: el `seo` sale de `settings.{page}Seo`
+ *  - `getSeoSettings()`  → las 5 internas: el `seo` sale de su propio documento, de acá
+ *                          solo sale el fallback global
+ *
+ * Nunca las dos para la misma página (CLAUDE.md §8, "nunca ambas fuentes").
+ */
+import type { Seo } from '../../types/sanity';
+import { resolveSeo, type ResolvedSeo } from '../seo/resolveSeo';
+import { sanityClient } from './client';
+import { siteSettingsSeoQuery } from './queries';
+
+/** Lo que `Metadata.astro` necesita del sitio, con la `ogImage` ya resuelta. */
+export interface SiteSeoSettings {
+  siteTitle?: string;
+  siteUrl?: string;
+  /** Fallback global: cubre cualquier campo que la página deje vacío. */
+  seo?: ResolvedSeo;
+}
+
+/** Las 8 páginas estáticas/shell que no tienen documento propio en Sanity. */
+export type SeoPage =
+  | 'home'
+  | 'about'
+  | 'work'
+  | 'clients'
+  | 'mentor'
+  | 'resources'
+  | 'agency'
+  | 'contact';
+
+/** Shape crudo que devuelve `siteSettingsSeoQuery`, antes de resolver las imágenes. */
+interface SettingsSeoProjection {
+  siteTitle?: string;
+  siteUrl?: string;
+  seo?: Seo;
+  homeSeo?: Seo;
+  aboutSeo?: Seo;
+  workSeo?: Seo;
+  clientsSeo?: Seo;
+  mentorSeo?: Seo;
+  resourcesSeo?: Seo;
+  agencySeo?: Seo;
+  contactSeo?: Seo;
+}
+
+async function load(): Promise<{
+  siteSettings: SiteSeoSettings;
+  pages: Record<SeoPage, ResolvedSeo | undefined>;
+}> {
+  /* `?? {}`: hoy el singleton existe pero está vacío, y en un dataset nuevo podría no
+     existir. Sin esto el build entero se cae por metadata faltante — que es
+     justamente lo que el fallback tiene que absorber. */
+  const settings = (await sanityClient.fetch<SettingsSeoProjection | null>(siteSettingsSeoQuery)) ?? {};
+
+  return {
+    siteSettings: {
+      siteTitle: settings.siteTitle,
+      siteUrl: settings.siteUrl,
+      seo: resolveSeo(settings.seo),
+    },
+    pages: {
+      home: resolveSeo(settings.homeSeo),
+      about: resolveSeo(settings.aboutSeo),
+      work: resolveSeo(settings.workSeo),
+      clients: resolveSeo(settings.clientsSeo),
+      mentor: resolveSeo(settings.mentorSeo),
+      resources: resolveSeo(settings.resourcesSeo),
+      agency: resolveSeo(settings.agencySeo),
+      contact: resolveSeo(settings.contactSeo),
+    },
+  };
+}
+
+let cached: ReturnType<typeof load> | null = null;
+
+function loadOnce() {
+  cached ??= load();
+  return cached;
+}
+
+/** Páginas estáticas/shell: devuelve su `seo` propio + el fallback global, en un solo await. */
+export async function getPageSeo(
+  page: SeoPage
+): Promise<{ seo: ResolvedSeo | undefined; siteSettings: SiteSeoSettings }> {
+  const { siteSettings, pages } = await loadOnce();
+  return { seo: pages[page], siteSettings };
+}
+
+/** Internas de detalle: solo el fallback global — el `seo` lo pone el documento. */
+export async function getSeoSettings(): Promise<SiteSeoSettings> {
+  return (await loadOnce()).siteSettings;
+}

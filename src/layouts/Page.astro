@@ -9,23 +9,32 @@
  * inicial al tope de la página, antes del scroll). Ver Navbar.astro para el resto del
  * comportamiento (nav--scrolled, menú mobile).
  *
+ * Las props de SEO (`seo`, `siteSettings`, `ogType`) pasan de largo hasta
+ * `Base.astro` → `Metadata.astro`; este layout no las mira. Las páginas las obtienen
+ * de `lib/sanity/settings.ts` (`getPageSeo()` las 8 estáticas/shell,
+ * `getSeoSettings()` las 5 internas).
+ *
  * Páginas que necesiten omitir Navbar o Footer (ninguna hoy) siguen usando
  * `Base.astro` directo — este layout no reemplaza a `Base.astro`, se apoya en él.
  */
-import Base from './Base.astro';
 import Navbar from '../components/layout/Navbar.astro';
 import Footer from '../components/layout/Footer.astro';
+import type { SiteSeoSettings } from '../lib/sanity/settings';
+import type { OgType } from '../lib/seo/ogType';
+import type { ResolvedSeo } from '../lib/seo/resolveSeo';
+import Base from './Base.astro';
 
 interface Props {
-  title: string;
-  description?: string;
+  seo?: ResolvedSeo;
+  siteSettings: SiteSeoSettings;
+  ogType?: OgType;
   navVariant?: 'white' | 'black';
 }
 
-const { title, description, navVariant = 'white' } = Astro.props;
+const { seo, siteSettings, ogType, navVariant = 'white' } = Astro.props;
 ---
 
-<Base title={title} description={description}>
+<Base seo={seo} siteSettings={siteSettings} ogType={ogType}>
   <Navbar variant={navVariant} />
   <slot />
   <Footer />

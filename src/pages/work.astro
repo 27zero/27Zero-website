@@ -17,6 +17,7 @@
  * su `@media (max-width: 768px)` — ahí el `clamp()` usa los px reales de cada extremo.
  */
 import Page from '../layouts/Page.astro';
+import { getPageSeo } from '../lib/sanity/settings';
 import CategorySliders from '../components/sections/CategorySliders.astro';
 import FilterPills from '../components/sections/FilterPills.astro';
 import MarqueeLogos from '../components/sections/MarqueeLogos.astro';
@@ -79,9 +80,13 @@ const HERO_CONTAINER =
    que Clientes reutiliza — mismo criterio que el override del Work Slider en About. */
 const LOS_MEJORES_CARD_HEIGHT =
   '[&_#los-mejores_.card--work]:h-[clamp(20rem,17.7143rem_+_11.4286vw,28rem)] [&_#los-mejores_.card-work-body]:min-h-[clamp(20rem,17.7143rem_+_11.4286vw,28rem)]';
+
+/* SEO de esta página: `settings.workSeo` en Sanity, con fallback global.
+   `getPageSeo()` memoiza el singleton — una sola query para todo el build. */
+const { seo, siteSettings } = await getPageSeo('work');
 ---
 
-<Page title="Work — 27zero" navVariant="white">
+<Page seo={seo} siteSettings={siteSettings} navVariant="white">
   <!-- HERO -->
   <section
     class="section section--hero pt-[clamp(10.2431rem,8.6172rem_+_8.1295vw,15.9337rem)] pb-[clamp(2.8125rem,2.3661rem_+_2.2321vw,4.375rem)]"
