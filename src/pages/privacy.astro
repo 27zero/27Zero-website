@@ -1,0 +1,183 @@
+---
+/**
+ * Privacy Policy — 27zero
+ * Página estática nueva (Etapa 8, Hallazgo 1). Reemplaza el link roto `/privacy` que el
+ * footer heredó del vanilla, donde apuntaba a una página que nunca existió.
+ *
+ * El copy es el de producción de `27zero.agency` (Webflow), que sigue siendo la fuente
+ * de verdad hasta el swap de dominio de Etapa 9. Sin documentType en Sanity: copy legal
+ * es siempre estático (CLAUDE.md §4). SEO por constante en el frontmatter — no hay
+ * `privacySeo` en `settings` y crearlo sería la segunda fuente que §8 prohíbe.
+ *
+ * El `<h1>` dice "Privacy" y no "Privacy Policy" porque es el título literal de la
+ * página de producción; el nombre formal del documento va en el `subtitle`.
+ */
+import Legal, { type LegalSection } from '../layouts/Legal.astro';
+import { getSeoSettings } from '../lib/sanity/settings';
+
+const siteSettings = await getSeoSettings();
+
+const seo = {
+  title: 'Privacy Policy — 27zero',
+  description: 'How 27 ZERO STUDIO SAS collects, stores, and processes personal data, and how data subjects can exercise their rights.',
+};
+
+/* Copy de producción de `https://www.27zero.agency/privacy`, transcrito verbatim
+   (verificado carácter por carácter contra el origen). Va como datos y no como markup
+   porque la maquetación vive en `layouts/Legal.astro` — ver el docblock de ese archivo.
+
+   Cualquier cambio de este texto es una decisión legal del cliente, no de código: se
+   edita acá, en branch → PR → merge (CLAUDE.md §4, copy legal siempre estático). */
+const SECTIONS: LegalSection[] = [
+  {
+    heading: "1. Introduction",
+    content: [
+      { type: 'p', text: "Based on Statutory Law 1581 of 2012 \"Which establishes general provisions for the protection of personal data\" and Decree 1377 of 2013 \"Which partially regulates Law 1581 of 2012,\" 27 ZERO STUDIO SAS, headquartered in Bogotá, adopts this privacy and personal data protection policy regarding the collection, storage, and management of data received from clients, suppliers, contractors, consultants, employees, and in general, from any natural person whose personal data is subject to processing." },
+      { type: 'p', text: "27 ZERO STUDIO SAS may update this policy at any time, whether due to legislative, regulatory, or jurisprudential updates, internal policies, or any other reason or circumstance. These updates will be communicated promptly through a written document, publication on the website, verbal communication, or any other technology. Therefore, it is recommended that data subjects review this policy regularly to ensure they have read the most updated version." },
+    ],
+  },
+  {
+    heading: "2. Data Controller",
+    content: [
+      { type: 'p', text: "The entity responsible for processing your personal data is 27 ZERO STUDIO SAS, identified with NIT: 900.166.660-9, headquartered at Cra 7 116 50 - Bogotá, Website: www.27ZERO.co" },
+    ],
+  },
+  {
+    heading: "3. Purpose of Personal Data",
+    content: [
+      { type: 'p', text: "27 ZERO STUDIO SAS maintains a database with information provided throughout its relationships with clients, suppliers, and employees. This includes stored documents submitted to our offices or sent via email, containing signatures and personal information when dealing with natural persons, or information related to partners, employees, contractors, or dependents in the case of legal entities." },
+      { type: 'p', text: "The collection and automated processing of personal data aim to facilitate management, administration, statistics, as well as sending communications and any other purpose necessary for 27 ZERO STUDIO SAS to fulfill its corporate purpose. Accordingly, personal data is used by the administrative, commercial, and service desk departments for the following purposes:" },
+      {
+        type: 'ul',
+        items: [
+          { text: "Creation and maintenance of legally required documents according to accounting regulations." },
+          { text: "Processing personal data for marketing activities." },
+          { text: "Adapting our products and services to better meet client needs." },
+          { text: "Data update campaigns." },
+          { text: "Conducting selection, evaluation, and employment processes." },
+          { text: "Executing contractual relationships with clients, suppliers, and employees, including contractual obligation payments." },
+          { text: "Handling requests, complaints, and claims." },
+        ],
+      },
+    ],
+  },
+  {
+    heading: "4. Exercising Data Subject Rights to Access, Update, Rectify, and Delete Information",
+    content: [
+      { type: 'p', text: "Users may exercise their right to access, update, rectify, and delete the personal data they have provided to 27 ZERO STUDIO SAS by submitting a request through the following means:" },
+      {
+        type: 'ul',
+        items: [
+          { text: "Email: contacto@27ZERO.co" },
+          { text: "Direct mail addressed to 27 ZERO STUDIO SAS" },
+        ],
+      },
+      { type: 'p', text: "In accordance with Article 20 of Decree 1377 of 2013, data subjects' rights established by law may be exercised by:" },
+      {
+        type: 'ol',
+        items: [
+          { text: "The data subject, who must sufficiently prove their identity by the means provided by the controller." },
+          { text: "Their heirs, who must prove such status." },
+          { text: "The data subject's representative and/or attorney, upon proper authorization." },
+          { text: "A third party by stipulation in favor of or for another." },
+        ],
+      },
+      { type: 'p', text: "Requests must include the user's full name and contact details for notifications." },
+      { type: 'p', text: "The data subject may request a copy of the personal data held by 27 ZERO STUDIO SAS. Likewise, 27 ZERO STUDIO SAS will update, rectify, or delete data that is inaccurate, incomplete, or no longer necessary for the original purpose." },
+      { type: 'p', text: "If the data subject has not contacted 27 ZERO STUDIO SAS to request the deletion of their personal data, the company may reasonably conclude, under Article 7 of Decree 1377 of 2013, that there is an unequivocal act granting authorization for processing the data held in its databases for the purposes stated in this policy. However, the data subject retains the right to request deletion at any time." },
+    ],
+  },
+  {
+    heading: "4.1 Processing of Requests and Complaints",
+    content: [],
+  },
+  {
+    heading: "Consultations:",
+    level: 3,
+    content: [
+      { type: 'p', text: "Data subjects or their heirs may request information on the personal data stored in any database of 27 ZERO STUDIO SAS. The company will provide all information contained in the individual record or linked to the data subject's identification. The consultation must be submitted in writing, as indicated in section 4, by the data subject or their attorney." },
+      { type: 'p', text: "The consultation will be addressed within ten (10) business days from the date of receipt. If the request cannot be processed within this period, the applicant will be informed, explaining the reasons for the delay and indicating the date by which the request will be processed, which in no case shall exceed five (5) additional business days." },
+    ],
+  },
+  {
+    heading: "Complaints:",
+    level: 3,
+    content: [
+      { type: 'p', text: "If a data subject or their heirs believe that the data contained in 27 ZERO STUDIO SAS databases should be corrected, updated, or deleted, they may file a complaint, which will be processed under the following rules:" },
+      {
+        type: 'ol',
+        items: [
+          {
+            text: "The complaint must be submitted in writing to 27 ZERO STUDIO SAS, including:",
+            items: [
+              "Identification of the data subject",
+              "Description of the facts supporting the complaint",
+              "Address and any supporting documents",
+            ],
+          },
+          { text: "If the complaint is incomplete, the applicant will be requested to correct deficiencies within five (5) days of receipt. If two (2) months pass without the requested information being provided, the complaint will be considered withdrawn." },
+          { text: "If the recipient of the complaint is not competent to resolve it, they will refer it to the appropriate party within two (2) business days and inform the applicant." },
+          { text: "A complete complaint will be resolved within fifteen (15) business days from the day after receipt. If it cannot be resolved within this period, the applicant will be informed of the reasons and the estimated resolution date, which shall not exceed eight (8) additional business days." },
+        ],
+      },
+    ],
+  },
+  {
+    heading: "5. Notification to Data Subjects Regarding Data Collection",
+    content: [
+      { type: 'p', text: "In accordance with Article 10, paragraph 3, of Decree 1377 of 2013, 27 ZERO STUDIO SAS will publish a notice on its official website, www.27ZERO.co, informing data subjects about this data processing policy and their rights." },
+    ],
+  },
+  {
+    heading: "6. Responsibilities as Data Processor",
+    content: [
+      { type: 'p', text: "27 ZERO STUDIO SAS is directly responsible for processing and safeguarding collected and stored personal data. However, it reserves the right to delegate processing to third parties, requiring them to implement appropriate policies and procedures to protect personal data and ensure strict confidentiality, in accordance with Article 18 of Law 1581 of 2012." },
+    ],
+  },
+  {
+    heading: "7. Sensitive Data",
+    content: [
+      { type: 'p', text: "For the purposes of personal data protection law and this policy, sensitive data refers to information related to the data subject's privacy, such as racial or ethnic origin, political opinions, religious or philosophical beliefs, trade union membership, social organizations, human rights groups, or political party affiliations. It also includes health data, sexual life, and biometric data." },
+      { type: 'p', text: "27 ZERO STUDIO SAS remains apolitical and non-discriminatory regarding religion or ethnicity. The data subject is not obligated to provide sensitive data, and any request for such information will require explicit authorization." },
+    ],
+  },
+  {
+    heading: "8. Third Parties",
+    content: [
+      { type: 'p', text: "Databases or files will not be shared with third parties without the data subject's explicit authorization or as required by law. Data shared with third parties for correspondence and communication purposes is subject to confidentiality agreements to ensure data protection." },
+    ],
+  },
+  {
+    heading: "9. Security Measures for Personal Data Processing",
+    content: [
+      { type: 'p', text: "In compliance with the security principle in Law 1581 of 2012, 27 ZERO STUDIO SAS will adopt necessary technical, human, and administrative measures to protect data against alteration, loss, unauthorized consultation, use, or fraudulent access." },
+    ],
+  },
+  {
+    heading: "10. Acceptance of This Policy",
+    content: [
+      { type: 'p', text: "By providing personal data to 27 ZERO STUDIO SAS, the data subject acknowledges having read and accepted this policy." },
+    ],
+  },
+  {
+    heading: "11. Validity of This Policy",
+    content: [
+      { type: 'p', text: "This policy is effective from its publication and remains in force as long as 27 ZERO STUDIO SAS continues its corporate activities." },
+    ],
+  },
+  {
+    heading: "12. Contact Information",
+    content: [
+      { type: 'p', text: "For any inquiries regarding this data protection policy, you may contact 27 ZERO STUDIO SAS through the means indicated in section 4 of this document." },
+    ],
+  },
+];
+---
+
+<Legal
+  seo={seo}
+  siteSettings={siteSettings}
+  title="Privacy"
+  subtitle="PRIVACY AND DATA POLICY OF 27 ZERO STUDIO SAS"
+  sections={SECTIONS}
+/>

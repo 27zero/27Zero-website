@@ -53,7 +53,7 @@ const WORK_BY_CLIENT: WorkGroup[] = clients.map((client) => ({
   label: client.name,
   items: works
     .filter((work) => work.clientName === client.name)
-    .map((work) => toWorkCard(work, client.name)),
+    .map((work) => toWorkCard(work, { eyebrow: client.name })),
 }));
 
 /* A diferencia de Work, acá TODOS los grupos llevan pill: no existe el bloque

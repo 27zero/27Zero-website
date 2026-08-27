@@ -77,24 +77,60 @@ export interface ResourceProjection {
   cardThumbnail?: SanityImage;
 }
 
+/* ──────────────────────────── Anchos de imagen ─────────────────────────── */
+
+/**
+ * Ancho al que se le pide cada imagen al Image CDN de Sanity, por contexto de render.
+ *
+ * Los valores NO son estimados: salen de medir el ancho CSS real de cada `<img>` en el
+ * build servido, en desktop (1440px) y en mobile (390px), y tomar el mayor × 2 para
+ * cubrir pantallas de densidad doble. Antes había un `700` fijo para todo (Etapa 8), que
+ * daba de casualidad el valor correcto para las cards y 6x de más para el logo.
+ *
+ * Cada mapper acepta un override, porque el mismo documento se renderiza a tamaños
+ * distintos según la página que lo pida (es lo que `toResourceCard` ya hacía con
+ * `imageWidth` desde Etapa 6).
+ *
+ * | contexto              | render CSS máx. | ancho pedido |
+ * |-----------------------|-----------------|--------------|
+ * | card de work          | 350px           | 700          |
+ * | card de mentor        | 350px           | 700          |
+ * | logo de cliente       | 28px            | 64           |
+ * | avatar de invitado    | 50px            | 128          |
+ */
+const CARD_IMAGE_WIDTH = 700;
+
+/** 28px de render — `160` servía una imagen casi 6x más grande de lo necesario. */
+const CLIENT_LOGO_WIDTH = 64;
+
+/**
+ * Se queda en 128 y no baja a 100 (50px × 2) a propósito: es la única imagen del set que
+ * cae dentro del rango de las pantallas 3x, donde 100 se vería blando. A este tamaño la
+ * diferencia de bytes es despreciable y Lighthouse no la marca.
+ */
+const AVATAR_WIDTH = 128;
+
 /* ──────────────────────────────── Mappers ─────────────────────────────── */
 
 /**
  * `work` → props de `WorkCard`.
  *
  * `eyebrow` es la categoría en Work/Home y el cliente en Clientes, así que se recibe
- * como parámetro: es criterio de la página, no del documento. En el vanilla iba entre
+ * en `options`: es criterio de la página, no del documento. En el vanilla iba entre
  * corchetes (`[Client Name]`) porque era placeholder — con contenido real el texto va
  * limpio, y el `capitalize` lo resuelve el CSS de la card.
  */
-export function toWorkCard(work: WorkCardProjection, eyebrow?: string): WorkCardData {
+export function toWorkCard(
+  work: WorkCardProjection,
+  options: { eyebrow?: string; imageWidth?: number } = {}
+): WorkCardData {
   return {
     href: workUrl(work.slug),
     title: work.title,
-    eyebrow: eyebrow ?? work.categoryTitle,
-    image: toImage(work.thumbnail, { width: 700 }),
+    eyebrow: options.eyebrow ?? work.categoryTitle,
+    image: toImage(work.thumbnail, { width: options.imageWidth ?? CARD_IMAGE_WIDTH }),
     clientName: work.clientName,
-    clientLogo: toImage(work.clientLogo, { width: 160 }),
+    clientLogo: toImage(work.clientLogo, { width: CLIENT_LOGO_WIDTH }),
     /* Solo si no hay logo: la card muestra uno u otro, nunca los dos. */
     clientInitials: work.clientLogo ? undefined : getInitials(work.clientName),
   };
@@ -111,8 +147,11 @@ export function toWorkCard(work: WorkCardProjection, eyebrow?: string): WorkCard
  * del invitado va aparte, en `name`. Cae a `guestName` solo cuando `title` está vacío:
  * hay documentos reales cargados a medias, y una card sin ningún texto no es navegable.
  */
-export function toMentorCard(mentor: MentorCardProjection): MentorCardData {
-  const avatar = toImage(mentor.guestPhoto, { width: 128, height: 128 });
+export function toMentorCard(
+  mentor: MentorCardProjection,
+  options: { imageWidth?: number } = {}
+): MentorCardData {
+  const avatar = toImage(mentor.guestPhoto, { width: AVATAR_WIDTH, height: AVATAR_WIDTH });
 
   return {
     href: mentorUrl(mentor.slug),
@@ -122,7 +161,7 @@ export function toMentorCard(mentor: MentorCardProjection): MentorCardData {
     name: mentor.guestName,
     /* Fondo de la card. Es `thumbnail` y NO `guestPhoto`: esa última es la foto de la
        persona y ya se usa como avatar del header, acá arriba. */
-    image: toImage(mentor.thumbnail, { width: 700 }),
+    image: toImage(mentor.thumbnail, { width: options.imageWidth ?? CARD_IMAGE_WIDTH }),
     avatar,
     avatarInitials: avatar ? undefined : getInitials(mentor.guestName),
   };

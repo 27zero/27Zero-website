@@ -14,8 +14,18 @@
  * de `lib/sanity/settings.ts` (`getPageSeo()` las 8 estáticas/shell,
  * `getSeoSettings()` las 5 internas).
  *
+ * Única excepción: `siteSettings.linkedinUrl`, que este layout SÍ mira para bajarla al
+ * footer (Etapa 8, Hallazgo 1). No pasa por `Base.astro` porque el footer se instancia
+ * acá, y ninguna página tiene que volver a pedir el mismo singleton para eso.
+ *
  * Páginas que necesiten omitir Navbar o Footer (ninguna hoy) siguen usando
  * `Base.astro` directo — este layout no reemplaza a `Base.astro`, se apoya en él.
+ *
+ * El `<main>` vive acá y no en `Base.astro` porque es el hermano de Navbar y Footer: su
+ * razón de ser es delimitar el contenido de página frente a los dos landmarks que lo
+ * rodean, y en `Base.astro` (que no los instancia) envolvería también a cualquiera de
+ * los dos que una página futura decidiera meter por el slot. Uno solo por página, que
+ * es lo que pide `landmark-one-main` (CLAUDE.md §10, accesibilidad baseline).
  */
 import Navbar from '../components/layout/Navbar.astro';
 import Footer from '../components/layout/Footer.astro';
@@ -40,6 +50,8 @@ const { seo, siteSettings, ogType, article, breadcrumb, navVariant = 'white' } =
 
 <Base seo={seo} siteSettings={siteSettings} ogType={ogType} article={article} breadcrumb={breadcrumb}>
   <Navbar variant={navVariant} />
-  <slot />
-  <Footer />
+  <main>
+    <slot />
+  </main>
+  <Footer linkedinUrl={siteSettings.linkedinUrl} />
 </Base>

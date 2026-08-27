@@ -50,7 +50,7 @@ const FEATURED_GROUP: WorkGroup = {
 const CATEGORY_GROUPS: WorkGroup[] = categories.flatMap((category) => {
   const items = works
     .filter((work) => work.categorySlug === category.slug)
-    .map((work) => toWorkCard(work, category.title));
+    .map((work) => toWorkCard(work, { eyebrow: category.title }));
 
   return items.length > 0 ? [{ id: category.slug, label: category.title, items }] : [];
 });

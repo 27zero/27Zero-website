@@ -1,0 +1,57 @@
+---
+/**
+ * Security Policy — 27zero
+ * Página estática nueva (Etapa 8, Hallazgo 1). Sale del split del link combinado
+ * "Privacy Security Policy" del footer del vanilla, que apuntaba a un solo `/privacy`
+ * inexistente y ahora son dos links a dos documentos separados.
+ *
+ * Mismo criterio que `privacy.astro`: copy de producción de `27zero.agency` transcrito
+ * verbatim, estático (CLAUDE.md §4), maquetación en `layouts/Legal.astro`, SEO por
+ * constante en el frontmatter (CLAUDE.md §8/§8.1).
+ */
+import Legal, { type LegalSection } from '../layouts/Legal.astro';
+import { getSeoSettings } from '../lib/sanity/settings';
+
+const siteSettings = await getSeoSettings();
+
+const seo = {
+  title: 'Security Policy — 27zero',
+  description: 'The information security policy of 27 ZERO STUDIO SAS, built on ISO 27001:2013 and covering the confidentiality, integrity, and availability of information.',
+};
+
+/* Copy de producción de `https://www.27zero.agency/security-policy`, transcrito verbatim
+   (verificado carácter por carácter contra el origen). Va como datos y no como markup
+   porque la maquetación vive en `layouts/Legal.astro` — ver el docblock de ese archivo.
+
+   Cualquier cambio de este texto es una decisión legal del cliente, no de código: se
+   edita acá, en branch → PR → merge (CLAUDE.md §4, copy legal siempre estático). */
+const SECTIONS: LegalSection[] = [
+  {
+    heading: "Information Security",
+    content: [
+      { type: 'p', text: "At 27zero, we are committed to delivering high-quality and far-reaching work by incorporating standards such as ISO 27001:2013 into our activities, ensuring information security. Therefore, we have established a policy that guides us in safeguarding all information throughout every process, working to ensure its availability, integrity, and confidentiality." },
+    ],
+  },
+  {
+    heading: "General Information Security Policy",
+    content: [
+      { type: 'p', text: "27 ZERO STUDIO SAS (27zero) has decided to define, implement, operate, and continuously improve an Information Security Management System (ISMS), based on business needs and regulatory requirements applicable to its nature. This policy is guided by the principles of preserving the confidentiality, integrity, and availability of information through the alignment of security best practices with the company’s strategic objectives. Additionally, we strive to engage stakeholders in the ISMS to ensure the long-term implementation and execution of security controls, fostering a culture of information security at all levels. Through this approach, we aim to positively enhance customer satisfaction by meeting both explicit and implicit information security requirements." },
+    ],
+  },
+  {
+    heading: "Commitment to the Policy",
+    content: [
+      { type: 'p', text: "27 ZERO STUDIO SAS (27zero) is committed to complying with all applicable information security requirements within the defined scope and in line with the organization’s purpose of protecting and safeguarding its own and third-party information. Furthermore, we are dedicated to the continuous improvement of the system and its processes through the assignment of roles and responsibilities, as established by management, to implement, control, and monitor the ISMS effectively." },
+      { type: 'p', text: "For more information about our policy or Information Security Management System (ISMS), please contact us." },
+    ],
+  },
+];
+---
+
+<Legal
+  seo={seo}
+  siteSettings={siteSettings}
+  title="Security Policy"
+  subtitle="INFORMATION SECURITY POLICY OF 27 ZERO STUDIO SAS"
+  sections={SECTIONS}
+/>

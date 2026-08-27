@@ -39,6 +39,13 @@ export interface SiteSeoSettings {
   logoUrl?: string;
   sameAs?: string[];
   offices?: Office[];
+  /**
+   * URL de LinkedIn, cruda. Ya alimenta `sameAs` del JSON-LD, pero el footer la
+   * necesita suelta para el `href` del link visible (Etapa 8, Hallazgo 1): leerla de
+   * `sameAs[0]` acoplaría el footer al orden de ese array. `Page.astro` la baja a
+   * `Footer.astro`.
+   */
+  linkedinUrl?: string;
 }
 
 /** Las 8 páginas estáticas/shell que no tienen documento propio en Sanity. */
@@ -94,6 +101,7 @@ async function load(): Promise<{
       seo: resolveSeo(settings.seo),
       logoUrl: ogImageUrl(settings.logo),
       sameAs: socialUrls.length ? socialUrls : undefined,
+      linkedinUrl: settings.linkedinUrl,
       offices: [
         {country: 'US' as const, label: 'United States', ...settings.officeUSNew},
         {country: 'CO' as const, label: 'Colombia', ...settings.officeCONew},
