@@ -388,6 +388,8 @@ export interface EdtechMarketingPractice extends SanityDocument {
   ctaTitle?: string;
   ctaLabel?: string;
   ctaHref?: string;
+
+  seo?: Seo;
 }
 
 /** `edtechMarketingService` — un servicio del menú de EdTech Marketing + interna. */
