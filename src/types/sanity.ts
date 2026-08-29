@@ -430,6 +430,14 @@ interface LinkItem {
   href?: string;
 }
 
+/** Card del bloque final de Contact — `bookCard` y `subscribeCard` comparten shape. */
+interface ContactCard {
+  title?: string;
+  subtitle?: string;
+  link?: string;
+  bgImage?: SanityImage;
+}
+
 /**
  * `settings` — singleton de configuración del sitio.
  *
@@ -504,7 +512,7 @@ export interface Settings extends SanityDocument {
 
   // Contact
   contactSeo?: Seo;
-  contactHero?: { headline?: string; text?: string };
+  contactHero?: { headline?: string; text?: string; ctaLink?: string };
   contactEmail?: string;
   officeUSNew?: { address?: string; phone?: string; email?: string };
   officeCONew?: { address?: string; phone?: string; email?: string };
@@ -512,6 +520,13 @@ export interface Settings extends SanityDocument {
   officeUS?: string;
   /** Legacy plano — reemplazado por `officeCONew`, todavía en el schema. */
   officeCO?: string;
+  /** Fieldset `form` — encabezado del formulario de contacto. */
+  formTitle?: string;
+  formSubtitle?: string;
+  /** Fieldset `bottomCards` — título de la sección de cards al pie de Contact. */
+  waysTitle?: string;
+  bookCard?: ContactCard;
+  subscribeCard?: ContactCard;
 
   // EdTech Marketing
   agencySeo?: Seo;
