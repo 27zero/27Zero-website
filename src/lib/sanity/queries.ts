@@ -167,7 +167,10 @@ export const aboutQuery = `{
   "mentorPosts": *[_type == "edtechMentor" && defined(slug.current)]
     | order(publishedAt desc)[0...6] {${MENTOR_CARD_FIELDS}},
 
-  "proofPoint": *[_type == "settings"][0].aboutProofPoint {title, text, image}
+  "proofPoint": *[_type == "settings"][0].aboutProofPoint {title, text, image},
+  "aboutHero": *[_type == "settings"][0].aboutHero {headline, text, image},
+  "aboutDna": *[_type == "settings"][0].aboutDna,
+  "aboutTeam": *[_type == "settings"][0].aboutTeam
 }`;
 
 /* ────────────────────────── Work / Clientes ───────────────────────────── */

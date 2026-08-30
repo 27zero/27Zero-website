@@ -34,13 +34,23 @@ import type { SanityImage } from '../types/sanity';
 import type { MentorCardData, WorkCardData } from '../types/ui';
 
 /* Una sola query para las 4 secciones que consumen CMS (CLAUDE.md §10). */
-const { team, works, featuredMentor, mentorPosts, proofPoint } = await sanityClient.fetch<{
-  team: { _id: string; name: string; role: string; photo?: SanityImage }[];
-  works: WorkCardProjection[];
-  featuredMentor: MentorCardProjection | null;
-  mentorPosts: MentorCardProjection[];
-  proofPoint: { title?: string; text?: string; image?: SanityImage } | null;
-}>(aboutQuery);
+const { team, works, featuredMentor, mentorPosts, proofPoint, aboutHero, aboutDna, aboutTeam } =
+  await sanityClient.fetch<{
+    team: { _id: string; name: string; role: string; photo?: SanityImage }[];
+    works: WorkCardProjection[];
+    featuredMentor: MentorCardProjection | null;
+    mentorPosts: MentorCardProjection[];
+    proofPoint: { title?: string; text?: string; image?: SanityImage } | null;
+    aboutHero: { headline?: string; text?: string; image?: SanityImage } | null;
+    aboutDna: { headline?: string; text?: string } | null;
+    aboutTeam: { headline?: string; text?: string } | null;
+  }>(aboutQuery);
+
+/* Fondo full-bleed del hero. `toImage()` y no `ogImageUrl()`: ese último recorta a
+   1200×630 para la tarjeta de Open Graph y deformaría el fondo (mismo criterio que el
+   poster del hero de Home, Etapa 10). Sin imagen cargada — o sin `alt` — queda
+   `undefined` y el hero cae al placeholder. */
+const HERO_IMAGE = toImage(aboutHero?.image, { width: 1920 });
 
 /* `TeamCard` exige `image` con `alt` obligatorio (CLAUDE.md §8.1), así que los
    integrantes sin foto cargada quedan fuera del grid: la card es una foto con el
@@ -105,15 +115,21 @@ const { seo, siteSettings } = await getPageSeo('about');
   <section
     class="section section--hero-marketing relative mt-[clamp(6rem,5.2143rem_+_3.9286vw,8.75rem)] overflow-hidden pt-[clamp(5.625rem,8.4375rem_-_3.125vw,7.8125rem)] pb-[clamp(5.625rem,12.4554rem_-_7.5893vw,10.9375rem)]"
   >
-    {/* PENDIENTE (planning-maquetado-about.md #2): asset de fondo del hero sin
-        definir. Se maqueta con el placeholder del vanilla — no bloquea el resto. */}
-    <div class="hero-marketing-bg absolute inset-0 z-0 flex items-center justify-center bg-gray">
-      <span
-        class="font-inter text-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] font-semibold tracking-[1px] text-black uppercase opacity-40"
-      >
-        [HERO BACKGROUND IMAGE]
-      </span>
-    </div>
+    {
+      HERO_IMAGE ? (
+        <img
+          src={HERO_IMAGE.src}
+          alt={HERO_IMAGE.alt}
+          class="hero-marketing-bg absolute inset-0 z-0 size-full object-cover"
+        />
+      ) : (
+        <div class="hero-marketing-bg absolute inset-0 z-0 flex items-center justify-center bg-gray">
+          <span class="font-inter text-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] font-semibold tracking-[1px] text-black uppercase opacity-40">
+            [HERO BACKGROUND IMAGE]
+          </span>
+        </div>
+      )
+    }
 
     <div
       class:list={[
@@ -123,11 +139,10 @@ const { seo, siteSettings } = await getPageSeo('about');
     >
       <div class="hero-marketing-text flex max-w-[50%] flex-col gap-[clamp(1.2656rem,1.0647rem_+_1.0045vw,1.9688rem)] max-md:max-w-full">
         <h1 class="font-lora text-h1 leading-[1.25] font-medium tracking-[-0.48px]">
-          Your extended team of EdTech marketing experts and creatives.
+          {aboutHero?.headline}
         </h1>
         <p class:list={[BODY, 'max-w-[90%] text-black max-md:max-w-full']}>
-          Our mission is to help drive global education transformation. With extensive hands-on experience, we
-          understand the industry's evolving needs and enable EdTech companies to thrive.
+          {aboutHero?.text}
         </p>
       </div>
     </div>
@@ -138,12 +153,11 @@ const { seo, siteSettings } = await getPageSeo('about');
     <div
       class:list={[CONTAINER, 'dna-container items-center gap-[clamp(1.2656rem,1.0647rem_+_1.0045vw,1.9688rem)] text-center']}
     >
-      <h2 class={GLOBAL_HEADING}>Creativity is our DNA</h2>
+      <h2 class={GLOBAL_HEADING}>{aboutDna?.headline}</h2>
       <p
         class="dna-subtitle mx-auto max-w-[70%] text-center font-inter text-[clamp(1.125rem,1.0714rem_+_0.2679vw,1.3125rem)] leading-[1.6] font-normal tracking-normal max-md:max-w-full"
       >
-        We are experts in generating demand and growing revenue for education organizations of all kinds, from
-        institutions to software, from b2c to b2b2c. We've been part of the transformation in education since 2001.
+        {aboutDna?.text}
       </p>
     </div>
   </section>
@@ -152,10 +166,9 @@ const { seo, siteSettings } = await getPageSeo('about');
   <section class="section section--team bg-indigo py-[clamp(4.6181rem,3.8851rem_+_3.6652vw,7.1838rem)]">
     <div class:list={[CONTAINER, 'team-container gap-[clamp(2.25rem,1.8929rem_+_1.7857vw,3.5rem)]']}>
       <div class="team-intro flex flex-col items-center gap-[clamp(0.8438rem,0.7098rem_+_0.6696vw,1.3125rem)] text-center">
-        <h2 class:list={[GLOBAL_HEADING, 'text-white']}>The people behind the work.</h2>
+        <h2 class:list={[GLOBAL_HEADING, 'text-white']}>{aboutTeam?.headline}</h2>
         <p class:list={[BODY, 'mx-auto max-w-[70%] text-white max-md:max-w-full']}>
-          Our mission is to help drive global education transformation. With extensive hands-on experience, we
-          understand the industry's evolving needs and enable EdTech companies to thrive.
+          {aboutTeam?.text}
         </p>
       </div>
 
