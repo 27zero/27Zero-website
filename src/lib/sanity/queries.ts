@@ -102,7 +102,13 @@ export const siteSettingsSeoQuery = `
     mentorSeo,
     resourcesSeo,
     agencySeo,
-    contactSeo
+    contactSeo,
+    contactHero,
+    formTitle,
+    formSubtitle,
+    waysTitle,
+    bookCard,
+    subscribeCard
   }
 `;
 

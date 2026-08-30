@@ -4,19 +4,23 @@
  * Portado 1:1 de `/contact/index.html` + `/contact/style.css` del repo vanilla.
  * Clases propias documentadas en `/contact/design-system-contact.md`.
  *
- * Página 100% estática, sin GROQ ni mock data — una sola sección de contenido
- * (`.section--main-contact`) además de navbar/footer.
+ * Contenido editable desde Sanity (Etapa 10): headline y texto del hero, link del
+ * CTA, encabezado del formulario, título de "Two more ways to start" y las dos
+ * cards salen del singleton `settings` vía `getContactContent()`. Las direcciones
+ * de oficina salen de `siteSettings.offices` — el mismo array que ya alimenta el
+ * JSON-LD, no una proyección aparte.
  *
  * El logo del form (`.contact-form-logo`) usa el asset self-hosteado
  * (`/assets/logo-27zero.svg`), no el CDN de Webflow del vanilla (CLAUDE.md: assets
  * self-hosted) — mismo asset que ya usan Navbar/Footer.
  *
- * El submit del `<form>` replica el comportamiento placeholder del vanilla
- * (`preventDefault()` + no-op): no hay servicio de envío conectado todavía, eso es
- * una decisión de producto fuera de esta etapa (planning-maquetado-contact.md #1).
+ * El formulario ya no es el `<form>` vanilla con submit placeholder: es un embed de
+ * HubSpot (`js.hsforms.net/forms/v2.js`) que maneja su propio submit, con
+ * verificación anti-spam contra `oopspam.digital-efd.workers.dev` antes de dejar
+ * pasar el envío.
  */
 import Page from '../layouts/Page.astro';
-import { getPageSeo } from '../lib/sanity/settings';
+import { getContactContent, getPageSeo } from '../lib/sanity/settings';
 import Button from '../components/ui/Button.astro';
 
 const CONTAINER = 'container mx-auto flex w-full max-w-(--container-max-width) flex-col px-container-x';
@@ -28,25 +32,9 @@ const SECTION_HEADING =
 
 const BODY = 'text-body font-inter leading-[1.6] font-normal tracking-normal';
 
-const LOOKING_FOR_OPTIONS = [
-  { value: 'edtech-marketing', label: 'EdTech Marketing' },
-  { value: 'edtech-mentor', label: 'The EdTech Mentor' },
-  { value: 'general-inquiry', label: 'General inquiry' },
-  { value: 'other', label: 'Other' },
-];
-
-const CONTACT_CARDS = [
-  {
-    href: '#',
-    title: 'Book a strategy session',
-    subtitle: '30 minutes. Free. Pick a time that works for you on our calendar — no emails needed.',
-  },
-  {
-    href: '#',
-    title: 'Subscribe to The EdTech Mentor',
-    subtitle: 'Get our newsletter — interviews with EdTech leaders and market insights, every week.',
-  },
-];
+/* La bandera no es contenido editable: sale de `office.country`, que es un código
+   ISO fijo que pone el schema, no texto suelto que el editor pueda romper. */
+const OFFICE_FLAGS: Record<'US' | 'CO', string> = { US: '🇺🇸', CO: '🇨🇴' };
 
 /* Ícono decorativo de las contact-card: idéntico en ambas, `fill="black"` fijo (no
    currentColor) — el hover de la card solo afecta a `.contact-card-arrow`, tal cual
@@ -55,8 +43,15 @@ const CARD_ICON_PATH =
   'M38.87 38.86L38.55 24.46C35.42 33.03 28.46 38.75 19.35 38.86L19.06 25.09C15.51 33.29 9.14 38.7 0 38.87V-1.0866e-05C8.93 -0.0700109 15.41 5.42999 19.06 13.54L19.39 0.0299891C28.16 -0.140011 35.55 5.67999 38.5 14.47L38.8 0.00998913C49.45 -0.100011 58.13 8.57999 58.2 19.23C58.27 29.58 50.19 38.58 38.86 38.85L38.87 38.86Z';
 
 /* SEO de esta página: `settings.contactSeo` en Sanity, con fallback global.
-   `getPageSeo()` memoiza el singleton — una sola query para todo el build. */
+   `getPageSeo()` memoiza el singleton — una sola query para todo el build, y
+   `getContactContent()` sale de esa misma promesa, sin fetch extra. */
 const { seo, siteSettings } = await getPageSeo('contact');
+const contactContent = await getContactContent();
+
+/* Dos campos fijos, no un array: el grid es de 2 columnas y el schema los modela
+   así a propósito (Etapa 10, Sesión 1). Ambas se renderizan siempre, tengan o no
+   `link`/`bgImageUrl`. */
+const contactCards = [contactContent.bookCard, contactContent.subscribeCard];
 ---
 
 <Page seo={seo} siteSettings={siteSettings} navVariant="white">
@@ -67,174 +62,78 @@ const { seo, siteSettings } = await getPageSeo('contact');
       <!-- Bloque de título -->
       <div class="main-contact-title-block flex flex-col items-center gap-[clamp(1.6087rem,1.3534rem_+_1.2768vw,2.5025rem)] text-center">
         <h1 class={SECTION_HEADING + ' max-w-[50%] max-md:max-w-full'}>
-          How can we help your EdTech brand thrive?
+          {contactContent.headline}
         </h1>
         <p class:list={[BODY, 'text-white']}>
-          Looking for a marketing partner who genuinely understands EdTech? Let's start a conversation.
+          {contactContent.text}
         </p>
-        <Button href="#" variant="whiteIndigo">Book a strategy session</Button>
+        {
+          contactContent.ctaLink && (
+            <Button href={contactContent.ctaLink} target="_blank" rel="noopener noreferrer" variant="whiteIndigo">
+              Book a strategy session
+            </Button>
+          )
+        }
       </div>
 
       <!-- Bloque de formulario -->
       <div
-        class="main-contact-form-block w-full rounded-[0.625rem] bg-white py-[clamp(2.5rem,1.9643rem_+_2.6786vw,4.375rem)] px-[clamp(1.5rem,0.5rem_+_5vw,5rem)]"
+        class="main-contact-form-block flex w-full flex-col gap-[clamp(1.6875rem,1.4196rem_+_1.3393vw,2.625rem)] rounded-[0.625rem] bg-white py-[clamp(2.5rem,1.9643rem_+_2.6786vw,4.375rem)] px-[clamp(1.5rem,0.5rem_+_5vw,5rem)]"
       >
-        <div class="contact-form-header mb-[clamp(1.6875rem,1.4196rem_+_1.3393vw,2.625rem)] flex flex-col items-center gap-[clamp(0.2813rem,0.2366rem_+_0.2232vw,0.4375rem)] text-center">
+        <div class="contact-form-header flex flex-col items-center gap-[clamp(0.2813rem,0.2366rem_+_0.2232vw,0.4375rem)] text-center">
           <h2 class="font-lora text-[clamp(1.5rem,1.3561rem_+_0.7196vw,2.0038rem)] leading-[1.25] font-medium tracking-[clamp(-0.02rem,-0.0136rem_-_0.0071vw,-0.015rem)] text-indigo">
-            How can we help your EdTech brand thrive?
+            {contactContent.formTitle}
           </h2>
-          <p class:list={[BODY, 'text-black']}>We respond to every inquiry within one business day.</p>
+          <p class:list={[BODY, 'text-black']}>{contactContent.formSubtitle}</p>
         </div>
 
-        <form
-          id="contactForm"
-          class="contact-form grid grid-cols-2 gap-x-[5.25rem] gap-y-[clamp(1.5rem,1.3036rem_+_0.9821vw,2.1875rem)] max-md:grid-cols-1"
-        >
-          <div class="contact-form-field flex flex-col gap-[clamp(0.4838rem,0.407rem_+_0.3839vw,0.7525rem)]" style="grid-area: fname;">
-            <label for="firstName" class="font-lora text-[clamp(1.125rem,1.0714rem_+_0.2679vw,1.3125rem)] leading-[1.6] font-normal tracking-normal text-black">
-              First name
-            </label>
-            <input
-              type="text"
-              id="firstName"
-              name="firstName"
-              autocomplete="given-name"
-              class="w-full border-0 border-b-[0.0625rem] border-black/15 bg-transparent pb-[clamp(0.4838rem,0.407rem_+_0.3839vw,0.7525rem)] font-inter text-[clamp(0.8125rem,0.7771rem_+_0.1768vw,0.9363rem)] leading-[1.4] font-normal text-black outline-none transition-colors duration-200 ease-in-out focus:border-indigo"
-            />
-          </div>
+        <div id="hubspot-form"></div>
 
-          <div class="contact-form-field flex flex-col gap-[clamp(0.4838rem,0.407rem_+_0.3839vw,0.7525rem)]" style="grid-area: lname;">
-            <label for="lastName" class="font-lora text-[clamp(1.125rem,1.0714rem_+_0.2679vw,1.3125rem)] leading-[1.6] font-normal tracking-normal text-black">
-              Last name
-            </label>
-            <input
-              type="text"
-              id="lastName"
-              name="lastName"
-              autocomplete="family-name"
-              class="w-full border-0 border-b-[0.0625rem] border-black/15 bg-transparent pb-[clamp(0.4838rem,0.407rem_+_0.3839vw,0.7525rem)] font-inter text-[clamp(0.8125rem,0.7771rem_+_0.1768vw,0.9363rem)] leading-[1.4] font-normal text-black outline-none transition-colors duration-200 ease-in-out focus:border-indigo"
-            />
+        <div class="contact-form-footer flex flex-col gap-[clamp(0.9619rem,0.8092rem_+_0.7634vw,1.4963rem)]">
+          <img
+            src="/assets/logo-27zero.svg"
+            alt="27zero"
+            class="contact-form-logo block h-auto w-[clamp(6.75rem,5.6786rem_+_5.3571vw,10.5rem)]"
+          />
+          <div class="contact-form-locations flex gap-[clamp(1.5rem,1.2136rem_+_1.4321vw,2.5025rem)] max-md:flex-wrap">
+            {
+              siteSettings.offices?.map((office) => (
+                <div class="contact-form-location flex flex-col gap-[clamp(0.1631rem,0.1372rem_+_0.1295vw,0.2537rem)]">
+                  <span class="contact-form-location-name mb-[clamp(0.1631rem,0.1372rem_+_0.1295vw,0.2537rem)] font-inter text-[clamp(0.8125rem,0.7946rem_+_0.0893vw,0.875rem)] leading-[1.6] font-bold tracking-normal text-black">
+                    {OFFICE_FLAGS[office.country]} {office.label}
+                  </span>
+                  {/* `whitespace-pre-line`: el address llega de Sanity como texto plano con
+                      un salto embebido ("Granville, OH\n110 Bedwen Bach Lane, 43023"), donde
+                      el markup vanilla tenía un `<br />` explícito. */}
+                  <p class="contact-form-location-address font-inter text-[clamp(0.8125rem,0.7946rem_+_0.0893vw,0.875rem)] leading-[1.5] font-normal whitespace-pre-line text-black">
+                    {office.address}
+                  </p>
+                  <p class="contact-form-location-phone font-inter text-[clamp(0.8125rem,0.7946rem_+_0.0893vw,0.875rem)] leading-[1.5] font-normal text-black">
+                    {office.phone}
+                  </p>
+                </div>
+              ))
+            }
           </div>
-
-          <div class="contact-form-field flex flex-col gap-[clamp(0.4838rem,0.407rem_+_0.3839vw,0.7525rem)]" style="grid-area: email;">
-            <label for="workEmail" class="font-lora text-[clamp(1.125rem,1.0714rem_+_0.2679vw,1.3125rem)] leading-[1.6] font-normal tracking-normal text-black">
-              Work Email
-            </label>
-            <input
-              type="email"
-              id="workEmail"
-              name="workEmail"
-              autocomplete="email"
-              class="w-full border-0 border-b-[0.0625rem] border-black/15 bg-transparent pb-[clamp(0.4838rem,0.407rem_+_0.3839vw,0.7525rem)] font-inter text-[clamp(0.8125rem,0.7771rem_+_0.1768vw,0.9363rem)] leading-[1.4] font-normal text-black outline-none transition-colors duration-200 ease-in-out focus:border-indigo"
-            />
-          </div>
-
-          <div class="contact-form-field flex flex-col gap-[clamp(0.4838rem,0.407rem_+_0.3839vw,0.7525rem)]" style="grid-area: company;">
-            <label for="company" class="font-lora text-[clamp(1.125rem,1.0714rem_+_0.2679vw,1.3125rem)] leading-[1.6] font-normal tracking-normal text-black">
-              Company / Organization *
-            </label>
-            <input
-              type="text"
-              id="company"
-              name="company"
-              required
-              autocomplete="organization"
-              class="w-full border-0 border-b-[0.0625rem] border-black/15 bg-transparent pb-[clamp(0.4838rem,0.407rem_+_0.3839vw,0.7525rem)] font-inter text-[clamp(0.8125rem,0.7771rem_+_0.1768vw,0.9363rem)] leading-[1.4] font-normal text-black outline-none transition-colors duration-200 ease-in-out focus:border-indigo"
-            />
-          </div>
-
-          <div class="contact-form-field contact-form-field--select relative flex flex-col gap-[clamp(0.4838rem,0.407rem_+_0.3839vw,0.7525rem)]" style="grid-area: looking;">
-            <label for="lookingFor" class="font-lora text-[clamp(1.125rem,1.0714rem_+_0.2679vw,1.3125rem)] leading-[1.6] font-normal tracking-normal text-black">
-              What are you looking for?
-            </label>
-            <select
-              id="lookingFor"
-              name="lookingFor"
-              class="w-full appearance-none border-0 border-b-[0.0625rem] border-black/15 bg-transparent pb-[clamp(0.4838rem,0.407rem_+_0.3839vw,0.7525rem)] font-inter text-[clamp(0.8125rem,0.7771rem_+_0.1768vw,0.9363rem)] leading-[1.4] font-normal text-black outline-none transition-colors duration-200 ease-in-out focus:border-indigo cursor-pointer"
-            >
-              <option value="" selected></option>
-              {LOOKING_FOR_OPTIONS.map((opt) => <option value={opt.value}>{opt.label}</option>)}
-            </select>
-            <svg
-              class="contact-form-chevron pointer-events-none absolute right-0 bottom-[clamp(0.5344rem,0.4496rem_+_0.4241vw,0.8313rem)] text-black/50"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              aria-hidden="true"
-            >
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </div>
-
-          <div class="contact-form-field flex flex-col gap-[clamp(0.4838rem,0.407rem_+_0.3839vw,0.7525rem)]" style="grid-area: challenge;">
-            <label for="challenge" class="font-lora text-[clamp(1.125rem,1.0714rem_+_0.2679vw,1.3125rem)] leading-[1.6] font-normal tracking-normal text-black">
-              Tell us about your challenge
-            </label>
-            <textarea
-              id="challenge"
-              name="challenge"
-              rows="1"
-              class="min-h-[1.4em] w-full resize-none border-0 border-b-[0.0625rem] border-black/15 bg-transparent pb-[clamp(0.4838rem,0.407rem_+_0.3839vw,0.7525rem)] font-inter text-[clamp(0.8125rem,0.7771rem_+_0.1768vw,0.9363rem)] leading-[1.4] font-normal text-black outline-none transition-colors duration-200 ease-in-out focus:border-indigo"
-            ></textarea>
-          </div>
-
-          <div class="contact-form-submit flex flex-col items-start gap-[clamp(0.6412rem,0.5395rem_+_0.5089vw,0.9975rem)]" style="grid-area: button;">
-            <Button type="submit" variant="purple">Send message</Button>
-            <p class="contact-form-caption font-inter text-[clamp(0.8125rem,0.7946rem_+_0.0893vw,0.875rem)] leading-[1.5] font-normal text-black">
-              We'll reply within one business day.<br />No spam, ever.
-            </p>
-          </div>
-
-          <div class="contact-form-footer flex flex-col gap-[clamp(0.9619rem,0.8092rem_+_0.7634vw,1.4963rem)]" style="grid-area: footer;">
-            <img
-              src="/assets/logo-27zero.svg"
-              alt="27zero"
-              class="contact-form-logo block h-auto w-[clamp(6.75rem,5.6786rem_+_5.3571vw,10.5rem)]"
-            />
-            <div class="contact-form-locations flex gap-[clamp(1.5rem,1.2136rem_+_1.4321vw,2.5025rem)] max-md:flex-wrap">
-              <div class="contact-form-location flex flex-col gap-[clamp(0.1631rem,0.1372rem_+_0.1295vw,0.2537rem)]">
-                <span class="contact-form-location-name mb-[clamp(0.1631rem,0.1372rem_+_0.1295vw,0.2537rem)] font-inter text-[clamp(0.8125rem,0.7946rem_+_0.0893vw,0.875rem)] leading-[1.6] font-bold tracking-normal text-black">
-                  🇺🇸 United States
-                </span>
-                <p class="contact-form-location-address font-inter text-[clamp(0.8125rem,0.7946rem_+_0.0893vw,0.875rem)] leading-[1.5] font-normal text-black">
-                  Granville, OH<br />110 Bedwen Bach Lane, 43023
-                </p>
-                <p class="contact-form-location-phone font-inter text-[clamp(0.8125rem,0.7946rem_+_0.0893vw,0.875rem)] leading-[1.5] font-normal text-black">
-                  +1 (317) 201-0890
-                </p>
-              </div>
-              <div class="contact-form-location flex flex-col gap-[clamp(0.1631rem,0.1372rem_+_0.1295vw,0.2537rem)]">
-                <span class="contact-form-location-name mb-[clamp(0.1631rem,0.1372rem_+_0.1295vw,0.2537rem)] font-inter text-[clamp(0.8125rem,0.7946rem_+_0.0893vw,0.875rem)] leading-[1.6] font-bold tracking-normal text-black">
-                  🇨🇴 Colombia
-                </span>
-                <p class="contact-form-location-address font-inter text-[clamp(0.8125rem,0.7946rem_+_0.0893vw,0.875rem)] leading-[1.5] font-normal text-black">
-                  Bogotá<br />Cra 7 # 116-50
-                </p>
-                <p class="contact-form-location-phone font-inter text-[clamp(0.8125rem,0.7946rem_+_0.0893vw,0.875rem)] leading-[1.5] font-normal text-black">
-                  +57 (304) 576-0752
-                </p>
-              </div>
-            </div>
-          </div>
-        </form>
+        </div>
       </div>
 
       <!-- Bloque de título secundario -->
       <div class="main-contact-ways-block">
-        <h2 class={SECTION_HEADING}>Two more ways to start</h2>
+        <h2 class={SECTION_HEADING}>{contactContent.waysTitle}</h2>
       </div>
 
       <!-- Bloque de cards -->
       <div class="main-contact-cards-block">
         <div class="contact-cards-grid grid grid-cols-2 gap-[clamp(0.8044rem,0.6767rem_+_0.6384vw,1.2512rem)] max-md:grid-cols-1">
           {
-            CONTACT_CARDS.map((card) => (
+            contactCards.map((card) => (
               <a
-                href={card.href}
-                class="contact-card group/card flex flex-col gap-[clamp(2.4131rem,2.0301rem_+_1.9152vw,3.7538rem)] rounded-[0.625rem] bg-gray pt-[clamp(1.6087rem,1.3534rem_+_1.2768vw,2.5025rem)] px-[clamp(1.2038rem,1.0127rem_+_0.9554vw,1.8725rem)] pb-[clamp(2.0081rem,1.6894rem_+_1.5937vw,3.1237rem)] text-black no-underline"
+                href={card.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={card.bgImageUrl ? `background-image: url('${card.bgImageUrl}');` : undefined}
+                class="contact-card group/card flex flex-col gap-[clamp(2.4131rem,2.0301rem_+_1.9152vw,3.7538rem)] rounded-[0.625rem] bg-gray bg-cover bg-center pt-[clamp(1.6087rem,1.3534rem_+_1.2768vw,2.5025rem)] px-[clamp(1.2038rem,1.0127rem_+_0.9554vw,1.8725rem)] pb-[clamp(2.0081rem,1.6894rem_+_1.5937vw,3.1237rem)] text-black no-underline"
               >
                 <svg
                   width="59"
@@ -272,45 +171,51 @@ const { seo, siteSettings } = await getPageSeo('contact');
   </section>
 </Page>
 
-<style>
-  /* `grid-template-areas` responsivo — desvío estructural (CLAUDE.md §5, regla 4):
-     reordena los campos del form en mobile sin tocar el HTML (cada campo ya trae su
-     `grid-area` vía `style` inline, igual que el vanilla). */
-  .contact-form {
-    grid-template-areas:
-      'fname lname'
-      'email company'
-      'looking challenge'
-      'button footer';
+<!-- Embed de HubSpot. `is:inline` es obligatorio: sin eso Astro bundlea el script
+     como módulo ES y `hbspt` (el global que expone v2.js) queda fuera de scope. El
+     cuerpo del snippet va tal cual lo entregó HubSpot. -->
+<script is:inline src="https://js.hsforms.net/forms/v2.js"></script>
+<script is:inline>
+hbspt.forms.create({
+  target: "#hubspot-form",
+  region: "na1",
+  portalId: "7512561",
+  formId: "dae4eef2-fee1-47a5-9424-5cbf017b46f1",
+  onFormReady: function($form) {
+    console.log("Form HubSpot listo y conectado.");
+  },
+  onFormSubmit: function($form) {
+    const email = ($form.find('input[name="email"]').val() || "").toLowerCase();
+    const message = $form.find('textarea').val() || "";
+    fetch("https://oopspam.digital-efd.workers.dev", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, content: message })
+    })
+    .then(res => res.json())
+    .then(result => {
+      console.log("OOPSPAM RESULT:", result);
+      const isSafe = result?.raw?.Details?.isContentSpam === "nospam";
+      const emailBlocked = result?.raw?.Details?.isEmailBlocked;
+      if (isSafe && !emailBlocked) {
+        $form.off("submit");
+        $form.submit();
+      } else {
+        const messageDiv = document.createElement("div");
+        messageDiv.style.padding = "10px";
+        messageDiv.style.margin = "10px 0";
+        messageDiv.style.backgroundColor = "#ffe0e0";
+        messageDiv.style.color = "#900";
+        messageDiv.style.borderRadius = "5px";
+        messageDiv.textContent = "Your message was flagged as spam, or this email address is blocked. Please review your information.";
+        $form.prepend(messageDiv);
+      }
+    })
+    .catch(err => {
+      console.error("Error OOPSpam:", err);
+      $form.off("submit");
+      $form.submit();
+    });
   }
-
-  @media (max-width: 768px) {
-    .contact-form {
-      grid-template-areas:
-        'fname'
-        'lname'
-        'email'
-        'company'
-        'looking'
-        'challenge'
-        'button'
-        'footer';
-    }
-  }
-</style>
-
-<script>
-  // ============================
-  // Contact form — 27zero
-  // TODO: conectar con el endpoint/servicio de envío real.
-  // Portado de /contact/script.js: por ahora solo previene el submit real y
-  // loguea un placeholder — no hay backend conectado todavía.
-  // ============================
-
-  const form = document.getElementById('contactForm');
-
-  form?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    console.log('Contact form submitted (placeholder — sin backend conectado aún).');
-  });
+});
 </script>

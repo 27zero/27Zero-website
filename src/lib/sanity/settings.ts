@@ -48,6 +48,42 @@ export interface SiteSeoSettings {
   linkedinUrl?: string;
 }
 
+/**
+ * Una de las dos cards del bloque final de Contact, con la imagen ya resuelta a URL.
+ *
+ * El prefijo `Resolved` sigue el mismo criterio que `ResolvedSeo`: distingue el shape
+ * ya procesado del crudo que devuelve Sanity, que vive como `ContactCard` en
+ * `types/sanity.ts` (el espejo del schema) y trae `bgImage` como `SanityImage`.
+ */
+export interface ResolvedContactCard {
+  title?: string;
+  subtitle?: string;
+  link?: string;
+  /** URL ya resuelta. Si no hay imagen, la card cae al fondo gris por default (bg-gray). */
+  bgImageUrl?: string;
+}
+
+/**
+ * Contenido editable de Contact (Etapa 10).
+ *
+ * Aparte de `SiteSeoSettings` a propósito: eso es lo que necesitan `Metadata.astro`
+ * y el JSON-LD, no contenido de página. Sale de la misma query y de la misma promesa
+ * cacheada, así que no cuesta un fetch extra.
+ */
+export interface ContactContent {
+  headline?: string;
+  text?: string;
+  /** Si está vacío, el botón del hero no se renderiza. */
+  ctaLink?: string;
+  formTitle?: string;
+  formSubtitle?: string;
+  waysTitle?: string;
+  /* Requeridos, no opcionales: `load()` siempre construye los dos objetos, con o sin
+     contenido detrás. Lo que puede venir vacío de Sanity son sus campos, no la card. */
+  bookCard: ResolvedContactCard;
+  subscribeCard: ResolvedContactCard;
+}
+
 /** Las 8 páginas estáticas/shell que no tienen documento propio en Sanity. */
 export type SeoPage =
   | 'home'
@@ -77,11 +113,18 @@ interface SettingsSeoProjection {
   resourcesSeo?: Seo;
   agencySeo?: Seo;
   contactSeo?: Seo;
+  contactHero?: { headline?: string; text?: string; ctaLink?: string };
+  formTitle?: string;
+  formSubtitle?: string;
+  waysTitle?: string;
+  bookCard?: { title?: string; subtitle?: string; link?: string; bgImage?: SanityImage };
+  subscribeCard?: { title?: string; subtitle?: string; link?: string; bgImage?: SanityImage };
 }
 
 async function load(): Promise<{
   siteSettings: SiteSeoSettings;
   pages: Record<SeoPage, ResolvedSeo | undefined>;
+  contactContent: ContactContent;
 }> {
   /* `?? {}`: hoy el singleton existe pero está vacío, y en un dataset nuevo podría no
      existir. Sin esto el build entero se cae por metadata faltante — que es
@@ -117,6 +160,26 @@ async function load(): Promise<{
       agency: resolveSeo(settings.agencySeo),
       contact: resolveSeo(settings.contactSeo),
     },
+    contactContent: {
+      headline: settings.contactHero?.headline,
+      text: settings.contactHero?.text,
+      ctaLink: settings.contactHero?.ctaLink,
+      formTitle: settings.formTitle,
+      formSubtitle: settings.formSubtitle,
+      waysTitle: settings.waysTitle,
+      bookCard: {
+        title: settings.bookCard?.title,
+        subtitle: settings.bookCard?.subtitle,
+        link: settings.bookCard?.link,
+        bgImageUrl: ogImageUrl(settings.bookCard?.bgImage),
+      },
+      subscribeCard: {
+        title: settings.subscribeCard?.title,
+        subtitle: settings.subscribeCard?.subtitle,
+        link: settings.subscribeCard?.link,
+        bgImageUrl: ogImageUrl(settings.subscribeCard?.bgImage),
+      },
+    } satisfies ContactContent,
   };
 }
 
@@ -138,4 +201,9 @@ export async function getPageSeo(
 /** Internas de detalle: solo el fallback global — el `seo` lo pone el documento. */
 export async function getSeoSettings(): Promise<SiteSeoSettings> {
   return (await loadOnce()).siteSettings;
+}
+
+/** Contenido editable de Contact (Etapa 10). Misma promesa cacheada que `getPageSeo`/`getSeoSettings`. */
+export async function getContactContent(): Promise<ContactContent> {
+  return (await loadOnce()).contactContent;
 }
