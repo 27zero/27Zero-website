@@ -66,7 +66,7 @@ export interface TestimonialProjection {
   order?: number;
 }
 
-/** Devuelve `resourceListQuery`. */
+/** Devuelve el key `resources` de `resourceListQuery`. */
 export interface ResourceProjection {
   _id: string;
   title?: string;
