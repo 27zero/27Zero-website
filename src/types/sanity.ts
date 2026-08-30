@@ -535,8 +535,9 @@ export interface Settings extends SanityDocument {
   workSeo?: Seo;
   workHero?: { eyebrow?: string; headline?: string; subtitle?: string };
 
-  // Clientes — grupo nuevo en Etapa 7, hoy solo SEO.
+  // Clientes — misma plantilla que Work, distinta vista.
   clientsSeo?: Seo;
+  clientsHero?: { eyebrow?: string; headline?: string; subtitle?: string };
 
   // Mentor
   mentorSeo?: Seo;
