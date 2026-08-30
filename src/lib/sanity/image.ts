@@ -35,3 +35,24 @@ export function toImage(
 
   return { src: url.url(), alt: source.alt };
 }
+
+/**
+ * Dimensiones intrínsecas de un asset de Sanity, parseadas de su `_ref`
+ * (formato `image-{hash}-{width}x{height}-{formato}`), escaladas al `width`
+ * pedido. Evita layout shift en `<img>` remotas que no pasan por `<Image>`.
+ * Devuelve `undefined` si el ref no matchea el patrón esperado.
+ */
+export function imageDimensions(
+  image: SanityImage | undefined,
+  targetWidth: number
+): { width: number; height: number } | undefined {
+  const ref = image?.asset?._ref;
+  const match = ref?.match(/-(\d+)x(\d+)-\w+$/);
+  if (!match) return undefined;
+
+  const [, intrinsicWidth, intrinsicHeight] = match.map(Number);
+  return {
+    width: targetWidth,
+    height: Math.round(targetWidth * (intrinsicHeight / intrinsicWidth)),
+  };
+}

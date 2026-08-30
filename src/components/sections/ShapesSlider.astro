@@ -9,9 +9,13 @@
  * En mobile (<=768px) sí hay desplazamiento: scroll-snap horizontal con spacers
  * reales a los lados, sin flechas, navegable por swipe o tap en los extremos.
  *
- * Contenido y comportamiento idénticos en todas las páginas donde se usa, así que
- * van hardcodeados (etapa3.md). El copy sale tal cual del vanilla — incluidos los
- * dos textos placeholder que todavía no tienen copy final.
+ * El comportamiento es idéntico en todas las páginas donde se usa, y el contenido
+ * también: sale de `settings.apartSection` (Etapa 10), así que se edita UNA vez y
+ * cambia en las 3 páginas a la vez. Por eso el componente sigue sin recibir props —
+ * pide su propio contenido, y las 3 comparten la misma promesa memoizada.
+ *
+ * La estructura (color de cada shape, orden, imagen de respaldo) sí sigue siendo
+ * código: es maquetación, no contenido editable.
  *
  * Diferencia con el vanilla: las 3 shapes se renderizan en el markup de Astro en vez
  * de inyectarse con `innerHTML`. El DOM resultante es el mismo, pero queda en el HTML
@@ -19,9 +23,12 @@
  */
 import { Image } from 'astro:assets';
 import Button from '../ui/Button.astro';
+import { getApartSection } from '../../lib/sanity/settings';
 import creativity from '../../assets/creativity.png';
 import execution from '../../assets/execution.png';
 import researchEnhanced from '../../assets/research-enhanced.png';
+
+const apartSection = await getApartSection();
 
 /**
  * Ancho al que se pide cada shape. El slot mide 19,25rem (308px) en desktop y hasta
@@ -36,27 +43,39 @@ import researchEnhanced from '../../assets/research-enhanced.png';
  */
 const SHAPE_WIDTH = 640;
 
-const SHAPES = [
+/**
+ * Estructura fija + contenido de Sanity. Los tres slides existen siempre: el schema
+ * los modela como campos fijos, no como array, justamente para que el editor no pueda
+ * agregar un cuarto y romper el layout.
+ *
+ * `fallbackSrc`/`fallbackAlt` son los PNG locales del vanilla. Se usan solo si el
+ * slide no tiene imagen cargada en Sanity (o la tiene sin `alt`, que `toImage()`
+ * trata como no cargada).
+ */
+const SLIDES = [
   {
     modifier: 'apart-shape--purple',
-    src: researchEnhanced,
-    alt: 'Research Enhanced',
-    title: 'Research Enhanced Insights',
-    text: 'Lorem ipsum is simply dummy text of the printing and typesetting industry standard, used here as placeholder copy.',
+    fallbackSrc: researchEnhanced,
+    fallbackAlt: 'Research Enhanced',
+    sanityImage: apartSection.slideOne?.image,
+    title: apartSection.slideOne?.title,
+    text: apartSection.slideOne?.text,
   },
   {
     modifier: 'apart-shape--indigo',
-    src: execution,
-    alt: 'Execution',
-    title: 'Execution that Scales',
-    text: 'We deliver the complete capability of a full-service agency with the focus of a boutique partner — with regional expertise in North America and Europe, and agile production in Latin America.',
+    fallbackSrc: execution,
+    fallbackAlt: 'Execution',
+    sanityImage: apartSection.slideTwo?.image,
+    title: apartSection.slideTwo?.title,
+    text: apartSection.slideTwo?.text,
   },
   {
     modifier: 'apart-shape--black',
-    src: creativity,
-    alt: 'Creativity',
-    title: 'Creativity Without Limits',
-    text: 'Lorem ipsum is simply dummy text of the printing and typesetting industry standard, used here as placeholder copy.',
+    fallbackSrc: creativity,
+    fallbackAlt: 'Creativity',
+    sanityImage: apartSection.slideThree?.image,
+    title: apartSection.slideThree?.title,
+    text: apartSection.slideThree?.text,
   },
 ];
 
@@ -77,10 +96,9 @@ const NAV_ZONE =
   class="shapes-slider section section--apart-home bg-white pt-[clamp(2.4131rem,1.8526rem_+_2.8027vw,4.375rem)] pb-[clamp(2.4131rem,1.4951rem_+_4.5902vw,5.6262rem)] text-center"
 >
   <div class:list={[CONTAINER, 'apart-home-container']}>
-    <h2 class="font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px]">What sets 27zero apart.</h2>
+    <h2 class="font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px]">{apartSection.headline}</h2>
     <p class="text-body--sm font-inter text-body-sm leading-[1.6] font-normal tracking-normal">
-      Our foundations connect insight, creativity, and efficient execution — helping EdTech brands turn purpose into
-      lasting impact.
+      {apartSection.description}
     </p>
     {/* `/edtech-marketing` y no `/services`: esa ruta nunca existió, venía del
         vanilla y daba 404 (Etapa 8, Hallazgo 1). No se crea página nueva. */}
@@ -104,22 +122,37 @@ const NAV_ZONE =
       >
         <div class="apart-shapes-spacer hidden max-md:block max-md:flex-[0_0_15%]" aria-hidden="true"></div>
         {
-          SHAPES.map((shape, i) => (
+          SLIDES.map((slide, i) => (
             <div
               class:list={[
                 'apart-shape relative flex flex-1 origin-center items-center justify-center transition-transform duration-300 ease-in-out max-md:flex-[0_0_70%] max-md:[scroll-snap-align:center]',
-                shape.modifier,
+                slide.modifier,
               ]}
               style={`transform: scale(${i === DEFAULT_INDEX ? 1 : 0.9})`}
-              data-shape-title={shape.title}
-              data-shape-text={shape.text}
+              data-shape-title={slide.title}
+              data-shape-text={slide.text}
             >
-              <Image
-                src={shape.src}
-                alt={shape.alt}
-                width={SHAPE_WIDTH}
-                class="block h-auto w-full max-w-[clamp(12.375rem,10.4107rem_+_9.8214vw,19.25rem)] max-md:max-w-full"
-              />
+              {/* Cambia el TAG, no solo el `src`: `<Image>` de `astro:assets` es para
+                  assets locales, y una imagen de Sanity ya viene resuelta por su CDN
+                  (CLAUDE.md §2, `image-delivery-insight` de Etapa 8). */}
+              {slide.sanityImage ? (
+                <img
+                  src={slide.sanityImage.src}
+                  alt={slide.sanityImage.alt}
+                  width={SHAPE_WIDTH}
+                  height={slide.sanityImage.height}
+                  loading="lazy"
+                  decoding="async"
+                  class="block h-auto w-full max-w-[clamp(12.375rem,10.4107rem_+_9.8214vw,19.25rem)] max-md:max-w-full"
+                />
+              ) : (
+                <Image
+                  src={slide.fallbackSrc}
+                  alt={slide.fallbackAlt}
+                  width={SHAPE_WIDTH}
+                  class="block h-auto w-full max-w-[clamp(12.375rem,10.4107rem_+_9.8214vw,19.25rem)] max-md:max-w-full"
+                />
+              )}
             </div>
           ))
         }
@@ -144,13 +177,13 @@ const NAV_ZONE =
       id="apartScalesTitle"
       class="text-center font-lora text-[clamp(1.3125rem,1.26rem_+_0.2625vw,1.4962rem)] leading-[1.25] font-medium tracking-[-0.24px]"
     >
-      {SHAPES[DEFAULT_INDEX].title}
+      {SLIDES[DEFAULT_INDEX].title}
     </h3>
     <p
       id="apartScalesText"
       class="text-body--sm max-w-[clamp(25.3125rem,21.2946rem_+_20.0893vw,39.375rem)] font-inter text-body-sm leading-[1.6] font-normal tracking-normal"
     >
-      {SHAPES[DEFAULT_INDEX].text}
+      {SLIDES[DEFAULT_INDEX].text}
     </p>
   </div>
 </section>

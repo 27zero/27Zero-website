@@ -114,7 +114,8 @@ export const siteSettingsSeoQuery = `
     "homeWork": homeWork{
       ...,
       "featuredWork": featuredWork->{${WORK_CARD_FIELDS}}
-    }
+    },
+    apartSection
   }
 `;
 

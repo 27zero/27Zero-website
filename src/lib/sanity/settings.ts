@@ -15,11 +15,11 @@
  *
  * Nunca las dos para la misma página (CLAUDE.md §8, "nunca ambas fuentes").
  */
-import type { PortableTextBlock, SanityImage, Seo } from '../../types/sanity';
+import type { PortableTextBlock, SanityImage, Seo, Settings } from '../../types/sanity';
 import { ogImageUrl, resolveSeo, type ResolvedSeo } from '../seo/resolveSeo';
 import type { WorkCardProjection } from './cards';
 import { sanityClient } from './client';
-import { toImage } from './image';
+import { imageDimensions, toImage } from './image';
 import { siteSettingsSeoQuery } from './queries';
 
 /** Una oficina, para el nodo `ProfessionalService` del JSON-LD. */
@@ -85,6 +85,42 @@ export interface ContactContent {
   bookCard: ResolvedContactCard;
   subscribeCard: ResolvedContactCard;
 }
+
+/**
+ * Uno de los 3 slides de "What Sets 27zero Apart", con la imagen ya resuelta.
+ *
+ * Es el mismo shape que ya tiene el fallback local de `ShapesSlider`, para que el
+ * componente pueda elegir entre uno y otro sin traducir nada.
+ */
+export interface ApartSlideContent {
+  /**
+   * `width`/`height` son las dimensiones intrínsecas del asset escaladas al ancho
+   * pedido: el `<img>` remoto no pasa por `<Image>`, así que sin ellas el navegador
+   * no puede reservar el espacio y la sección salta al cargar.
+   */
+  image?: { src: string; alt: string; width?: number; height?: number };
+  title?: string;
+  text?: string;
+}
+
+/**
+ * "What Sets 27zero Apart" — el slider de shapes, compartido por Home, About y
+ * EdTech Marketing. Un solo lugar de edición para las 3 páginas.
+ */
+export interface ApartSectionContent {
+  headline?: string;
+  description?: string;
+  slideOne?: ApartSlideContent;
+  slideTwo?: ApartSlideContent;
+  slideThree?: ApartSlideContent;
+}
+
+/**
+ * Ancho al que se le pide cada shape al Image CDN. Es el mismo `SHAPE_WIDTH` que
+ * `ShapesSlider.astro` le pasa a sus imágenes locales de respaldo: el slot mide
+ * 19,25rem en desktop y hasta ~70vw en mobile, así que 640 cubre 2x en ambos.
+ */
+const APART_SHAPE_WIDTH = 640;
 
 /**
  * Ancho al que se le pide el poster del hero al Image CDN.
@@ -174,6 +210,9 @@ interface SettingsSeoProjection {
     featuredWork?: WorkCardProjection;
   };
   homeMentor?: { headline?: PortableTextBlock[]; subtitle?: string };
+  /* Se reusa el espejo del schema en vez de redeclarar el shape: la query lo trae
+     plano, tal cual, sin proyección de subcampos. */
+  apartSection?: Settings['apartSection'];
   contactHero?: { headline?: string; text?: string; ctaLink?: string };
   formTitle?: string;
   formSubtitle?: string;
@@ -187,6 +226,7 @@ async function load(): Promise<{
   pages: Record<SeoPage, ResolvedSeo | undefined>;
   contactContent: ContactContent;
   homeContent: HomeContent;
+  apartSection: ApartSectionContent;
 }> {
   /* `?? {}`: hoy el singleton existe pero está vacío, y en un dataset nuevo podría no
      existir. Sin esto el build entero se cae por metadata faltante — que es
@@ -266,6 +306,33 @@ async function load(): Promise<{
         subtitle: settings.homeMentor?.subtitle,
       },
     } satisfies HomeContent,
+    apartSection: {
+      headline: settings.apartSection?.headline,
+      description: settings.apartSection?.description,
+      slideOne: toApartSlide(settings.apartSection?.slideOne),
+      slideTwo: toApartSlide(settings.apartSection?.slideTwo),
+      slideThree: toApartSlide(settings.apartSection?.slideThree),
+    } satisfies ApartSectionContent,
+  };
+}
+
+/**
+ * Un slide crudo → resuelto. `toImage()` devuelve `undefined` si el slide no tiene
+ * imagen o si la imagen no trae `alt`; en ese caso `ShapesSlider` cae a su asset
+ * local de respaldo.
+ */
+function toApartSlide(
+  slide: NonNullable<Settings['apartSection']>['slideOne']
+): ApartSlideContent {
+  const image = toImage(slide?.image, { width: APART_SHAPE_WIDTH });
+  const dimensions = imageDimensions(slide?.image, APART_SHAPE_WIDTH);
+
+  return {
+    /* Si el ref no matchea el patrón esperado, `dimensions` es `undefined` y el
+       spread no agrega nada: el `<img>` sale sin `height`, como antes. */
+    image: image ? { ...image, ...dimensions } : undefined,
+    title: slide?.title,
+    text: slide?.text,
   };
 }
 
@@ -297,4 +364,12 @@ export async function getContactContent(): Promise<ContactContent> {
 /** Contenido editable de Home (Etapa 10). Misma promesa cacheada, sin query extra. */
 export async function getHomeContent(): Promise<HomeContent> {
   return (await loadOnce()).homeContent;
+}
+
+/**
+ * "What Sets 27zero Apart" (Etapa 10). Lo pide `ShapesSlider`, que se renderiza en
+ * 3 páginas — las 3 comparten esta misma promesa memoizada, sin query extra.
+ */
+export async function getApartSection(): Promise<ApartSectionContent> {
+  return (await loadOnce()).apartSection;
 }
