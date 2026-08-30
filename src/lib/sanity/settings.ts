@@ -61,7 +61,10 @@ export interface ResolvedContactCard {
   title?: string;
   subtitle?: string;
   link?: string;
-  /** URL ya resuelta. Si no hay imagen, la card cae al fondo gris por default (bg-gray). */
+  /**
+   * URL ya resuelta. Si no hay imagen — o si la imagen no trae `alt` — queda
+   * `undefined` y la card cae al fondo gris por default (`bg-gray`).
+   */
   bgImageUrl?: string;
 }
 
@@ -121,6 +124,16 @@ export interface ApartSectionContent {
  * 19,25rem en desktop y hasta ~70vw en mobile, así que 640 cubre 2x en ambos.
  */
 const APART_SHAPE_WIDTH = 640;
+
+/**
+ * Ancho al que se le pide el fondo de cada card de Contact al Image CDN.
+ *
+ * El grid es de 2 columnas dentro del container de 90rem con `px-container-x`, así
+ * que cada card mide ~620px de CSS en desktop; 1280 la cubre a 2x. NO se resuelve con
+ * `ogImageUrl()`, que recorta a 1200×630 para la tarjeta de Open Graph — sobre una
+ * card más alta que ancha ese recorte se ve mal encuadrado y escalado.
+ */
+const CONTACT_CARD_BG_WIDTH = 1280;
 
 /**
  * Ancho al que se le pide el poster del hero al Image CDN.
@@ -273,13 +286,13 @@ async function load(): Promise<{
         title: settings.bookCard?.title,
         subtitle: settings.bookCard?.subtitle,
         link: settings.bookCard?.link,
-        bgImageUrl: ogImageUrl(settings.bookCard?.bgImage),
+        bgImageUrl: toImage(settings.bookCard?.bgImage, { width: CONTACT_CARD_BG_WIDTH })?.src,
       },
       subscribeCard: {
         title: settings.subscribeCard?.title,
         subtitle: settings.subscribeCard?.subtitle,
         link: settings.subscribeCard?.link,
-        bgImageUrl: ogImageUrl(settings.subscribeCard?.bgImage),
+        bgImageUrl: toImage(settings.subscribeCard?.bgImage, { width: CONTACT_CARD_BG_WIDTH })?.src,
       },
     } satisfies ContactContent,
     homeContent: {
