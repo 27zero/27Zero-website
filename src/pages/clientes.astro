@@ -15,9 +15,10 @@
  *    (no existe ese anchor en esta página) y no se replica.
  *  - Los 8 clientes llevan pill; en Work, "Los mejores" quedaba fuera del filtro.
  *
- * El hero repite el markup de Work en vez de extraerse a un componente: el copy real
- * de esta página está pendiente (ver abajo), así que los dos heros van a divergir en
- * cuanto llegue. Extraerlo ahora sería abstraer sobre contenido provisorio.
+ * El hero repite el markup de Work en vez de extraerse a un componente: cada página
+ * tiene su propio campo en el Studio (`clientsHero` acá, `workHero` en Work), así que
+ * el copy puede divergir sin tocar código. Hoy los dos traen el mismo texto cargado,
+ * pero eso es contenido, no un acoplamiento a resolver.
  *
  * Valores fluidos con la curva del resto del proyecto: mobile = `em × 9` @320px,
  * desktop = `em × 14` @1440px, salvo donde el vanilla fija un valor mobile propio.
@@ -34,9 +35,10 @@ import { workByClientQuery } from '../lib/sanity/queries';
 import { slugify } from '../lib/utils/format';
 import type { WorkGroup } from '../types/ui';
 
-const { clients, works } = await sanityClient.fetch<{
+const { clients, works, hero } = await sanityClient.fetch<{
   clients: { _id: string; name: string }[];
   works: WorkCardProjection[];
+  hero: { eyebrow?: string; headline?: string; subtitle?: string } | null;
 }>(workByClientQuery);
 
 /* Mismo `documentType` y mismos componentes que Work — cambia el criterio de
@@ -73,11 +75,6 @@ const { seo, siteSettings } = await getPageSeo('clients');
 ---
 
 <Page seo={seo} siteSettings={siteSettings} navVariant="white">
-  {/* PENDIENTE (planning-maquetado-clientes.md #1): el hero del vanilla quedó con el
-      copy literal de la página Work (eyebrow, h1 y párrafo sin editar) —
-      `design-system-clientes.md` lo confirma como copy-paste. Se replica tal cual, sin
-      inventar copy nuevo ni placeholder propio: es contenido provisorio a la espera del
-      copy real de Clientes. */}
   <!-- HERO -->
   <section
     class="section section--hero pt-[clamp(10.2431rem,8.6172rem_+_8.1295vw,15.9337rem)] pb-[clamp(2.8125rem,2.3661rem_+_2.2321vw,4.375rem)]"
@@ -86,13 +83,13 @@ const { seo, siteSettings } = await getPageSeo('clients');
       <span
         class="text-eyebrow block font-inter text-[clamp(0.7256rem,0.6104rem_+_0.5759vw,1.1288rem)] leading-[1.6] font-normal tracking-normal text-black"
       >
-        Work: Behind the fastest-growing EdTech brands
+        {hero?.eyebrow}
       </span>
       <h1 class="font-lora text-h1 leading-[1.25] font-medium tracking-[clamp(-0.03rem,0.0013rem_-_0.0348vw,-0.0056rem)]">
-        Behind the fastest growing EdTech brands.
+        {hero?.headline}
       </h1>
       <p class="text-body font-inter text-body leading-[1.6] font-medium tracking-normal">
-        First-hand expertise, innovative conceptual thinking &amp; design, client-first approach
+        {hero?.subtitle}
       </p>
     </div>
   </section>

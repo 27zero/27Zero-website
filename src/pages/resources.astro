@@ -24,7 +24,10 @@ import type { ResourceProjection } from '../lib/sanity/cards';
 import { sanityClient } from '../lib/sanity/client';
 import { resourceListQuery } from '../lib/sanity/queries';
 
-const resources = await sanityClient.fetch<ResourceProjection[]>(resourceListQuery);
+const { resources, hero } = await sanityClient.fetch<{
+  resources: ResourceProjection[];
+  hero: { headline?: string; subtitle?: string } | null;
+}>(resourceListQuery);
 
 /* `resource` no tiene campo `isFeatured` en el schema, así que el destacado es el
    artículo más reciente (la query ya viene ordenada por `publishedAt desc`) y el resto
@@ -55,14 +58,16 @@ const { seo, siteSettings } = await getPageSeo('resources');
       <div
         class="hero-resources-header flex max-w-[clamp(22.5rem,18.9286rem_+_17.8571vw,35rem)] flex-col gap-[clamp(0.675rem,0.5679rem_+_0.5357vw,1.05rem)]"
       >
-        {/* Los dos `span` van en bloque: el título ocupa dos líneas fijas, no por wrap. */}
+        {/* `whitespace-pre-line`: el título ocupa dos líneas fijas, no por wrap. El salto
+            viene embebido en el string de Sanity ("EdTech\nResources"), donde antes había
+            dos `<span class="block">` — mismo criterio que las direcciones en Contact. */}
         <h1
-          class="font-lora text-h1 leading-[1.25] font-medium tracking-[clamp(-0.03rem,-0.0171rem_-_0.0143vw,-0.02rem)]"
+          class="font-lora text-h1 leading-[1.25] font-medium tracking-[clamp(-0.03rem,-0.0171rem_-_0.0143vw,-0.02rem)] whitespace-pre-line"
         >
-          <span class="block">EdTech</span><span class="block">Resources</span>
+          {hero?.headline}
         </h1>
         <p class="text-body font-inter text-body leading-[1.6] font-normal tracking-normal">
-          Resources built from real campaigns, real strategies, and real results.
+          {hero?.subtitle}
         </p>
       </div>
 

@@ -27,9 +27,10 @@ import { sanityClient } from '../lib/sanity/client';
 import { workListQuery } from '../lib/sanity/queries';
 import type { WorkGroup } from '../types/ui';
 
-const { categories, works } = await sanityClient.fetch<{
+const { categories, works, hero } = await sanityClient.fetch<{
   categories: { _id: string; title: string; slug: string }[];
   works: WorkCardProjection[];
+  hero: { eyebrow?: string; headline?: string; subtitle?: string } | null;
 }>(workListQuery);
 
 /* "Los mejores" va primero y NO es una categoría: en Etapa 5 se sacó de `workCategory`
@@ -95,13 +96,13 @@ const { seo, siteSettings } = await getPageSeo('work');
       <span
         class="text-eyebrow block font-inter text-[clamp(0.7256rem,0.6104rem_+_0.5759vw,1.1288rem)] leading-[1.6] font-normal tracking-normal text-black"
       >
-        Work: Behind the fastest-growing EdTech brands
+        {hero?.eyebrow}
       </span>
       <h1 class="font-lora text-h1 leading-[1.25] font-medium tracking-[clamp(-0.03rem,0.0013rem_-_0.0348vw,-0.0056rem)]">
-        Behind the fastest growing EdTech brands.
+        {hero?.headline}
       </h1>
       <p class="text-body font-inter text-body leading-[1.6] font-medium tracking-normal">
-        First-hand expertise, innovative conceptual thinking &amp; design, client-first approach
+        {hero?.subtitle}
       </p>
     </div>
   </section>

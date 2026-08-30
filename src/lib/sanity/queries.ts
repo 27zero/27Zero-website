@@ -188,7 +188,9 @@ export const workListQuery = `{
     | order(order asc, title asc) {_id, title, "slug": slug.current},
 
   "works": *[_type == "work" && defined(slug.current)]
-    | order(order asc, title asc) {${WORK_CARD_FIELDS}}
+    | order(order asc, title asc) {${WORK_CARD_FIELDS}},
+
+  "hero": *[_type == "settings"][0].workHero
 }`;
 
 /**
@@ -203,7 +205,9 @@ export const workByClientQuery = `{
     | order(name asc) {_id, name},
 
   "works": *[_type == "work" && defined(slug.current) && defined(client)]
-    | order(order asc, title asc) {${WORK_CARD_FIELDS}}
+    | order(order asc, title asc) {${WORK_CARD_FIELDS}},
+
+  "hero": *[_type == "settings"][0].clientsHero
 }`;
 
 /* ─────────────────────────────── Resources ────────────────────────────── */
@@ -215,8 +219,8 @@ export const workByClientQuery = `{
  * el resto va al grid; el corte lo hace la página. Trae `cardThumbnail` (imagen de
  * card) y NO `heroBanner`, que es la del hero de la interna.
  */
-export const resourceListQuery = `
-  *[_type == "resource" && defined(slug.current)] | order(publishedAt desc) {
+export const resourceListQuery = `{
+  "resources": *[_type == "resource" && defined(slug.current)] | order(publishedAt desc) {
     _id,
     title,
     "slug": slug.current,
@@ -224,8 +228,10 @@ export const resourceListQuery = `
     description,
     publishedAt,
     cardThumbnail
-  }
-`;
+  },
+
+  "hero": *[_type == "settings"][0].resourcesHero
+}`;
 
 /* ───────────────────────────── EdTech Mentor ──────────────────────────── */
 
