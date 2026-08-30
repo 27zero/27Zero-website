@@ -15,9 +15,11 @@
  *
  * Nunca las dos para la misma página (CLAUDE.md §8, "nunca ambas fuentes").
  */
-import type { SanityImage, Seo } from '../../types/sanity';
+import type { PortableTextBlock, SanityImage, Seo } from '../../types/sanity';
 import { ogImageUrl, resolveSeo, type ResolvedSeo } from '../seo/resolveSeo';
+import type { WorkCardProjection } from './cards';
 import { sanityClient } from './client';
+import { toImage } from './image';
 import { siteSettingsSeoQuery } from './queries';
 
 /** Una oficina, para el nodo `ProfessionalService` del JSON-LD. */
@@ -84,6 +86,49 @@ export interface ContactContent {
   subscribeCard: ResolvedContactCard;
 }
 
+/**
+ * Ancho al que se le pide el poster del hero al Image CDN.
+ *
+ * Es un fondo full-bleed, no una card: se sirve al ancho del viewport de desktop
+ * (1440) redondeado hacia arriba para cubrir pantallas más anchas. NO se resuelve con
+ * `ogImageUrl()`, que recorta a 1200×630 — ese tamaño es el de la tarjeta de Open
+ * Graph y deformaría el fondo.
+ */
+const HERO_POSTER_WIDTH = 1920;
+
+/**
+ * Contenido editable de Home (Etapa 10).
+ *
+ * Los `headline` son Portable Text de una sola línea, no `string`: el editor marca en
+ * cursiva el tramo acentuado y `accentMarkComponents` (`utils/portableText`) lo traduce
+ * al `.inter-accent` del design system, que es un cambio de tipografía (Lora → Inter),
+ * no de color — hereda el color del heading que lo contiene.
+ *
+ * `featuredWork` sale crudo, sin mapear a props de card: eso lo hace la página con
+ * `toFeaturedWorkCard()`, igual que ya hace con `toWorkCard()` / `toMentorCard()`.
+ */
+export interface HomeContent {
+  hero: {
+    headline?: PortableTextBlock[];
+    subtitle?: string;
+    /** Si está vacío, el botón del hero no se renderiza. */
+    ctaLink?: string;
+    ctaCaption?: string;
+    videoUrl?: string;
+    posterUrl?: string;
+    posterAlt?: string;
+  };
+  work: {
+    headline?: PortableTextBlock[];
+    subtitle?: string;
+    featuredWork?: WorkCardProjection;
+  };
+  mentor: {
+    headline?: PortableTextBlock[];
+    subtitle?: string;
+  };
+}
+
 /** Las 8 páginas estáticas/shell que no tienen documento propio en Sanity. */
 export type SeoPage =
   | 'home'
@@ -113,6 +158,22 @@ interface SettingsSeoProjection {
   resourcesSeo?: Seo;
   agencySeo?: Seo;
   contactSeo?: Seo;
+  homeHero?: {
+    headline?: PortableTextBlock[];
+    subtitle?: string;
+    ctaLink?: string;
+    ctaCaption?: string;
+    video?: string;
+    poster?: SanityImage;
+  };
+  /** `featuredWork` llega ya expandido por la query, no como referencia cruda. */
+  homeWork?: {
+    headline?: PortableTextBlock[];
+    subtitle?: string;
+    showreelUrl?: string;
+    featuredWork?: WorkCardProjection;
+  };
+  homeMentor?: { headline?: PortableTextBlock[]; subtitle?: string };
   contactHero?: { headline?: string; text?: string; ctaLink?: string };
   formTitle?: string;
   formSubtitle?: string;
@@ -125,6 +186,7 @@ async function load(): Promise<{
   siteSettings: SiteSeoSettings;
   pages: Record<SeoPage, ResolvedSeo | undefined>;
   contactContent: ContactContent;
+  homeContent: HomeContent;
 }> {
   /* `?? {}`: hoy el singleton existe pero está vacío, y en un dataset nuevo podría no
      existir. Sin esto el build entero se cae por metadata faltante — que es
@@ -180,6 +242,30 @@ async function load(): Promise<{
         bgImageUrl: ogImageUrl(settings.subscribeCard?.bgImage),
       },
     } satisfies ContactContent,
+    homeContent: {
+      hero: {
+        headline: settings.homeHero?.headline,
+        subtitle: settings.homeHero?.subtitle,
+        ctaLink: settings.homeHero?.ctaLink,
+        ctaCaption: settings.homeHero?.ctaCaption,
+        videoUrl: settings.homeHero?.video,
+        /* `toImage()` devuelve `undefined` si la imagen no trae `alt`, así que un
+           poster sin alt no se renderiza. Es el enforcement de CLAUDE.md §8.1 ("alt
+           obligatorio, no queda a criterio del editor"), no un caso a cubrir con
+           fallback. */
+        posterUrl: toImage(settings.homeHero?.poster, { width: HERO_POSTER_WIDTH })?.src,
+        posterAlt: settings.homeHero?.poster?.alt,
+      },
+      work: {
+        headline: settings.homeWork?.headline,
+        subtitle: settings.homeWork?.subtitle,
+        featuredWork: settings.homeWork?.featuredWork,
+      },
+      mentor: {
+        headline: settings.homeMentor?.headline,
+        subtitle: settings.homeMentor?.subtitle,
+      },
+    } satisfies HomeContent,
   };
 }
 
@@ -206,4 +292,9 @@ export async function getSeoSettings(): Promise<SiteSeoSettings> {
 /** Contenido editable de Contact (Etapa 10). Misma promesa cacheada que `getPageSeo`/`getSeoSettings`. */
 export async function getContactContent(): Promise<ContactContent> {
   return (await loadOnce()).contactContent;
+}
+
+/** Contenido editable de Home (Etapa 10). Misma promesa cacheada, sin query extra. */
+export async function getHomeContent(): Promise<HomeContent> {
+  return (await loadOnce()).homeContent;
 }

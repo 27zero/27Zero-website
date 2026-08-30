@@ -53,6 +53,27 @@ export interface MentorCardData {
 }
 
 /**
+ * Props de `FeaturedCard` cuando el origen NO es una entrevista.
+ *
+ * El componente nació consumiendo `MentorCardData` por spread, y esas props siguen
+ * siendo compatibles; este tipo es el mismo contrato con nombres genéricos, para las
+ * páginas que le pasan un `work` (el destacado del Intro de Home). No es
+ * `WorkCardData`: ese es el contrato de `WorkCard.astro`, con `eyebrow`,
+ * `clientName` y `clientLogo` en vez de `tag`, `name` y `avatar`.
+ */
+export interface FeaturedCardData {
+  href: string;
+  title: string;
+  tag?: string;
+  name?: string;
+  role?: string;
+  avatar?: { src: string; alt: string };
+  avatarInitials?: string;
+  /** Fondo de la card, desde `work.thumbnail`. */
+  image?: { src: string; alt: string };
+}
+
+/**
  * Un bloque de `MentorCategorySection`. `heading`/`headingAccent`/`subtext` son copy
  * de la página (maquetación única, CLAUDE.md §4) — no salen de Sanity; lo único que
  * viene del CMS son los `items`.

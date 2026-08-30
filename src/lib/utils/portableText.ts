@@ -8,6 +8,8 @@
  * día que una de las dos reglas cambie el TOC apunta a anclas inexistentes y no falla
  * nada — solo deja de andar.
  */
+import type { PortableTextComponents } from '@portabletext/to-html';
+
 import { slugify } from './format';
 
 /** Bloque de Portable Text, tipado al mínimo que estos helpers necesitan leer. */
@@ -53,3 +55,18 @@ export function getHeadings(value: unknown, styles: string[] = ['h2']): { id: st
 export function hasContent(value: unknown): boolean {
   return Array.isArray(value) && value.length > 0;
 }
+
+/**
+ * Serializer del mark `em` para los headlines de "texto de acento": en vez de
+ * `<em>` real, emite el span de acento del design system. El editor aplica
+ * cursiva en Sanity para marcar el tramo — no se ve en cursiva en el sitio.
+ *
+ * Vive acá y no en cada página porque el mismo patrón de heading en dos tonos
+ * aparece en secciones de varias páginas; duplicarlo garantizaría que se
+ * desincronicen las clases.
+ */
+export const accentMarkComponents: PortableTextComponents = {
+  marks: {
+    em: ({ children }) => `<span class="inter-accent font-inter font-medium">${children}</span>`,
+  },
+};

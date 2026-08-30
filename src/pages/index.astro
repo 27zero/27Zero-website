@@ -14,7 +14,7 @@
  * valor fijo de mobile (`em × 9`), no como parte del clamp.
  */
 import Page from '../layouts/Page.astro';
-import { getPageSeo } from '../lib/sanity/settings';
+import { getHomeContent, getPageSeo } from '../lib/sanity/settings';
 import CardsSlider from '../components/sections/CardsSlider.astro';
 import MarqueeLogos from '../components/sections/MarqueeLogos.astro';
 import ShapesSlider from '../components/sections/ShapesSlider.astro';
@@ -22,12 +22,14 @@ import TestimonialsSlider from '../components/sections/TestimonialsSlider.astro'
 import Button from '../components/ui/Button.astro';
 import EdtechMentorCard from '../components/ui/EdtechMentorCard.astro';
 import FeaturedCard from '../components/ui/FeaturedCard.astro';
+import PortableText from '../components/ui/PortableText.astro';
 import WorkCard from '../components/ui/WorkCard.astro';
-import { toMentorCard, toWorkCard } from '../lib/sanity/cards';
+import { toFeaturedWorkCard, toMentorCard, toWorkCard } from '../lib/sanity/cards';
 import type { MentorCardProjection, TestimonialProjection, WorkCardProjection } from '../lib/sanity/cards';
 import { sanityClient } from '../lib/sanity/client';
 import { toImage } from '../lib/sanity/image';
 import { homeQuery } from '../lib/sanity/queries';
+import { accentMarkComponents } from '../lib/utils/portableText';
 import type { MentorCardData, WorkCardData } from '../types/ui';
 
 /* Una sola query para las 3 secciones que consumen CMS (CLAUDE.md §10). */
@@ -76,24 +78,70 @@ const BODY_SM = 'text-body--sm font-inter text-body-sm leading-[1.6] font-normal
 /* SEO de esta página: `settings.homeSeo` en Sanity, con fallback global.
    `getPageSeo()` memoiza el singleton — una sola query para todo el build. */
 const { seo, siteSettings } = await getPageSeo('home');
+
+/* Copy editable de Home (Etapa 10). Sale de la misma promesa memoizada que el SEO,
+   así que no cuesta una segunda query. */
+const homeContent = await getHomeContent();
 ---
 
 <Page seo={seo} siteSettings={siteSettings} navVariant="white">
   <!-- HERO -->
   <section
-    class="section section--hero-home mt-[clamp(3.0938rem,2.6027rem_+_2.4554vw,4.8125rem)] bg-gray py-[clamp(10.125rem,9.9829rem_+_0.7107vw,10.6225rem)]"
+    class="section section--hero-home relative mt-[clamp(3.0938rem,2.6027rem_+_2.4554vw,4.8125rem)] overflow-hidden bg-gray py-[clamp(10.125rem,9.9829rem_+_0.7107vw,10.6225rem)]"
   >
-    <div class:list={[CONTAINER, 'hero-home-container items-start gap-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)]']}>
-      <h1 class="font-lora text-h1 leading-[1.25] font-medium tracking-[-0.48px]">
-        Turn EdTech purpose into <span class="inter-accent font-inter font-medium">Brand power.</span>
-      </h1>
-      <div class="hero-home-cta flex flex-col items-center gap-xs">
-        <Button href="/contact" variant="white" class="border-white!">Book a strategy session</Button>
-        <p
-          class="text-caption font-inter text-[clamp(0.625rem,0.5361rem_+_0.4446vw,0.9363rem)] leading-[1.6] font-normal tracking-normal text-black"
+    {/* Fondo del hero: el video si está cargado, el poster si no. `bg-gray` de la
+        sección queda de fallback cuando no hay ninguno de los dos. */}
+    {
+      homeContent.hero.videoUrl ? (
+        <video
+          autoplay
+          muted
+          loop
+          playsinline
+          poster={homeContent.hero.posterUrl}
+          class="absolute inset-0 size-full object-cover"
         >
-          Free. 30 min. No sales pitch.
-        </p>
+          <source src={homeContent.hero.videoUrl} type="video/mp4" />
+        </video>
+      ) : homeContent.hero.posterUrl ? (
+        <img
+          src={homeContent.hero.posterUrl}
+          alt={homeContent.hero.posterAlt || ''}
+          class="absolute inset-0 size-full object-cover"
+        />
+      ) : null
+    }
+    {/* Velo oscuro sobre el video/poster: el copy del hero es blanco y sin esto pierde
+        contraste contra los frames claros del loop. */}
+    <div class="absolute inset-0 bg-black/50"></div>
+    <div
+      class:list={[CONTAINER, 'hero-home-container relative items-start gap-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)]']}
+    >
+      {/* Sin `class` a nivel de componente: así emite por Fragment y el `<h1>` sale
+          directo, sin `<div>` envolvente. El tag lo pone `classes.h1`. */}
+      <PortableText
+        value={homeContent.hero.headline}
+        classes={{ h1: 'font-lora text-h1 leading-[1.25] font-medium tracking-[-0.48px] text-white' }}
+        components={accentMarkComponents}
+      />
+      {homeContent.hero.subtitle && <p class:list={[BODY_SM, 'text-white']}>{homeContent.hero.subtitle}</p>}
+      <div class="hero-home-cta flex flex-col items-center gap-xs">
+        {
+          homeContent.hero.ctaLink && (
+            <Button href={homeContent.hero.ctaLink} variant="white" class="border-white!">
+              Book a strategy session
+            </Button>
+          )
+        }
+        {
+          homeContent.hero.ctaCaption && (
+            <p
+              class="text-caption font-inter text-[clamp(0.625rem,0.5361rem_+_0.4446vw,0.9363rem)] leading-[1.6] font-normal tracking-normal text-white"
+            >
+              {homeContent.hero.ctaCaption}
+            </p>
+          )
+        }
       </div>
     </div>
   </section>
@@ -103,28 +151,28 @@ const { seo, siteSettings } = await getPageSeo('home');
     <div class:list={[CONTAINER, 'intro-home-container gap-gap']}>
       <div class:list={['intro-home-row', TEXT_MEDIA_ROW]}>
         <div class:list={['intro-home-text', TEXT_COLUMN]}>
-          <h2 class={HEADING_ACCENT_H2}>
-            The marketing team EdTech brands turn to <span class="inter-accent font-inter font-medium"
-              >for growth and impact.</span
-            >
-          </h2>
-          <p class={BODY_SM}>Lorem ipsum is simply dummy text of the printing and typesetting industry.</p>
+          <PortableText
+            value={homeContent.work.headline}
+            classes={{ h2: HEADING_ACCENT_H2 }}
+            components={accentMarkComponents}
+          />
+          <p class={BODY_SM}>{homeContent.work.subtitle}</p>
           <Button href="/work" variant="dark">See all work</Button>
         </div>
 
-        {/* PENDIENTE (planning-maquetado-home.md #1): falta confirmar con el cliente si
-            `.intro-home-media` es una imagen simple o una card de `work`. Queda la
-            estructura del vanilla con su placeholder visual; el contenido real se
-            resuelve antes del QA de la sección. */}
-        <div
-          class="intro-home-media flex min-h-[clamp(19.125rem,16.0893rem_+_15.1786vw,29.75rem)] flex-1 items-center justify-center rounded-card bg-gray max-md:w-full"
-        >
-          <span
-            class="font-inter text-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] font-semibold tracking-[1px] text-black uppercase opacity-40"
-          >
-            [MEDIA PLACEHOLDER]
-          </span>
-        </div>
+        {
+          homeContent.work.featuredWork ? (
+            <div class="intro-home-media h-[clamp(19.125rem,16.0893rem_+_15.1786vw,29.75rem)] flex-1 max-md:w-full">
+              <FeaturedCard {...toFeaturedWorkCard(homeContent.work.featuredWork)} />
+            </div>
+          ) : (
+            <div class="intro-home-media flex min-h-[clamp(19.125rem,16.0893rem_+_15.1786vw,29.75rem)] flex-1 items-center justify-center rounded-card bg-gray max-md:w-full">
+              <span class="font-inter text-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] font-semibold tracking-[1px] text-black uppercase opacity-40">
+                [MEDIA PLACEHOLDER]
+              </span>
+            </div>
+          )
+        }
       </div>
     </div>
 
@@ -135,9 +183,9 @@ const { seo, siteSettings } = await getPageSeo('home');
     </div>
   </section>
 
-  {/* PENDIENTE (planning-maquetado-home.md #2): 2 de las 3 shapes siguen con lorem ipsum
-      a la espera del copy del cliente — el placeholder ya viene marcado dentro del
-      componente, que es donde vive el contenido (es igual en todas las páginas). */}
+  {/* El copy sigue hardcodeado en el componente, con lorem ipsum en 2 de las 3 shapes.
+      El schema editable ya existe (`settings.apartSection`, Etapa 10) — conectarlo es
+      una sesión aparte, porque el componente se comparte con About y EdTech Marketing. */}
   <ShapesSlider />
 
   <!-- LOGOS -->
@@ -152,10 +200,12 @@ const { seo, siteSettings } = await getPageSeo('home');
     <div class:list={[CONTAINER, 'mentor-home-container gap-gap']}>
       <div class:list={['mentor-home-row', TEXT_MEDIA_ROW]}>
         <div class:list={['mentor-home-text', TEXT_COLUMN]}>
-          <h2 class={HEADING_ACCENT_H2}>
-            The EdTech Mentor <span class="inter-accent font-inter font-medium">pearls of wisdom.</span>
-          </h2>
-          <p class={BODY_SM}>Lorem ipsum is simply dummy text of the printing and typesetting industry.</p>
+          <PortableText
+            value={homeContent.mentor.headline}
+            classes={{ h2: HEADING_ACCENT_H2 }}
+            components={accentMarkComponents}
+          />
+          <p class={BODY_SM}>{homeContent.mentor.subtitle}</p>
           <Button href="/edtech-mentor" variant="whiteOnDark">The EdTech Mentor</Button>
         </div>
 

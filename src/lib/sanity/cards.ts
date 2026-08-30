@@ -19,7 +19,7 @@
  */
 import type { InterviewCategory, SanityImage } from '../../types/sanity';
 import { INTERVIEW_CATEGORY_LABELS } from '../../types/sanity';
-import type { MentorCardData, ResourceCardData, WorkCardData } from '../../types/ui';
+import type { FeaturedCardData, MentorCardData, ResourceCardData, WorkCardData } from '../../types/ui';
 import { formatDate, getInitials } from '../utils/format';
 import { mentorUrl, resourceUrl, workUrl } from '../utils/routes';
 import { toImage } from './image';
@@ -164,6 +164,29 @@ export function toMentorCard(
     image: toImage(mentor.thumbnail, { width: options.imageWidth ?? CARD_IMAGE_WIDTH }),
     avatar,
     avatarInitials: avatar ? undefined : getInitials(mentor.guestName),
+  };
+}
+
+/**
+ * `work` → props de `FeaturedCard`, para el destacado de la sección Intro de Home.
+ *
+ * El mapeo replica el de `toWorkCard()` campo por campo, traducido a los nombres
+ * genéricos del componente: la categoría entra como `tag`, el cliente como `name` y
+ * su logo como `avatar`, con las mismas iniciales de fallback. `role` queda afuera —
+ * `work` no tiene nada equivalente al rol del invitado de una entrevista.
+ */
+export function toFeaturedWorkCard(work: WorkCardProjection): FeaturedCardData {
+  const avatar = toImage(work.clientLogo, { width: CLIENT_LOGO_WIDTH });
+
+  return {
+    href: workUrl(work.slug),
+    title: work.title,
+    tag: work.categoryTitle,
+    name: work.clientName,
+    avatar,
+    /* Solo si no hay logo: la card muestra uno u otro, nunca los dos. */
+    avatarInitials: avatar ? undefined : getInitials(work.clientName),
+    image: toImage(work.thumbnail, { width: CARD_IMAGE_WIDTH }),
   };
 }
 

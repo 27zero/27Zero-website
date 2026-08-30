@@ -17,14 +17,21 @@ interface Props {
   avatar?: { src: string; alt: string };
   /** Alternativa al avatar: iniciales dentro del círculo. */
   avatarInitials?: string;
+  /**
+   * Fondo de la card. Sin ella queda `bg-gray`, que es el comportamiento previo.
+   * Va como `background-image` y no como `<img>`, así que el `alt` no se renderiza
+   * en ningún lado — mismo caso que las cards de Contact.
+   */
+  image?: { src: string; alt: string };
 }
 
-const { href, title, tag, name, role, avatar, avatarInitials } = Astro.props;
+const { href, title, tag, name, role, avatar, avatarInitials, image } = Astro.props;
 ---
 
 <a
   href={href}
-  class="card card--featured group/card relative flex size-full shrink-0 cursor-pointer flex-col justify-between overflow-hidden rounded-card bg-gray p-[clamp(0.9562rem,0.8045rem_+_0.7589vw,1.4875rem)] text-black no-underline"
+  style={image ? `background-image: url('${image.src}')` : undefined}
+  class="card card--featured group/card relative flex size-full shrink-0 cursor-pointer flex-col justify-between overflow-hidden rounded-card bg-gray bg-cover bg-center p-[clamp(0.9562rem,0.8045rem_+_0.7589vw,1.4875rem)] text-black no-underline"
 >
   {
     tag && (

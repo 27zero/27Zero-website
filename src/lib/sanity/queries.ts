@@ -108,7 +108,13 @@ export const siteSettingsSeoQuery = `
     formSubtitle,
     waysTitle,
     bookCard,
-    subscribeCard
+    subscribeCard,
+    homeHero,
+    homeMentor,
+    "homeWork": homeWork{
+      ...,
+      "featuredWork": featuredWork->{${WORK_CARD_FIELDS}}
+    }
   }
 `;
 
