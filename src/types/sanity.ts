@@ -502,7 +502,7 @@ export interface Settings extends SanityDocument {
   homeSeo?: Seo;
   /**
    * Los `headline` de Home son Portable Text de una sola línea, no `string`: el editor
-   * marca en cursiva el tramo que va con el acento de color y el render lo traduce
+   * marca en cursiva el tramo que va con el acento tipográfico y el render lo traduce
    * (Etapa 10). El bloque solo habilita el decorador `em`.
    */
   homeHero?: {
@@ -568,9 +568,20 @@ export interface Settings extends SanityDocument {
 
   // EdTech Marketing
   agencySeo?: Seo;
-  agencyHero?: { headline?: string; text?: string };
+  agencyHero?: {
+    headline?: string;
+    text?: string;
+    image?: SanityImage;
+    /** Si está vacío, el botón del hero no se renderiza. */
+    ctaLink?: string;
+    ctaCaption?: string;
+  };
   agencyPracticesSection?: { headline?: string; text?: string };
-  agencyClosingCta?: { headline?: string };
+  agencyClosingCta?: {
+    headline?: string;
+    /** Si está vacío, el botón no se renderiza. */
+    ctaLink?: string;
+  };
   /** Fieldset `services` — intro del menú de servicios (agregado en Etapa 5). */
   servicesTitle?: string;
   servicesDescription?: string;
