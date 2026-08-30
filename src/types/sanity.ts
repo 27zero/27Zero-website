@@ -430,6 +430,16 @@ interface LinkItem {
   href?: string;
 }
 
+/**
+ * Uno de los 3 slides fijos de "What Sets 27zero Apart" — los tres comparten shape.
+ * Fijos y no un array: el componente siempre muestra exactamente 3.
+ */
+interface ApartSlide {
+  image?: SanityImage;
+  title?: string;
+  text?: string;
+}
+
 /** Card del bloque final de Contact — `bookCard` y `subscribeCard` comparten shape. */
 interface ContactCard {
   title?: string;
@@ -474,17 +484,44 @@ export interface Settings extends SanityDocument {
   footerNavigation?: { links?: LinkItem[] };
   footerCopyright?: { year?: string };
 
+  /**
+   * "What Sets 27zero Apart" — componente compartido, no contenido de Home.
+   * Vivía como `homeApart` dentro del grupo `home` hasta la Etapa 10; se movió a su
+   * propio grupo porque Home, About y EdTech Marketing renderizan el mismo slider.
+   */
+  apartSection?: {
+    headline?: string;
+    description?: string;
+    slideOne?: ApartSlide;
+    slideTwo?: ApartSlide;
+    slideThree?: ApartSlide;
+  };
+
   // Home
   /** SEO por página estática/shell (Etapa 7) — fallback a `settings.seo`. */
   homeSeo?: Seo;
-  homeHero?: { headline?: string; subtitle?: string; video?: string; poster?: SanityImage };
-  homeWork?: { headline?: string; subtitle?: string; showreelUrl?: string };
-  homeMentor?: { headline?: string; subtitle?: string };
-  homeApart?: {
-    headline?: string;
-    description?: string;
-    slides?: { _key: string; title?: string; text?: string }[];
+  /**
+   * Los `headline` de Home son Portable Text de una sola línea, no `string`: el editor
+   * marca en cursiva el tramo que va con el acento de color y el render lo traduce
+   * (Etapa 10). El bloque solo habilita el decorador `em`.
+   */
+  homeHero?: {
+    headline?: PortableTextBlock[];
+    subtitle?: string;
+    /** Si está vacío, el botón del hero no se renderiza. */
+    ctaLink?: string;
+    ctaCaption?: string;
+    video?: string;
+    poster?: SanityImage;
   };
+  homeWork?: {
+    headline?: PortableTextBlock[];
+    subtitle?: string;
+    showreelUrl?: string;
+    /** Sin expandir. La query que la resuelve a datos de card entra con el wiring. */
+    featuredWork?: SanityReference;
+  };
+  homeMentor?: { headline?: PortableTextBlock[]; subtitle?: string };
   homeNewsletter?: { headline?: string; placeholder?: string };
 
   // About
