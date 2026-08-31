@@ -73,10 +73,13 @@ export interface Seo {
 /* ──────────────────────────── Taxonomías ──────────────────────────────── */
 
 /**
- * `edtechMentor.interviewCategory` — `string` + `options.list` en el schema.
- * Conjunto cerrado: el editor elige de un radio, no puede inventar valores, así que
- * la union de TS no puede desalinearse sin que alguien toque el schema.
- * (Typo `essencial` → `essential` ya corregido en Etapa 5.)
+ * ⚠️ LEGACY — `edtechMentor.interviewCategory` ya NO existe en el schema: se borró en
+ * Etapa 11 y la categoría de una entrevista pasó a ser `category`, una `reference` a
+ * `mentorCategory` (documento, no lista cerrada — ver `MentorCategory`).
+ *
+ * La union sobrevive solo porque `MentorCardProjection` y las páginas de EdTech Mentor
+ * todavía la consumen; se elimina junto con ese wiring en la sesión siguiente de la
+ * etapa. No usarla en código nuevo.
  */
 export type InterviewCategory = 'essential' | 'investor' | 'founders';
 
@@ -133,7 +136,7 @@ export type ServiceIconId = 'asterisk' | 'quatrefoil' | 'arc';
  */
 export type PracticeIconId = 'waves' | 'spiral' | 'square-circle';
 
-/** Labels de `InterviewCategory`, tal como se muestran en los pills de EdTech Mentor. */
+/** ⚠️ LEGACY — labels de `InterviewCategory`. Los reemplaza `mentorCategory.title`. */
 export const INTERVIEW_CATEGORY_LABELS: Record<InterviewCategory, string> = {
   essential: 'Essential',
   investor: 'Investor',
@@ -156,6 +159,33 @@ export interface WorkCategory extends SanityDocument {
   slug: SanitySlug;
   description?: string;
   color?: string;
+}
+
+/**
+ * `mentorCategory` — taxonomía de EdTech Mentor. Mismo shape que `workCategory`, pero
+ * además es dueña del copy de su propia sección en la página de índice: cada categoría
+ * trae su headline, su bajada y el link a la página de la serie (Etapa 11).
+ *
+ * Reemplaza a `InterviewCategory`: como es documento y no `options.list`, el editor
+ * puede crear categorías nuevas desde el Studio — la lista sale siempre de la query.
+ *
+ * El botón "Go to {título}" NO tiene campo propio: se computa de `title` en el sitio.
+ */
+export interface MentorCategory extends SanityDocument {
+  _type: 'mentorCategory';
+  title: string;
+  slug: SanitySlug;
+  description?: string;
+  color?: string;
+  order: number;
+  /**
+   * Portable Text de una sola línea, igual que los `headline` de Home: el editor marca
+   * en cursiva el tramo del acento tipográfico y `accentMarkComponents` lo traduce.
+   */
+  sectionHeadline: PortableTextBlock[];
+  sectionSubtitle?: string;
+  /** Vacío → el botón "Go to {título}" no se renderiza. */
+  ctaUrl?: string;
 }
 
 /**
@@ -336,7 +366,8 @@ export interface EdtechMentor extends SanityDocument {
 
   // Metadata
   slug?: SanitySlug;
-  interviewCategory?: InterviewCategory;
+  /** Requerido en el schema — `SanityReference` sin `->`, `MentorCategory` con `->`. */
+  category: SanityReference | MentorCategory;
   isFeatured?: boolean;
   publishedAt?: string;
   /** Requerido en el schema — `SanityReference` sin `->`, `Author` con `->`. */
@@ -542,7 +573,17 @@ export interface Settings extends SanityDocument {
   // Mentor
   mentorSeo?: Seo;
   mentorHero?: { headline?: string; text?: string };
-  mentorCta?: { headline?: string; text?: string };
+  /**
+   * El primer botón ("Let's Talk" → `/contact`) está hardcodeado en el componente: es
+   * ruta interna fija, no copy editable. Solo el secundario sale del CMS.
+   */
+  mentorCta?: {
+    headline?: string;
+    text?: string;
+    secondaryCtaText?: string;
+    /** Vacío → el segundo botón no se renderiza. */
+    secondaryCtaLink?: string;
+  };
 
   // Resources
   resourcesSeo?: Seo;
