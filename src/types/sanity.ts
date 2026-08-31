@@ -336,6 +336,8 @@ export interface Resource extends SanityDocument {
 export interface PearlOfWisdomBlock {
   _type: 'pearlOfWisdom';
   _key: string;
+  /** Titular propio de la perla. Ausente en las que nunca se personalizaron en Webflow. */
+  title?: string;
   quote?: string;
 }
 
