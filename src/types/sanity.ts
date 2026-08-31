@@ -73,17 +73,6 @@ export interface Seo {
 /* ──────────────────────────── Taxonomías ──────────────────────────────── */
 
 /**
- * ⚠️ LEGACY — `edtechMentor.interviewCategory` ya NO existe en el schema: se borró en
- * Etapa 11 y la categoría de una entrevista pasó a ser `category`, una `reference` a
- * `mentorCategory` (documento, no lista cerrada — ver `MentorCategory`).
- *
- * La union sobrevive solo porque `MentorCardProjection` y las páginas de EdTech Mentor
- * todavía la consumen; se elimina junto con ese wiring en la sesión siguiente de la
- * etapa. No usarla en código nuevo.
- */
-export type InterviewCategory = 'essential' | 'investor' | 'founders';
-
-/**
  * `edtechMarketingService.category` y `edtechMarketingPractice.relatedServiceCategory`
  * — la misma lista de 8 valores, declarada por separado en cada schema.
  *
@@ -136,13 +125,6 @@ export type ServiceIconId = 'asterisk' | 'quatrefoil' | 'arc';
  */
 export type PracticeIconId = 'waves' | 'spiral' | 'square-circle';
 
-/** ⚠️ LEGACY — labels de `InterviewCategory`. Los reemplaza `mentorCategory.title`. */
-export const INTERVIEW_CATEGORY_LABELS: Record<InterviewCategory, string> = {
-  essential: 'Essential',
-  investor: 'Investor',
-  founders: 'Founders',
-};
-
 /* ───────────────────────────── documentTypes ──────────────────────────── */
 
 /**
@@ -151,7 +133,7 @@ export const INTERVIEW_CATEGORY_LABELS: Record<InterviewCategory, string> = {
  * Por eso `slug.current` queda `string` y no una union de los 7 valores actuales: el
  * editor puede crear una categoría nueva desde el Studio y la union mentiría en el
  * primer alta. La lista de 7 sale siempre de la query, nunca de un tipo. (Contraste
- * con `InterviewCategory`/`ServiceCategoryId`, que sí son `options.list` cerradas.)
+ * con `ServiceCategoryId`, que sí es una `options.list` cerrada.)
  */
 export interface WorkCategory extends SanityDocument {
   _type: 'workCategory';
@@ -166,8 +148,9 @@ export interface WorkCategory extends SanityDocument {
  * además es dueña del copy de su propia sección en la página de índice: cada categoría
  * trae su headline, su bajada y el link a la página de la serie (Etapa 11).
  *
- * Reemplaza a `InterviewCategory`: como es documento y no `options.list`, el editor
- * puede crear categorías nuevas desde el Studio — la lista sale siempre de la query.
+ * Reemplazó a la vieja lista cerrada `interviewCategory`: como es documento y no
+ * `options.list`, el editor puede crear categorías nuevas desde el Studio — la lista
+ * sale siempre de la query, nunca de un tipo.
  *
  * El botón "Go to {título}" NO tiene campo propio: se computa de `title` en el sitio.
  */

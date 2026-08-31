@@ -30,7 +30,14 @@ const WORK_CARD_FIELDS = `
   "categorySlug": category->slug.current
 `;
 
-/** Campos de `edtechMentor` que consumen `EdtechMentorCard` y `FeaturedCard`. */
+/**
+ * Campos de `edtechMentor` que consumen `EdtechMentorCard` y `FeaturedCard`.
+ *
+ * `categoryTitle` sale de la referencia expandida, no de un campo suelto: desde
+ * Etapa 11 la categoría es un documento (`mentorCategory`) y su título es editable,
+ * así que el chip de la card muestra lo que el editor cargue — antes salía de un
+ * `Record` de labels hardcodeado contra la lista cerrada `interviewCategory`.
+ */
 const MENTOR_CARD_FIELDS = `
   _id,
   title,
@@ -40,7 +47,7 @@ const MENTOR_CARD_FIELDS = `
   guestCompany,
   guestPhoto,
   thumbnail,
-  interviewCategory,
+  "categoryTitle": category->title,
   isFeatured,
   publishedAt
 `;
@@ -100,6 +107,8 @@ export const siteSettingsSeoQuery = `
     workSeo,
     clientsSeo,
     mentorSeo,
+    mentorHero,
+    mentorCta,
     resourcesSeo,
     agencySeo,
     contactSeo,
@@ -236,18 +245,33 @@ export const resourceListQuery = `{
 /* ───────────────────────────── EdTech Mentor ──────────────────────────── */
 
 /**
- * EdTech Mentor — el destacado + todas las entrevistas con categoría asignada.
+ * EdTech Mentor — el destacado + una sección por cada `mentorCategory`.
  *
- * `defined(interviewCategory)` filtra los docs sin categoría: la página son tres
- * secciones (Essential / Investor / Founders) y una entrevista sin categoría no tiene
- * dónde caer. Hoy deja afuera a "Ready Education" — ver reporte de entrega.
+ * Las entrevistas vienen anidadas dentro de su categoría en vez de planas: la página
+ * ya no filtra en JS contra una lista fija de 3 ids, itera lo que devuelve la query.
+ * Agregar, sacar o reordenar una serie es contenido, no un deploy.
+ *
+ * Las categorías se traen TODAS, tengan o no entrevistas cargadas: son secciones del
+ * diseño — su header y su copy existen igual, y un slider vacío es señal de que falta
+ * cargar contenido, no motivo para esconder la sección.
+ *
+ * `references(^._id)` matchea contra el `category` singular de la entrevista; `^` es
+ * la categoría del nivel de arriba.
  */
 export const mentorListQuery = `{
   "featured": *[_type == "edtechMentor" && isFeatured == true && defined(slug.current)]
     | order(publishedAt desc)[0] {${MENTOR_CARD_FIELDS}},
 
-  "mentors": *[_type == "edtechMentor" && defined(slug.current) && defined(interviewCategory)]
-    | order(publishedAt desc) {${MENTOR_CARD_FIELDS}}
+  "categories": *[_type == "mentorCategory" && defined(slug.current)] | order(order asc) {
+    _id,
+    title,
+    "slug": slug.current,
+    sectionHeadline,
+    sectionSubtitle,
+    ctaUrl,
+    "interviews": *[_type == "edtechMentor" && defined(slug.current) && references(^._id)]
+      | order(publishedAt desc) {${MENTOR_CARD_FIELDS}}
+  }
 }`;
 
 /* ──────────────────────────── EdTech Marketing ────────────────────────── */
@@ -376,7 +400,6 @@ export const mentorDetailQuery = `
     bannerPost,
     body,
     rapidFire{description, image, questions[]{_key, question, answer}},
-    interviewCategory,
     author->{_id, name, role, linkedin},
     publishedAt,
     linkedinUrl,

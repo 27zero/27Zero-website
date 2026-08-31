@@ -178,6 +178,29 @@ export interface HomeContent {
   };
 }
 
+/**
+ * Contenido editable de EdTech Mentor (Etapa 11).
+ *
+ * Solo el copy del shell — hero y CTA de cierre. Las secciones de categoría NO salen
+ * de acá: cada una es un documento `mentorCategory` y las trae `mentorListQuery`,
+ * junto con sus entrevistas.
+ *
+ * El primer botón del CTA ("Let's Talk" → `/contact`) tampoco está acá: es ruta
+ * interna fija, hardcodeada en la página, mismo criterio que los "Book a strategy
+ * session" de Etapa 10.
+ */
+export interface MentorContent {
+  hero: { headline?: string; text?: string };
+  cta: {
+    headline?: string;
+    text?: string;
+    /** Label del botón secundario. `initialValue` "Learn More" en el schema. */
+    secondaryCtaText?: string;
+    /** Si está vacío, el botón secundario no se renderiza. */
+    secondaryCtaLink?: string;
+  };
+}
+
 /** Las 8 páginas estáticas/shell que no tienen documento propio en Sanity. */
 export type SeoPage =
   | 'home'
@@ -223,6 +246,8 @@ interface SettingsSeoProjection {
     featuredWork?: WorkCardProjection;
   };
   homeMentor?: { headline?: PortableTextBlock[]; subtitle?: string };
+  mentorHero?: { headline?: string; text?: string };
+  mentorCta?: Settings['mentorCta'];
   /* Se reusa el espejo del schema en vez de redeclarar el shape: la query lo trae
      plano, tal cual, sin proyección de subcampos. */
   apartSection?: Settings['apartSection'];
@@ -239,6 +264,7 @@ async function load(): Promise<{
   pages: Record<SeoPage, ResolvedSeo | undefined>;
   contactContent: ContactContent;
   homeContent: HomeContent;
+  mentorContent: MentorContent;
   apartSection: ApartSectionContent;
 }> {
   /* `?? {}`: hoy el singleton existe pero está vacío, y en un dataset nuevo podría no
@@ -319,6 +345,18 @@ async function load(): Promise<{
         subtitle: settings.homeMentor?.subtitle,
       },
     } satisfies HomeContent,
+    mentorContent: {
+      hero: {
+        headline: settings.mentorHero?.headline,
+        text: settings.mentorHero?.text,
+      },
+      cta: {
+        headline: settings.mentorCta?.headline,
+        text: settings.mentorCta?.text,
+        secondaryCtaText: settings.mentorCta?.secondaryCtaText,
+        secondaryCtaLink: settings.mentorCta?.secondaryCtaLink,
+      },
+    } satisfies MentorContent,
     apartSection: {
       headline: settings.apartSection?.headline,
       description: settings.apartSection?.description,
@@ -377,6 +415,14 @@ export async function getContactContent(): Promise<ContactContent> {
 /** Contenido editable de Home (Etapa 10). Misma promesa cacheada, sin query extra. */
 export async function getHomeContent(): Promise<HomeContent> {
   return (await loadOnce()).homeContent;
+}
+
+/**
+ * Copy del shell de EdTech Mentor (Etapa 11). Misma promesa cacheada: la página ya
+ * awaitea `getPageSeo('mentor')`, así que esto no agrega ni un request.
+ */
+export async function getMentorContent(): Promise<MentorContent> {
+  return (await loadOnce()).mentorContent;
 }
 
 /**

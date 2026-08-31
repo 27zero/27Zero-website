@@ -1,3 +1,5 @@
+import type { PortableTextBlock } from './sanity';
+
 // Shapes de presentación que consumen los componentes de `sections/`.
 //
 // Migrados desde `lib/mockData/` en Etapa 6: los mocks se borran, pero estos tipos
@@ -74,18 +76,24 @@ export interface FeaturedCardData {
 }
 
 /**
- * Un bloque de `MentorCategorySection`. `heading`/`headingAccent`/`subtext` son copy
- * de la página (maquetación única, CLAUDE.md §4) — no salen de Sanity; lo único que
- * viene del CMS son los `items`.
+ * Un bloque de `MentorCategorySection` — un documento `mentorCategory` ya resuelto.
+ *
+ * Hasta Etapa 10 el copy (`heading`/`headingAccent`/`subtext`) era constante de la
+ * página y solo los `items` salían del CMS. En Etapa 11 la categoría pasó a ser
+ * documento y se llevó su propio copy con ella: el encabezado dejó de partirse en dos
+ * strings (base + acento) porque ahora es Portable Text de una línea, donde el tramo
+ * acentuado lo marca el editor con cursiva y lo traduce `accentMarkComponents`.
  */
-export interface MentorGroup {
-  /** `id` del `.category-anchor` y `data-filter` del pill correspondiente. */
+export interface MentorCategoryGroup {
+  /** Slug de la categoría: `id` del `.category-anchor` y `data-filter` de su pill. */
   id: string;
-  /** Texto base del `h2` (Lora), sin la palabra de acento. */
-  heading: string;
-  /** Palabra final del `h2`, en `<span class="inter-accent">` (Inter). */
-  headingAccent: string;
-  subtext: string;
+  /** Título del CMS. Label del pill y del botón "Go to {título}". */
+  title: string;
+  /** `sectionHeadline`: Portable Text de una línea con el mark `em` como acento. */
+  headline?: PortableTextBlock[];
+  subtitle?: string;
+  /** `ctaUrl`. Vacío → el botón "Go to {título}" no se renderiza. */
+  ctaUrl?: string;
   items: MentorCardData[];
 }
 

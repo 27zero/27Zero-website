@@ -17,8 +17,7 @@
  * (`WORK_CARD_FIELDS`, `MENTOR_CARD_FIELDS`, `TESTIMONIAL_FIELDS`): si se agrega o
  * saca un campo de un fragmento, se actualiza el tipo acá, mismo ciclo.
  */
-import type { InterviewCategory, SanityImage } from '../../types/sanity';
-import { INTERVIEW_CATEGORY_LABELS } from '../../types/sanity';
+import type { SanityImage } from '../../types/sanity';
 import type { FeaturedCardData, MentorCardData, ResourceCardData, WorkCardData } from '../../types/ui';
 import { formatDate, getInitials } from '../utils/format';
 import { mentorUrl, resourceUrl, workUrl } from '../utils/routes';
@@ -51,7 +50,8 @@ export interface MentorCardProjection {
   guestCompany?: string;
   guestPhoto?: SanityImage;
   thumbnail?: SanityImage;
-  interviewCategory?: InterviewCategory;
+  /** Título de la `mentorCategory` referenciada, ya resuelto por la query. */
+  categoryTitle?: string;
   isFeatured?: boolean;
   publishedAt?: string;
 }
@@ -139,9 +139,9 @@ export function toWorkCard(
 /**
  * `edtechMentor` → props de `EdtechMentorCard` / `FeaturedCard`.
  *
- * `tag` toma el label de la categoría de entrevista. En el vanilla decía literalmente
- * "Tag" porque no había dato detrás; ahora que `interviewCategory` existe, es lo que
- * ese chip estaba esperando.
+ * `tag` toma el título de la categoría referenciada. En el vanilla decía literalmente
+ * "Tag" porque no había dato detrás; desde Etapa 11 sale de `mentorCategory.title`, o
+ * sea que el editor controla ese chip sin tocar código.
  *
  * `title` es el título del episodio y es lo que la card muestra en el hover; el nombre
  * del invitado va aparte, en `name`. Cae a `guestName` solo cuando `title` está vacío:
@@ -156,7 +156,7 @@ export function toMentorCard(
   return {
     href: mentorUrl(mentor.slug),
     title: mentor.title ?? mentor.guestName ?? '',
-    tag: mentor.interviewCategory ? INTERVIEW_CATEGORY_LABELS[mentor.interviewCategory] : undefined,
+    tag: mentor.categoryTitle,
     role: mentor.guestRole ?? mentor.guestCompany,
     name: mentor.guestName,
     /* Fondo de la card. Es `thumbnail` y NO `guestPhoto`: esa última es la foto de la

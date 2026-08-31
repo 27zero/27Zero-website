@@ -38,7 +38,7 @@ import { getInitials } from '../../lib/utils/format';
 import { hasContent } from '../../lib/utils/portableText';
 import { detailTrail } from '../../lib/utils/breadcrumbs';
 import { toStaticPaths } from '../../lib/utils/routes';
-import type { InterviewCategory, PortableTextBlock, SanityImage, Seo } from '../../types/sanity';
+import type { PortableTextBlock, SanityImage, Seo } from '../../types/sanity';
 
 export interface MentorDetail {
   _id: string;
@@ -60,7 +60,6 @@ export interface MentorDetail {
     image?: SanityImage;
     questions?: { _key: string; question?: string; answer?: string }[];
   };
-  interviewCategory?: InterviewCategory;
   publishedAt?: string;
   /** Expandido con `author->`. Opcional acá aunque el schema lo exija: los
    *  documentos cargados antes de Etapa 7 todavía no lo tienen asignado. */
