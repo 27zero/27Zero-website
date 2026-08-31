@@ -280,7 +280,13 @@ export const edtechMarketingQuery = `{
       _id, title, "slug": slug.current, category, iconId
     },
 
-  "settings": *[_type == "settings"][0] {servicesTitle, servicesDescription}
+  "settings": *[_type == "settings"][0] {
+    servicesTitle,
+    servicesDescription,
+    agencyHero,
+    agencyPracticesSection,
+    agencyClosingCta
+  }
 }`;
 
 /* ══════════════════════════ Páginas de detalle ═════════════════════════ */

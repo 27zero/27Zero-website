@@ -37,7 +37,19 @@ const { practices, services, settings } = await sanityClient.fetch<{
     cardImage?: SanityImage;
   }[];
   services: { _id: string; title: string; slug: string; category: ServiceCategoryId; iconId?: ServiceIconId }[];
-  settings: { servicesTitle?: string; servicesDescription?: string } | null;
+  settings: {
+    servicesTitle?: string;
+    servicesDescription?: string;
+    agencyHero?: {
+      headline?: string;
+      text?: string;
+      image?: SanityImage;
+      ctaLink?: string;
+      ctaCaption?: string;
+    };
+    agencyPracticesSection?: { headline?: string; text?: string };
+    agencyClosingCta?: { headline?: string; ctaLink?: string };
+  } | null;
 }>(edtechMarketingQuery);
 
 /* El body de la card sale de `shortDescription`, sin fallback: `description` era el
@@ -112,6 +124,12 @@ const BODY = 'text-body font-inter text-body leading-[1.6] font-medium tracking-
 const PLACEHOLDER_LABEL =
   'font-inter text-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] font-semibold tracking-[1px] text-black uppercase opacity-40';
 
+/* Fondo full-bleed del hero. `toImage()` y no `ogImageUrl()`: ese último recorta a
+   1200×630 para la tarjeta de Open Graph y deformaría el fondo (mismo criterio que el
+   poster del hero de Home y el de About, Etapa 10). Sin imagen cargada — o sin `alt` —
+   queda `undefined` y el hero cae al placeholder. */
+const HERO_IMAGE = toImage(settings?.agencyHero?.image, { width: 1920 });
+
 /* SEO de esta página: `settings.agencySeo` en Sanity, con fallback global.
    `getPageSeo()` memoiza el singleton — una sola query para todo el build. */
 const { seo, siteSettings } = await getPageSeo('agency');
@@ -122,11 +140,19 @@ const { seo, siteSettings } = await getPageSeo('agency');
   <section
     class="section section--hero-marketing relative mt-[clamp(6.0019rem,5.2167rem_+_3.9259vw,8.75rem)] overflow-hidden pt-[clamp(3.7538rem,8.9729rem_-_5.7991vw,7.8131rem)] pb-[clamp(7.4988rem,11.9168rem_-_4.9089vw,10.935rem)]"
   >
-    {/* PENDIENTE (planning-maquetado-edtech-marketing.md #1): asset de fondo del hero
-        sin definir. Se maqueta con el placeholder del vanilla, no bloquea. */}
-    <div class="hero-marketing-bg absolute inset-0 z-0 flex items-center justify-center bg-gray">
-      <span class={PLACEHOLDER_LABEL}>[HERO BACKGROUND IMAGE]</span>
-    </div>
+    {
+      HERO_IMAGE ? (
+        <img
+          src={HERO_IMAGE.src}
+          alt={HERO_IMAGE.alt}
+          class="hero-marketing-bg absolute inset-0 z-0 size-full object-cover"
+        />
+      ) : (
+        <div class="hero-marketing-bg absolute inset-0 z-0 flex items-center justify-center bg-gray">
+          <span class={PLACEHOLDER_LABEL}>[HERO BACKGROUND IMAGE]</span>
+        </div>
+      )
+    }
 
     <div
       class:list={[
@@ -136,25 +162,37 @@ const { seo, siteSettings } = await getPageSeo('agency');
     >
       <div class="hero-marketing-text flex max-w-[50%] flex-col gap-xs max-md:max-w-full">
         <h1 class="font-lora text-h1 leading-[1.25] font-medium tracking-[-0.48px]">
-          The first and only agency built for EdTech.
+          {settings?.agencyHero?.headline}
         </h1>
         <p class:list={[BODY, 'max-w-[90%] text-black']}>
-          Three practices. One goal: helping EdTech brands turn purpose into lasting impact.
+          {settings?.agencyHero?.text}
         </p>
       </div>
 
+      {/* Botón y caption son independientes: la caption no depende de que haya link
+          cargado, igual que en el hero de Home. */}
       <div class="hero-home-cta mr-auto flex flex-col items-center gap-xs">
-        <Button href="/contact" variant="white" class="border-white!">Book a strategy session</Button>
-        <p class="text-caption font-inter text-body-sm leading-[1.6] font-normal tracking-normal text-black">
-          Free. 30 min. No sales pitch.
-        </p>
+        {
+          settings?.agencyHero?.ctaLink && (
+            <Button href={settings.agencyHero.ctaLink} variant="white" class="border-white!">
+              Book a strategy session
+            </Button>
+          )
+        }
+        {
+          settings?.agencyHero?.ctaCaption && (
+            <p class="text-caption font-inter text-body-sm leading-[1.6] font-normal tracking-normal text-black">
+              {settings.agencyHero.ctaCaption}
+            </p>
+          )
+        }
       </div>
     </div>
   </section>
 
   {/* PENDIENTE (planning-maquetado-edtech-marketing.md #2): 2 de las 3 shapes siguen
-      con lorem ipsum a la espera del copy del cliente — el placeholder ya viene marcado
-      dentro del componente, que es donde vive el contenido. */}
+      con lorem ipsum a la espera del copy del cliente — desde la Sesión 5 ese contenido
+      vive en `settings.apartSection`, así que se resuelve cargándolo en el Studio. */}
   <ShapesSlider />
 
   <!-- PRACTICES -->
@@ -164,13 +202,12 @@ const { seo, siteSettings } = await getPageSeo('agency');
     <div class:list={[CONTAINER, 'practices-container gap-[clamp(4.0162rem,3.3787rem_+_3.1875vw,6.2475rem)]']}>
       <div class="practices-intro flex flex-col gap-[clamp(0.3994rem,0.336rem_+_0.317vw,0.6212rem)]">
         <h2 class="font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px] text-white">
-          Three practices. One goal.
+          {settings?.agencyPracticesSection?.headline}
         </h2>
         <p
           class="text-body--sm max-w-[clamp(19.125rem,16.0893rem_+_15.1786vw,29.75rem)] font-inter text-body-sm leading-[1.6] font-normal tracking-normal text-white/85 max-md:max-w-full"
         >
-          Elevating real voices, layering audiences with precision, and building brand equity that compounds —
-          together, the engine behind every client's go-to-market success.
+          {settings?.agencyPracticesSection?.text}
         </p>
       </div>
 
@@ -222,9 +259,15 @@ const { seo, siteSettings } = await getPageSeo('agency');
       ]}
     >
       <h2 class="max-w-[50%] font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px] text-black max-md:max-w-full">
-        Let's partner to articulate and unpack meaningful results.
+        {settings?.agencyClosingCta?.headline}
       </h2>
-      <Button href="/contact" variant="blackWhite">Book a strategy session</Button>
+      {
+        settings?.agencyClosingCta?.ctaLink && (
+          <Button href={settings.agencyClosingCta.ctaLink} variant="blackWhite">
+            Book a strategy session
+          </Button>
+        )
+      }
     </div>
   </section>
 </Page>
