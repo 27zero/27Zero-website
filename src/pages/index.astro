@@ -128,7 +128,13 @@ const homeContent = await getHomeContent();
       <div class="hero-home-cta flex flex-col items-center gap-xs">
         {
           homeContent.hero.ctaLink && (
-            <Button href={homeContent.hero.ctaLink} variant="white" class="border-white!">
+            <Button
+              href={homeContent.hero.ctaLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="white"
+              class="border-white!"
+            >
               Book a strategy session
             </Button>
           )

@@ -174,7 +174,13 @@ const { seo, siteSettings } = await getPageSeo('agency');
       <div class="hero-home-cta mr-auto flex flex-col items-center gap-xs">
         {
           settings?.agencyHero?.ctaLink && (
-            <Button href={settings.agencyHero.ctaLink} variant="white" class="border-white!">
+            <Button
+              href={settings.agencyHero.ctaLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="white"
+              class="border-white!"
+            >
               Book a strategy session
             </Button>
           )
@@ -263,7 +269,12 @@ const { seo, siteSettings } = await getPageSeo('agency');
       </h2>
       {
         settings?.agencyClosingCta?.ctaLink && (
-          <Button href={settings.agencyClosingCta.ctaLink} variant="blackWhite">
+          <Button
+            href={settings.agencyClosingCta.ctaLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="blackWhite"
+          >
             Book a strategy session
           </Button>
         )
