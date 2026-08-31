@@ -172,6 +172,20 @@ export interface MentorCategory extends SanityDocument {
 }
 
 /**
+ * `resourceCategory` — taxonomía de Resources. Más chica que `workCategory` /
+ * `mentorCategory` a propósito: sin `order` ni copy de sección, porque el diseño de
+ * Resources todavía no tiene dónde mostrar la categoría (Etapa 12).
+ *
+ * Sin wiring en Astro por ahora: ninguna query GROQ la trae todavía.
+ */
+export interface ResourceCategory extends SanityDocument {
+  _type: 'resourceCategory';
+  title: string;
+  slug: SanitySlug;
+  color?: string;
+}
+
+/**
  * `author` — quién escribió el contenido. Referenciado desde `resource` y
  * `edtechMentor`, requerido en ambos desde Etapa 7 (lo necesita el `author` del
  * JSON-LD de Article).
@@ -310,6 +324,11 @@ export interface Resource extends SanityDocument {
   /** Imagen del hero de la interna — NO se usa en el listado. */
   heroBanner?: SanityImage;
   body?: PortableTextBlock[];
+  /** Bloque de cierre debajo del body. Mismo Portable Text que `body`. */
+  contentCta?: PortableTextBlock[];
+  /** Opcional en el schema — el listado no lo lee todavía (Etapa 12). */
+  category?: SanityReference | ResourceCategory;
+  isFeatured?: boolean;
   seo?: Seo;
 }
 
