@@ -23,6 +23,7 @@ import { getSeoSettings } from '../../lib/sanity/settings';
 import type { ArticleInput } from '../../lib/seo/generateJsonLd';
 import { ogTypeFor } from '../../lib/seo/ogType';
 import { ogImageUrl, resolveSeo } from '../../lib/seo/resolveSeo';
+import { toImage } from '../../lib/sanity/image';
 import { getHeadings } from '../../lib/utils/portableText';
 import { detailTrail } from '../../lib/utils/breadcrumbs';
 import { toStaticPaths } from '../../lib/utils/routes';
@@ -87,6 +88,11 @@ const CONTAINER = 'container mx-auto w-full max-w-(--container-max-width) px-con
 /* `scroll-margin-top` en los `h2`: sin esto el navbar fijo tapa el título al saltar
    desde el TOC. En el vanilla vive en `.article-section`, que acá no existe porque el
    Portable Text es plano — el heading se lo lleva puesto. */
+/* Fondo del hero. Mismo patrón que el hero de `edtech-mentor/[slug]`: capa `<img>`
+   absoluta en vez de `background-image`, para que el `alt` siga siendo obligatorio
+   (CLAUDE.md §8.1). Sin `heroBanner` cargado queda el gris del diseño. */
+const heroBackground = toImage(resource.heroBanner, { width: 1600 });
+
 const ARTICLE_CLASSES = {
   normal: 'font-inter text-body-article leading-[1.6] font-normal text-black',
   h2: 'font-lora text-[clamp(1.375rem,1.2679rem_+_0.5357vw,1.75rem)] leading-[1.3] font-medium text-black scroll-mt-[clamp(5.0625rem,4.2589rem_+_4.0179vw,7.875rem)] mt-[clamp(0.8438rem,0.7098rem_+_0.6696vw,1.3125rem)]',
@@ -103,13 +109,26 @@ const ARTICLE_CLASSES = {
 <Page seo={seo} siteSettings={siteSettings} breadcrumb={breadcrumb} article={article} ogType={ogTypeFor('resource')} navVariant="white">
   <!-- 1. HERO -->
   <section
-    class="section section--hero-resources-cms bg-[#D9D9D9] mt-[clamp(7.0313rem,5.9152rem_+_5.5804vw,10.9375rem)] py-[clamp(11.25rem,16.875rem_-_6.25vw,15.625rem)]"
+    class="section section--hero-resources-cms relative overflow-hidden bg-[#D9D9D9] mt-[clamp(7.0313rem,5.9152rem_+_5.5804vw,10.9375rem)] py-[clamp(11.25rem,16.875rem_-_6.25vw,15.625rem)]"
   >
+    {/* Overlay negro al 45% en el `after`, mismo criterio que `WorkCard`: el banner es
+        una foto cualquiera del CMS y no hay control sobre su luminosidad, así que sin
+        esta capa el H1 blanco puede caer sobre un fondo claro. Se aplica también sin
+        imagen, sobre el gris, para que el hero se vea igual en los dos casos. */}
     <div
-      class:list={[CONTAINER, 'flex max-w-[70%] items-center justify-center text-center max-md:max-w-full']}
+      class="hero-resources-cms-bg absolute inset-0 z-0 after:absolute after:inset-0 after:bg-black/45 after:content-['']"
+    >
+      {heroBackground && <img src={heroBackground.src} alt={heroBackground.alt} class="size-full object-cover object-center" />}
+    </div>
+
+    <div
+      class:list={[
+        CONTAINER,
+        'relative z-[1] flex max-w-[70%] items-center justify-center text-center max-md:max-w-full',
+      ]}
     >
       <h1
-        class="font-lora text-h1 leading-[1.25] font-medium tracking-[clamp(-0.02rem,-0.0171rem_-_0.0143vw,-0.03rem)] text-black"
+        class="font-lora text-h1 leading-[1.25] font-medium tracking-[clamp(-0.02rem,-0.0171rem_-_0.0143vw,-0.03rem)] text-white"
       >
         {resource.title}
       </h1>
