@@ -60,19 +60,26 @@ const { featured, categories } = await sanityClient.fetch<{
 const FEATURED_MENTOR: MentorCardData | null = featured ? toMentorCard(featured) : null;
 
 /* Copy y entrevistas vienen juntos del mismo documento: la query ya devuelve las
-   categorías ordenadas por `order`, acá solo se mapean las cards. */
-const MENTOR_CATEGORIES: MentorCategoryGroup[] = categories.map((category) => ({
-  id: category.slug,
-  title: category.title,
-  headline: category.sectionHeadline,
-  subtitle: category.sectionSubtitle,
-  ctaUrl: category.ctaUrl,
-  items: category.interviews.map((mentor) => toMentorCard(mentor)),
-}));
+   categorías ordenadas por `order`, acá solo se mapean las cards.
 
-/* Un pill por sección, cada uno con su anchor. Se muestran todas aunque una categoría
-   no tenga entrevistas cargadas: son secciones del diseño, no grupos derivados de la
-   data como en Work/Clientes. */
+   Una categoría sin entrevistas no se renderiza. El criterio anterior era mostrarlas
+   siempre —"son secciones del diseño, no grupos derivados de la data"— pero al migrar
+   el contenido real de Webflow "CEOs" quedó vacía (ninguna entrevista traía esa
+   categoría en origen), y una sección sin cards deja el headline colgado y un pill que
+   salta a la nada. Cargarle entrevistas la hace volver sola. */
+const MENTOR_CATEGORIES: MentorCategoryGroup[] = categories
+  .filter((category) => category.interviews?.length)
+  .map((category) => ({
+    id: category.slug,
+    title: category.title,
+    headline: category.sectionHeadline,
+    subtitle: category.sectionSubtitle,
+    ctaUrl: category.ctaUrl,
+    items: category.interviews.map((mentor) => toMentorCard(mentor)),
+  }));
+
+/* Un pill por sección, cada uno con su anchor. Deriva de `MENTOR_CATEGORIES` ya
+   filtrado, así que una categoría vacía tampoco deja el pill huérfano. */
 const FILTER_CATEGORIES = MENTOR_CATEGORIES.map((category) => ({
   id: category.id,
   label: category.title,
