@@ -35,11 +35,21 @@ interface Props {
   categories: { id: string; label: string }[];
   /** Reemplaza al "All" hardcodeado. Sin `target`/`rel`: navegación interna normal. */
   leadPill?: { label: string; href: string; target?: string; rel?: string };
+  /**
+   * Pill de acción (Etapa 12, EdTech Mentor): un `<button>` que dispara algo en la
+   * página en vez de navegar — hoy, abrir el modal de búsqueda. Va en la misma fila y
+   * comparte el tratamiento de `leadPill` porque es un CTA, no un filtro de categoría.
+   * Sin `data-filter`, así que el `<script>` de acá abajo lo ignora igual que al
+   * `leadPill`: no togglea estado activo ni intenta scrollear a un anchor.
+   * El comportamiento lo cablea quien lo usa, por `id` — este componente no sabe qué
+   * hace el botón.
+   */
+  actionPill?: { label: string; id: string };
   /** `true` (default) = indent de Work/Clientes. `false` = container estándar. */
   indent?: boolean;
 }
 
-const { categories, leadPill, indent = true } = Astro.props;
+const { categories, leadPill, actionPill, indent = true } = Astro.props;
 
 /* El hover gana sobre el estado activo, igual que en el vanilla, donde `.pill:hover`
    (0,2,0) le gana a `.pill--active` (0,1,0). Acá `[&.pill--active]:` también es (0,2,0),
@@ -80,6 +90,22 @@ const CONTAINER_PADDING = indent
         ) : (
           <button class:list={[PILL, 'pill--active']} data-filter="all">
             All
+          </button>
+        )
+      }
+      {/* La lupa distingue por función lo que el color no: si no, quedan dos pills
+          purple idénticos al lado. El tratamiento visual es el mismo que pide la spec. */}
+      {
+        actionPill && (
+          <button type="button" id={actionPill.id} class:list={[PILL, PILL_SUBSCRIBE, 'gap-[0.4em]']}>
+            <svg
+              class="size-[1em] shrink-0"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <line x1="16.5" y1="16.5" x2="21" y2="21" />
+            </svg>
+            {actionPill.label}
           </button>
         )
       }
