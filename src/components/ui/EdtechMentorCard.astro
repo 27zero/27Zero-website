@@ -28,6 +28,15 @@
  * `translateZ(0)` los separa en capas y el compositor resuelve opacity/translate sin
  * repintar. Es la única razón de esas dos clases.
  *
+ * `justify-end`: el header crece hacia ARRIBA, no hacia abajo. `role` es texto libre
+ * del CMS y en varias interviews ocupa dos líneas; como el header va antes que el body
+ * en un `flex-col`, esa segunda línea empujaba el cuadrado hacia abajo y esa card
+ * quedaba desfasada respecto de las de una sola línea — en sliders, grids y modal.
+ * Las cards ya se estiran a la altura de la más alta (`align-items: stretch` del track),
+ * así que basta con anclar el contenido abajo: el body queda alineado con el del resto y
+ * el sobrante cae arriba del header, sobre fondo transparente donde no se ve. Sin
+ * truncar el `role` ni cablear una altura fija que se rompa con tres líneas.
+ *
  * Props genéricas, sin acoplar al schema de Sanity (Etapa 5).
  */
 interface Props {
@@ -48,7 +57,7 @@ const { href, title, name, role, tag, image, avatar, avatarInitials } = Astro.pr
 
 <a
   href={href}
-  class="card card--edtech-mentor group/card relative flex w-card shrink-0 cursor-pointer flex-col gap-gap rounded-card bg-transparent text-black no-underline"
+  class="card card--edtech-mentor group/card relative flex w-card shrink-0 cursor-pointer flex-col justify-end gap-gap rounded-card bg-transparent text-black no-underline"
 >
   <div
     class="card-edtech-mentor-header flex items-center gap-[clamp(0.4838rem,0.407rem_+_0.3839vw,0.7525rem)] bg-transparent p-0"
