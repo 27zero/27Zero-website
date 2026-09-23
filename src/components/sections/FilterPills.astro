@@ -21,6 +21,17 @@
  * solo cambia `flex-direction`, el padding queda el estándar de `.container`. Default
  * `true` preserva el comportamiento de Work/Clientes sin que pasen nada.
  *
+ * Feedback EdTech Mentor — todo opt-in, Work/Clientes no cambian:
+ *   - `categories[].color` (Nota 5.1): borde y texto del pill en el color de la
+ *     categoría; en hover y activo, relleno de ese color con texto en
+ *     `categories[].textColor` (segunda ronda) o, si no hay, por contraste.
+ *   - `leadPill.class` (Nota 13.1): EdTech Mentor lo oculta en mobile, donde lo
+ *     reemplaza el pill flotante de la página.
+ *   - `mobileSelect` (Nota 13.2): en mobile los pills de categoría se cambian por un
+ *     `<select>` nativo que scrollea a la misma sección, y la fila deja de scrollear
+ *     en horizontal. Nativo y no un listbox propio: accesible y usable con teclado y
+ *     lector de pantalla sin JS extra, y en mobile abre el picker del sistema.
+ *
  * Sin librería: la lógica va en el `<script>` de este `.astro`, no en una island
  * (CLAUDE.md §7) — no hay estado de React de por medio.
  *
@@ -30,11 +41,17 @@
  * `work/design-system-work.md § .pill--active` (fondo y borde purple, texto negro),
  * que es la intención documentada del diseño. Ver reporte de entrega.
  */
+import { accentColors } from '../../lib/utils/color';
+
 interface Props {
-  /** Sin el lead pill (o el "All" default): lo antepone este componente. */
-  categories: { id: string; label: string }[];
+  /**
+   * Sin el lead pill (o el "All" default): lo antepone este componente.
+   * `color`: hex de acento ya resuelto (con fallback). Sin él, el pill usa el estilo
+   * estándar negro/indigo/purple. `textColor`: texto de hover/activo; vacío → contraste.
+   */
+  categories: { id: string; label: string; color?: string; textColor?: string }[];
   /** Reemplaza al "All" hardcodeado. Sin `target`/`rel`: navegación interna normal. */
-  leadPill?: { label: string; href: string; target?: string; rel?: string };
+  leadPill?: { label: string; href: string; target?: string; rel?: string; class?: string };
   /**
    * Pill de acción (Etapa 12, EdTech Mentor): un `<button>` que dispara algo en la
    * página en vez de navegar — hoy, abrir el modal de búsqueda. Va en la misma fila y
@@ -47,9 +64,20 @@ interface Props {
   actionPill?: { label: string; id: string };
   /** `true` (default) = indent de Work/Clientes. `false` = container estándar. */
   indent?: boolean;
+  /** En mobile, `<select>` de categorías en vez de la fila de pills con scroll horizontal. */
+  mobileSelect?: boolean;
+  /** Clase de `padding-bottom` de la sección. Default: la del vanilla de Work/Clientes. */
+  paddingBottom?: string;
 }
 
-const { categories, leadPill, actionPill, indent = true } = Astro.props;
+const {
+  categories,
+  leadPill,
+  actionPill,
+  indent = true,
+  mobileSelect = false,
+  paddingBottom = 'pb-[clamp(4.0162rem,3.3787rem_+_3.1875vw,6.2475rem)]',
+} = Astro.props;
 
 /* El hover gana sobre el estado activo, igual que en el vanilla, donde `.pill:hover`
    (0,2,0) le gana a `.pill--active` (0,1,0). Acá `[&.pill--active]:` también es (0,2,0),
@@ -66,12 +94,27 @@ const PILL =
 const PILL_SUBSCRIBE =
   'border-purple! bg-purple! text-black! hover:border-purple! hover:bg-purple! hover:text-black! hover:opacity-85';
 
+/* Pill de acción (el "Search" de EdTech Mentor, Nota 4.1): oscuro con texto claro; el
+   hover solo baja opacity, mismo criterio que `PILL_SUBSCRIBE`. */
+const PILL_ACTION =
+  'border-black! bg-black! text-white! hover:border-black! hover:bg-black! hover:text-white! hover:opacity-75';
+
+/* Pill con color de categoría (Nota 5.1). El color llega por custom property inline —
+   viene del CMS, no existe como utilidad en build. `!` por el mismo motivo que en
+   `PILL_SUBSCRIBE`: pisa utilidades que `PILL` ya declara para los mismos estados. */
+const PILL_ACCENT =
+  'border-(--pill-accent)! text-(--pill-accent)! hover:bg-(--pill-accent)! hover:text-(--pill-accent-text)! [&.pill--active]:bg-(--pill-accent)! [&.pill--active]:text-(--pill-accent-text)!';
+
+/* En mobile los dos controles que quedan (búsqueda y select) van a ancho completo y a
+   1rem: por debajo de 16px iOS hace zoom al enfocar un `<select>`. */
+const MOBILE_CONTROL = 'max-md:w-full max-md:justify-center max-md:py-[0.625rem] max-md:text-[1rem]';
+
 const CONTAINER_PADDING = indent
   ? 'pr-container-x pl-[clamp(1.125rem,-1.8036rem_+_14.6429vw,11.375rem)]'
   : 'px-container-x';
 ---
 
-<section class="section section--pills pt-0 pb-[clamp(4.0162rem,3.3787rem_+_3.1875vw,6.2475rem)]">
+<section class:list={['section section--pills pt-0', paddingBottom]}>
   <div
     class:list={[
       'container pills-container mx-auto flex w-full max-w-(--container-max-width) flex-col gap-gap',
@@ -79,12 +122,17 @@ const CONTAINER_PADDING = indent
     ]}
   >
     <div
-      class="pills-wrap flex flex-wrap gap-[clamp(0.4219rem,0.3549rem_+_0.3348vw,0.6563rem)] max-md:flex-nowrap max-md:overflow-x-auto max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden"
+      class:list={[
+        'pills-wrap flex flex-wrap gap-[clamp(0.4219rem,0.3549rem_+_0.3348vw,0.6563rem)]',
+        mobileSelect
+          ? 'max-md:flex-col max-md:gap-xs'
+          : 'max-md:flex-nowrap max-md:overflow-x-auto max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden',
+      ]}
       id="pillsWrap"
     >
       {
         leadPill ? (
-          <a href={leadPill.href} target={leadPill.target} rel={leadPill.rel} class:list={[PILL, PILL_SUBSCRIBE]}>
+          <a href={leadPill.href} target={leadPill.target} rel={leadPill.rel} class:list={[PILL, PILL_SUBSCRIBE, leadPill.class]}>
             {leadPill.label}
           </a>
         ) : (
@@ -97,7 +145,11 @@ const CONTAINER_PADDING = indent
           purple idénticos al lado. El tratamiento visual es el mismo que pide la spec. */}
       {
         actionPill && (
-          <button type="button" id={actionPill.id} class:list={[PILL, PILL_SUBSCRIBE, 'gap-[0.4em]']}>
+          <button
+            type="button"
+            id={actionPill.id}
+            class:list={[PILL, PILL_ACTION, 'gap-[0.4em]', mobileSelect && MOBILE_CONTROL]}
+          >
             <svg
               class="size-[1em] shrink-0"
               viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"
@@ -109,7 +161,45 @@ const CONTAINER_PADDING = indent
           </button>
         )
       }
-      {categories.map((category) => <button class={PILL} data-filter={category.id}>{category.label}</button>)}
+      {
+        categories.map((category) => {
+          const accent = category.color ? accentColors(category.color, category.textColor) : undefined;
+          return (
+            <button
+              class:list={[PILL, accent && PILL_ACCENT, mobileSelect && 'max-md:hidden']}
+              style={accent ? `--pill-accent:${accent.background};--pill-accent-text:${accent.text}` : undefined}
+              data-filter={category.id}
+            >
+              {category.label}
+            </button>
+          );
+        })
+      }
+
+      {
+        mobileSelect && (
+          <div class="relative w-full md:hidden">
+            <label for="pillsSelect" class="sr-only">Jump to a category</label>
+            <select
+              id="pillsSelect"
+              class:list={[
+                PILL,
+                MOBILE_CONTROL,
+                'pills-select w-full appearance-none justify-start pr-[2.75rem] hover:border-black hover:text-black',
+              ]}
+            >
+              <option value="" selected disabled>Browse by category</option>
+              {categories.map((category) => <option value={category.id}>{category.label}</option>)}
+            </select>
+            <svg
+              class="pointer-events-none absolute top-1/2 right-[1.125rem] size-[1rem] -translate-y-1/2 text-black"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
+        )
+      }
     </div>
   </div>
 </section>
@@ -124,6 +214,13 @@ const CONTAINER_PADDING = indent
   // ============================
 
   const pillsWrap = document.getElementById('pillsWrap');
+  const pillsSelect = document.getElementById('pillsSelect') as HTMLSelectElement | null;
+
+  // Select mobile: mismo destino que el pill equivalente. El valor queda seleccionado
+  // como referencia de la sección a la que se saltó.
+  pillsSelect?.addEventListener('change', () => {
+    document.getElementById(pillsSelect.value)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 
   if (pillsWrap) {
     pillsWrap.addEventListener('click', (e) => {

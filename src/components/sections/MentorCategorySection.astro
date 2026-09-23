@@ -2,7 +2,7 @@
 /**
  * Mentor Category Section — 27zero
  * UN bloque de categoría de `/edtech-mentor` del repo vanilla: header propio (h2 con
- * acento + subtexto + 2 CTA) + slider sin título de `EdtechMentorCard`. Portado de
+ * acento + subtexto + CTAs) + slider sin título de `EdtechMentorCard`. Portado de
  * `.section--essential-mentor` / `.section--investor-mentor` / `.section--founders-mentor`.
  *
  * A diferencia de `ServiceCategoryBlock` (EdTech Marketing), las instancias de esta
@@ -36,9 +36,6 @@ interface Props extends MentorCategoryGroup {
    * schema, un `order - 1` se iría a un índice negativo).
    */
   themeIndex: number;
-  /** Newsletter de LinkedIn: destino del botón "Subscribe on LinkedIn", el mismo en
-      todas las secciones. Abre en pestaña nueva. */
-  linkedinUrl: string;
 }
 
 /**
@@ -72,7 +69,7 @@ const THEMES = [
   },
 ];
 
-const { id, title, headline, subtitle, ctaUrl, items, themeIndex, linkedinUrl } = Astro.props;
+const { id, headline, subtitle, viewAllHref, items, themeIndex } = Astro.props;
 
 const theme = THEMES[themeIndex % THEMES.length];
 
@@ -98,12 +95,12 @@ const SLIDERS_CONTAINER = 'sliders-container pt-[clamp(2.2106rem,1.7697rem_+_2.2
       )
     }
     <div class="flex flex-wrap gap-[clamp(1.125rem,0.9464rem_+_0.8929vw,1.75rem)] max-md:flex-col max-md:items-baseline">
-      {/* Sin página de serie cargada no hay a dónde ir: el botón no se renderiza,
-          mismo criterio que el resto de los CTA editables de Etapa 10. */}
-      {ctaUrl && <Button href={ctaUrl} variant={theme.buttonVariant}>Go to {title}</Button>}
-      <Button href={linkedinUrl} target="_blank" rel="noopener" variant={theme.buttonVariant}>
-        Subscribe on LinkedIn
-      </Button>
+      {/* Feedback cliente, Nota 3.4: reemplaza al "Subscribe on LinkedIn" de cada
+          sección — ese CTA ahora vive en el pill flotante de la página. Lleva a la
+          página de la categoría con todas sus entrevistas; el slider muestra solo la
+          selección curada. Sin página generada (ver `mentorCategoryPageSlugs`), no hay
+          botón. */}
+      {viewAllHref && <Button href={viewAllHref} variant={theme.buttonVariant}>View All</Button>}
     </div>
   </div>
 

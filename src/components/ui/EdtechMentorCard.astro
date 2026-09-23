@@ -37,14 +37,29 @@
  * el sobrante cae arriba del header, sobre fondo transparente donde no se ve. Sin
  * truncar el `role` ni cablear una altura fija que se rompa con tres líneas.
  *
+ * Pills (feedback EdTech Mentor, Notas 5.2 y 7.3): categoría y season van como
+ * `TagPill` filled con el color del CMS, uno al lado del otro, arriba a la izquierda
+ * del body. `flex-wrap` por si un título largo no entra en la card más chica.
+ *
+ * Título (Nota 10.1): Lora (segunda ronda), 1.6rem en desktop; en mobile escala con la misma proporción que
+ * la card (`--spacing-card`, 250/350px), así ocupa el mismo espacio relativo.
+ *
  * Props genéricas, sin acoplar al schema de Sanity (Etapa 5).
  */
+import TagPill from './TagPill.astro';
+import type { CardPill } from '../../types/ui';
+
 interface Props {
   href: string;
   title: string;
   name?: string;
   role?: string;
   tag?: string;
+  /** Color del pill de `tag` (`mentorCategory.color`). Vacío → negro. */
+  tagColor?: string;
+  /** Color de texto del pill de `tag` (`mentorCategory.textColor`). Vacío → por contraste. */
+  tagTextColor?: string;
+  season?: CardPill;
   /** Fondo de `.card-edtech-mentor-body` (`edtechMentor.thumbnail`). Sin ella, gris. */
   image?: { src: string; alt: string };
   avatar?: { src: string; alt: string };
@@ -52,7 +67,7 @@ interface Props {
   avatarInitials?: string;
 }
 
-const { href, title, name, role, tag, image, avatar, avatarInitials } = Astro.props;
+const { href, title, name, role, tag, tagColor, tagTextColor, season, image, avatar, avatarInitials } = Astro.props;
 ---
 
 <a
@@ -110,10 +125,11 @@ const { href, title, name, role, tag, image, avatar, avatarInitials } = Astro.pr
     }
 
     {
-      tag && (
-        <span class="card-edtech-mentor-tag relative z-[1] font-inter text-card-tag leading-[1.5] font-normal tracking-normal text-black">
-          {tag}
-        </span>
+      (tag || season) && (
+        <div class="card-edtech-mentor-tags relative z-[1] flex flex-wrap items-start gap-xs">
+          {tag && <TagPill label={tag} color={tagColor} textColor={tagTextColor} class="card-edtech-mentor-tag" />}
+          {season && <TagPill label={season.label} color={season.color} class="card-edtech-mentor-season" />}
+        </div>
       )
     }
 
@@ -121,7 +137,7 @@ const { href, title, name, role, tag, image, avatar, avatarInitials } = Astro.pr
       class="card-edtech-mentor-footer relative z-[1] mt-auto flex items-end justify-between gap-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)]"
     >
       <h3
-        class="card-edtech-mentor-title transform-gpu translate-y-xs font-inter text-card-headline leading-[1.4] font-medium tracking-normal text-white opacity-0 transition-[opacity,translate] duration-300 ease-in-out group-hover/card:translate-y-0 group-hover/card:opacity-100 max-md:translate-y-0 max-md:opacity-100"
+        class="card-edtech-mentor-title transform-gpu translate-y-xs font-lora text-[clamp(1.1429rem,1.0123rem_+_0.6531vw,1.6rem)] leading-[1.25] font-medium tracking-normal text-white opacity-0 transition-[opacity,translate] duration-300 ease-in-out group-hover/card:translate-y-0 group-hover/card:opacity-100 max-md:translate-y-0 max-md:opacity-100"
       >
         {title}
       </h3>

@@ -49,6 +49,14 @@ export const resourceUrl = (slug: string): string => `/resources/${normalizeSlug
 
 export const mentorUrl = (slug: string): string => `/edtech-mentor/${normalizeSlug(slug)}`;
 
+/**
+ * Página de categoría de EdTech Mentor (feedback cliente, Nota 3.2). Comparte prefijo
+ * con `mentorUrl` a propósito — es la URL que pidió el cliente —, así que los slugs de
+ * `mentorCategory` y de `edtechMentor` viven en el mismo espacio de nombres. La
+ * colisión la resuelve `edtech-mentor/[category].astro`: gana la entrevista.
+ */
+export const mentorCategoryUrl = (slug: string): string => `/edtech-mentor/${normalizeSlug(slug)}`;
+
 /** Práctica y servicio cuelgan de `/edtech-marketing` en subcarpetas distintas: sus
  *  slugs se solapan por nombre (ej. "Project Management" existe en ambas taxonomías). */
 export const practiceUrl = (slug: string): string => `/edtech-marketing/practices/${normalizeSlug(slug)}`;
@@ -99,4 +107,65 @@ export function toStaticPaths<T>(
   }
 
   return paths;
+}
+
+/**
+ * Slug efectivo de una `mentorCategory`: el del Studio o, si está vacío, el título
+ * (el `slug` es opcional en el schema).
+ *
+ * El fallback quita tildes antes de normalizar ("Educación" → "educacion"):
+ * `normalizeSlug` sola las descartaría ("educacin"). No se cambia `normalizeSlug` en sí
+ * para no mover URLs que ya están indexadas.
+ */
+export function mentorCategorySlug(category: { slug?: string | null; title?: string | null }): string {
+  return (
+    normalizeSlug(category.slug) ||
+    normalizeSlug(category.title?.normalize('NFD').replace(/[\u0300-\u036f]/g, ''))
+  );
+}
+
+/**
+ * Slugs (normalizados) de las `mentorCategory` que tienen página propia en
+ * `/edtech-mentor/[category]`.
+ *
+ * Única fuente de la regla, porque la consumen dos lados que no pueden desalinearse:
+ * el `getStaticPaths` de la página de categoría y el botón "View All" del índice — si
+ * el botón existiera sin la página, sería un link a un 404.
+ *
+ * Recibe el slug YA resuelto (`mentorCategorySlug`), en orden `order asc`.
+ *
+ * Una categoría tiene página si tiene al menos una entrevista y si su slug no pisa el
+ * de una entrevista (comparten prefijo de URL, ver `mentorCategoryUrl`). En la
+ * colisión gana la entrevista: su URL ya existe y puede estar indexada; la categoría
+ * pierde la página y el índice pierde sus botones hasta que se le cambie el slug.
+ *
+ * Tampoco se admiten dos categorías con el mismo slug (más probable con el fallback al
+ * título): Astro fallaría el build por ruta duplicada. Gana la primera en orden y la
+ * segunda se queda sin página, con aviso — igual que `toStaticPaths`.
+ */
+export function mentorCategoryPageSlugs(
+  categories: { slug?: string | null; interviewCount: number }[],
+  interviewSlugs: string[]
+): Set<string> {
+  const taken = new Set(interviewSlugs.map(normalizeSlug));
+  const pages = new Set<string>();
+
+  for (const category of categories) {
+    const slug = normalizeSlug(category.slug);
+    if (slug === '' || category.interviewCount === 0) continue;
+
+    if (taken.has(slug)) {
+      console.warn(`[edtech-mentor/[category]] el slug "${slug}" ya lo usa una entrevista — la categoría queda sin página.`);
+      continue;
+    }
+
+    if (pages.has(slug)) {
+      console.warn(`[edtech-mentor/[category]] dos categorías resuelven al slug "${slug}" — la segunda queda sin página.`);
+      continue;
+    }
+
+    pages.add(slug);
+  }
+
+  return pages;
 }

@@ -27,13 +27,21 @@ import { toMentorCard } from '../lib/sanity/cards';
 import type { MentorCardProjection } from '../lib/sanity/cards';
 import { sanityClient } from '../lib/sanity/client';
 import { mentorListQuery } from '../lib/sanity/queries';
+import { DEFAULT_ACCENT } from '../lib/utils/color';
+import { mentorCategoryPageSlugs, mentorCategorySlug, mentorCategoryUrl } from '../lib/utils/routes';
 import type { PortableTextBlock } from '../types/sanity';
 import type { MentorCardData, MentorCategoryGroup } from '../types/ui';
 
 const CONTAINER = 'container mx-auto flex w-full max-w-(--container-max-width) flex-col px-container-x';
 
+/* Nota 6 — espaciados del tope de la página, fluidos en todos los breakpoints.
+   Segunda ronda: hero de 2rem (mobile) a 8rem (desktop). En mobile los 2rem (32px)
+   quedan por debajo del alto del navbar fijo (45px); valor pedido explícitamente. */
+const HERO_PT = 'pt-[clamp(2rem,0.2857rem_+_8.5714vw,8rem)]';
+const PILLS_PB = 'pb-[clamp(1.6rem,1.4857rem_+_0.5714vw,2rem)]';
+
 /** Newsletter de The EdTech Mentor en LinkedIn — destino de los "Subscribe on
-    LinkedIn" de esta página (el pill y el botón de cada sección). Literal y no campo
+    LinkedIn" de esta página (el pill inline y el pill flotante). Literal y no campo
     de Sanity: es una propiedad de 27zero, no contenido que el editor vaya a cambiar
     (mismo criterio que los links de "Book a strategy session" de Etapa 10).
 
@@ -42,60 +50,106 @@ const CONTAINER = 'container mx-auto flex w-full max-w-(--container-max-width) f
 const LINKEDIN_NEWSLETTER_URL =
   'https://www.linkedin.com/newsletters/7057097071853461504/?displayConfirmation=true';
 
-/** Una categoría tal como la devuelve `mentorListQuery`, con sus entrevistas anidadas. */
+/** Una categoría tal como la devuelve `mentorListQuery`. */
 interface MentorCategoryProjection {
   _id: string;
   title: string;
-  slug: string;
+  /** Opcional en el schema: vacío → `mentorCategorySlug` lo arma con el título. */
+  slug: string | null;
+  color?: string | null;
+  textColor?: string | null;
   sectionHeadline?: PortableTextBlock[];
   sectionSubtitle?: string;
-  ctaUrl?: string;
-  interviews: MentorCardProjection[];
+  interviewCount: number;
+  /** Referencias expandidas: una entrevista sin publicar o borrada llega `null`. */
+  featuredInterviews?: (MentorCardProjection | null)[] | null;
+  latestInterviews: MentorCardProjection[];
 }
 
-const { featured, categories } = await sanityClient.fetch<{
+const { featured, categories, interviews } = await sanityClient.fetch<{
   featured: MentorCardProjection | null;
   categories: MentorCategoryProjection[];
+  interviews: MentorCardProjection[];
 }>(mentorListQuery);
 
-const FEATURED_MENTOR: MentorCardData | null = featured ? toMentorCard(featured) : null;
+/* Nota 14: el destacado usa `bannerPost` (horizontal) y no el `thumbnail` cuadrado.
+   Ancho = el del wrapper a container completo (90rem) × 2 para pantallas densas, con
+   el mismo tope de 1600 que el hero de la interna. */
+const FEATURED_MENTOR: MentorCardData | null = featured
+  ? toMentorCard(featured, { image: 'bannerPost', imageWidth: 1600 })
+  : null;
 
-/* Copy y entrevistas vienen juntos del mismo documento: la query ya devuelve las
-   categorías ordenadas por `order`, acá solo se mapean las cards.
-
-   Una categoría sin entrevistas no se renderiza. El criterio anterior era mostrarlas
-   siempre —"son secciones del diseño, no grupos derivados de la data"— pero al migrar
-   el contenido real de Webflow "CEOs" quedó vacía (ninguna entrevista traía esa
-   categoría en origen), y una sección sin cards deja el headline colgado y un pill que
-   salta a la nada. Cargarle entrevistas la hace volver sola. */
-const MENTOR_CATEGORIES: MentorCategoryGroup[] = categories
-  .filter((category) => category.interviews?.length)
-  .map((category) => ({
-    id: category.slug,
-    title: category.title,
-    headline: category.sectionHeadline,
-    subtitle: category.sectionSubtitle,
-    ctaUrl: category.ctaUrl,
-    items: category.interviews.map((mentor) => toMentorCard(mentor)),
-  }));
-
-/* Todas las entrevistas, aplanadas, para el grid del buscador.
-   Sale de `categories` SIN filtrar y no de `MENTOR_CATEGORIES`: el buscador cubre el
-   catálogo entero aunque una categoría deje de renderizarse como sección.
-   `categoryTitle` viaja aparte del card para el `data-` del filtro — es el criterio de
-   match, no algo que la card muestre distinto. */
-const SEARCHABLE_MENTORS = categories.flatMap((category) =>
-  (category.interviews ?? []).map((mentor) => ({
-    card: toMentorCard(mentor),
-    categoryTitle: category.title,
-  }))
+/* Categorías con página propia: la misma regla que genera `/edtech-mentor/[category]`,
+   así el "View All" nunca apunta a una ruta que no existe. */
+const CATEGORY_PAGES = mentorCategoryPageSlugs(
+  categories.map((category) => ({ slug: mentorCategorySlug(category), interviewCount: category.interviewCount })),
+  interviews.map((mentor) => mentor.slug)
 );
 
+/* Una categoría sin entrevistas no se renderiza: una sección sin cards deja el headline
+   colgado y un pill que salta a la nada. Cargarle entrevistas la hace volver sola.
+
+   Slider (Nota 3.3): la selección curada de `featuredInterviews`, en el orden del
+   Studio. Si la categoría no tiene ninguna curada (hoy es el caso de todas), cae a
+   sus 10 más recientes — si no, la página se quedaría sin sliders hasta que el
+   editor cure cada categoría. */
+const MENTOR_CATEGORIES: MentorCategoryGroup[] = categories
+  .filter((category) => category.interviewCount > 0)
+  .map((category) => {
+    const curated = (category.featuredInterviews ?? []).filter(
+      (mentor): mentor is MentorCardProjection => Boolean(mentor?.slug)
+    );
+    const slider = curated.length ? curated : category.latestInterviews;
+    /* Slug del Studio o, vacío, el título. Si dos categorías resuelven al mismo slug el
+       `id` del anchor queda duplicado: `mentorCategoryPageSlugs` ya avisa por consola y
+       se corrige en el Studio. */
+    const slug = mentorCategorySlug(category);
+
+    return {
+      id: slug,
+      title: category.title,
+      headline: category.sectionHeadline,
+      subtitle: category.sectionSubtitle,
+      viewAllHref: CATEGORY_PAGES.has(slug) ? mentorCategoryUrl(slug) : undefined,
+      /* Nota 5.3: sin color cargado, negro — en vez del estilo estándar de pill, así
+         todos los pills de la fila se comportan igual en hover. */
+      color: category.color || DEFAULT_ACCENT,
+      textColor: category.textColor ?? undefined,
+      items: slider.map((mentor) => toMentorCard(mentor)),
+    };
+  });
+
+/* Catálogo completo para el buscador — ya no se puede derivar de los sliders, que
+   desde la Nota 3.3 muestran como mucho 10 por categoría.
+
+   Nota 4.2: el texto de match junta invitado, rol, empresa, título del episodio,
+   categoría y season. Va en un solo `data-search` en minúsculas porque el criterio
+   es el mismo para todos (coincidencia parcial en cualquiera). */
+const SEARCHABLE_MENTORS = interviews.map((mentor) => ({
+  card: toMentorCard(mentor),
+  searchText: [
+    mentor.guestName,
+    mentor.guestRole,
+    mentor.guestCompany,
+    mentor.title,
+    mentor.categoryTitle,
+    mentor.season?.title,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase(),
+}));
+
 /* Un pill por sección, cada uno con su anchor. Deriva de `MENTOR_CATEGORIES` ya
-   filtrado, así que una categoría vacía tampoco deja el pill huérfano. */
+   filtrado, así que una categoría vacía tampoco deja el pill huérfano.
+
+   Nota 5.1: el pill lleva el color de la categoría (y su `textColor`, segunda ronda),
+   ya resueltos al armar `MENTOR_CATEGORIES`. */
 const FILTER_CATEGORIES = MENTOR_CATEGORIES.map((category) => ({
   id: category.id,
   label: category.title,
+  color: category.color,
+  textColor: category.textColor,
 }));
 
 /* SEO de esta página: `settings.mentorSeo` en Sanity, con fallback global.
@@ -108,7 +162,8 @@ const mentorContent = await getMentorContent();
 
 <Page seo={seo} siteSettings={siteSettings} navVariant="white">
   <!-- HERO / INTRO -->
-  <section class="section section--hero pt-[clamp(7.875rem,12.2143rem_-_4.8214vw,11.25rem)] pb-[clamp(0.8438rem,0.4598rem_+_1.9196vw,2.1875rem)]">
+  {/* Nota 6: `padding-top` fluido HERO_PT (ver arriba). */}
+  <section class:list={['section section--hero pb-[clamp(0.8438rem,0.4598rem_+_1.9196vw,2.1875rem)]', HERO_PT]}>
     <div class:list={[CONTAINER, 'hero-container gap-xs']}>
       <nav
         class="breadcrumb mb-xs flex items-center gap-xs font-inter text-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] leading-[1.5] font-normal text-black opacity-55"
@@ -137,6 +192,9 @@ const mentorContent = await getMentorContent();
       herramienta, no un filtro de categoría) y así no queda un input huérfano entre dos
       bloques grandes. Los pills y los sliders no cambian de estado nunca por la
       búsqueda — el modal es la única superficie que aparece. */}
+  {/* Notas 13.1 y 13.2: en mobile el "Subscribe" inline se oculta (lo cubre el pill
+      flotante) y las categorías pasan a un `<select>`, sin scroll horizontal.
+      Nota 6: `padding-bottom` fluido PILLS_PB. */}
   <FilterPills
     categories={FILTER_CATEGORIES}
     leadPill={{
@@ -144,16 +202,20 @@ const mentorContent = await getMentorContent();
       href: LINKEDIN_NEWSLETTER_URL,
       target: '_blank',
       rel: 'noopener',
+      class: 'max-md:hidden',
     }}
-    actionPill={{ label: 'Search by topic', id: 'mentor-search-open' }}
+    actionPill={{ label: 'Search', id: 'mentor-search-open' }}
     indent={false}
+    mobileSelect
+    paddingBottom={PILLS_PB}
   />
 
   <!-- FEATURED CARD -->
   <section class="section section--featured-mentor pt-0 pb-[clamp(3.6563rem,3.0759rem_+_2.9018vw,5.6875rem)]">
     <div class={CONTAINER}>
       <div class="featured-mentor-wrap h-[clamp(20rem,14.7321rem_+_26.3393vw,38.4375rem)] w-full overflow-hidden">
-        {FEATURED_MENTOR && <FeaturedCard {...FEATURED_MENTOR} />}
+        {/* Nota 10.2: variante `spotlight` — contenido +40%, texto claro y gradiente fijo. */}
+        {FEATURED_MENTOR && <FeaturedCard {...FEATURED_MENTOR} variant="spotlight" />}
       </div>
     </div>
   </section>
@@ -165,7 +227,7 @@ const mentorContent = await getMentorContent();
 
   {
     MENTOR_CATEGORIES.map((category, index) => (
-      <MentorCategorySection {...category} themeIndex={index} linkedinUrl={LINKEDIN_NEWSLETTER_URL} />
+      <MentorCategorySection {...category} themeIndex={index} />
     ))
   }
 
@@ -256,7 +318,7 @@ const mentorContent = await getMentorContent();
           </button>
         </div>
 
-        <label for="mentor-search" class="sr-only">Search interviews by title or category</label>
+        <label for="mentor-search" class="sr-only">Search interviews by guest, company, topic, category or season</label>
         <div class="relative w-full">
           <svg
             class="pointer-events-none absolute top-1/2 left-[1rem] size-[1.125rem] -translate-y-1/2 text-black/45"
@@ -269,7 +331,7 @@ const mentorContent = await getMentorContent();
             id="mentor-search"
             type="search"
             autocomplete="off"
-            placeholder="Search by title or category"
+            placeholder="Search by guest, company, topic or season"
             class="w-full rounded-full border-[0.0625rem] border-black/25 bg-transparent py-[clamp(0.5rem,0.4rem_+_0.5vw,0.75rem)] pr-[1.125rem] pl-[2.75rem] font-inter text-body-sm leading-[1.5] font-medium text-black transition-colors duration-200 ease-in-out placeholder:text-black/45 focus:border-indigo focus:outline-none"
           />
         </div>
@@ -288,17 +350,13 @@ const mentorContent = await getMentorContent();
         >
           <div class="flex flex-wrap gap-sm">
             {
-              SEARCHABLE_MENTORS.map(({ card, categoryTitle }) => (
+              SEARCHABLE_MENTORS.map(({ card, searchText }) => (
                 /* `flex`: el wrapper es el flex item de la grilla y se estira a la altura de la fila,
                    pero la card de adentro no heredaba esa altura, así que el `justify-end` de
                    `EdtechMentorCard` no tenía sobre qué anclar. Con esto la card se estira al
                    wrapper y los cuadrados alinean también acá. El toggle por `.hidden` del script
                    sigue mandando: preflight lo declara `!important`. */
-                <div
-                  class="mentor-search-item flex"
-                  data-title={card.title.toLowerCase()}
-                  data-category={(categoryTitle ?? '').toLowerCase()}
-                >
+                <div class="mentor-search-item flex" data-search={searchText}>
                   <EdtechMentorCard {...card} />
                 </div>
               ))
@@ -313,7 +371,7 @@ const mentorContent = await getMentorContent();
           id="mentor-search-hint"
           class="font-inter text-body-sm leading-[1.6] font-normal tracking-normal text-black/55"
         >
-          Type to search across {SEARCHABLE_MENTORS.length} interviews by episode title or category.
+          Type to search across {SEARCHABLE_MENTORS.length} interviews by guest, role, company, episode title, category or season.
         </p>
 
         <p
@@ -321,7 +379,7 @@ const mentorContent = await getMentorContent();
           hidden
           class="font-inter text-body leading-[1.6] font-medium tracking-normal text-black"
         >
-          No interviews match your search. Try a guest’s topic or a category name.
+          No interviews match your search. Try a guest’s name, a company or a category.
         </p>
 
         {/* Solo para lectores de pantalla: el conteo se anuncia al terminar el debounce. */}
@@ -329,14 +387,53 @@ const mentorContent = await getMentorContent();
       </div>
     </div>
   </div>
+
+  <!-- PILL FLOTANTE "SUBSCRIBE ON LINKEDIN" -->
+  {/* Nota 12: fijo abajo a la izquierda. En desktop aparece recién al pasar la fila de
+      pills — que es donde vive el "Subscribe" inline — y se queda visible el resto del
+      scroll. En mobile (Nota 13.1) está siempre visible: reemplaza al inline, que ahí
+      se oculta.
+
+      Sin borde, solo sombra: el pill flota sobre las tres pieles de sección y sobre la
+      purple la sombra es lo que lo separa del fondo.
+
+      Oculto con `invisible` y no solo `opacity-0`: `visibility:hidden` lo saca del orden
+      de tabulación y del árbol de accesibilidad mientras no se ve. */}
+  <a
+    id="mentor-subscribe-float"
+    href={LINKEDIN_NEWSLETTER_URL}
+    target="_blank"
+    rel="noopener"
+    class="fixed bottom-[clamp(1rem,0.8571rem_+_0.7143vw,1.5rem)] left-container-x z-[90] inline-flex items-center rounded-full bg-purple px-[clamp(1rem,0.8571rem_+_0.7143vw,1.5rem)] py-[clamp(0.5rem,0.4286rem_+_0.3571vw,0.75rem)] font-inter text-button leading-[1.5] font-medium whitespace-nowrap text-black no-underline shadow-[0_0.25rem_1.25rem_rgba(16,16,16,0.35)] transition-[opacity,visibility,translate] duration-300 ease-in-out hover:opacity-85 md:invisible md:translate-y-sm md:opacity-0 md:data-visible:visible md:data-visible:translate-y-0 md:data-visible:opacity-100"
+  >
+    Subscribe on LinkedIn
+  </a>
 </Page>
+
+<script>
+  // ============================
+  // EdTech Mentor — pill flotante (Nota 12)
+  // `data-visible` cuando la fila de pills ya salió por ARRIBA del viewport. El
+  // atributo solo tiene efecto en desktop: en mobile el pill es siempre visible por CSS.
+  // ============================
+
+  const floatingPill = document.getElementById('mentor-subscribe-float');
+  const pillsSection = document.querySelector('.section--pills');
+
+  if (floatingPill && pillsSection) {
+    new IntersectionObserver(([entry]) => {
+      const scrolledPast = !entry.isIntersecting && entry.boundingClientRect.top < 0;
+      floatingPill.toggleAttribute('data-visible', scrolledPast);
+    }).observe(pillsSection);
+  }
+</script>
 
 
 <script>
   // ============================
   // EdTech Mentor — modal de búsqueda de entrevistas
-  // Filtra por coincidencia parcial, case-insensitive, contra el título del episodio o
-  // el nombre de su categoría. Las cards vienen del build: acá solo se togglea
+  // Filtra por coincidencia parcial, case-insensitive, contra invitado, rol, empresa,
+  // título del episodio, categoría y season (todo junto en `data-search`). Las cards vienen del build: acá solo se togglea
   // visibilidad, nunca se construye markup.
   //
   // Los sliders y los filter pills NO participan de ningún cambio de estado: quedan
@@ -374,8 +471,7 @@ const mentorContent = await getMentorContent();
 
       let matches = 0;
       for (const item of items) {
-        const hit =
-          (item.dataset.title ?? '').includes(query) || (item.dataset.category ?? '').includes(query);
+        const hit = (item.dataset.search ?? '').includes(query);
         item.hidden = !hit;
         if (hit) matches++;
       }

@@ -37,6 +37,11 @@ const WORK_CARD_FIELDS = `
  * Etapa 11 la categoría es un documento (`mentorCategory`) y su título es editable,
  * así que el chip de la card muestra lo que el editor cargue — antes salía de un
  * `Record` de labels hardcodeado contra la lista cerrada `interviewCategory`.
+ *
+ * `categoryColor`, `categoryTextColor` y `season` alimentan los pills de la card
+ * (feedback EdTech Mentor, Notas 5.2 y 7.3; `textColor` es de la segunda ronda). La
+ * season no tiene color de texto: el suyo se calcula siempre por contraste. El campo de color se llama `color` en ambos documentTypes — no
+ * `accentColor`. `season` es opcional: sin referencia, la proyección da `null`.
  */
 const MENTOR_CARD_FIELDS = `
   _id,
@@ -48,6 +53,9 @@ const MENTOR_CARD_FIELDS = `
   guestPhoto,
   thumbnail,
   "categoryTitle": category->title,
+  "categoryColor": category->color,
+  "categoryTextColor": category->textColor,
+  "season": season->{title, color},
   isFeatured,
   publishedAt
 `;
@@ -245,33 +253,80 @@ export const resourceListQuery = `{
 /* ───────────────────────────── EdTech Mentor ──────────────────────────── */
 
 /**
- * EdTech Mentor — el destacado + una sección por cada `mentorCategory`.
+ * EdTech Mentor — el destacado, una sección por cada `mentorCategory` y el catálogo
+ * completo para el buscador.
  *
- * Las entrevistas vienen anidadas dentro de su categoría en vez de planas: la página
- * ya no filtra en JS contra una lista fija de 3 ids, itera lo que devuelve la query.
- * Agregar, sacar o reordenar una serie es contenido, no un deploy.
+ * Slider de cada sección (feedback cliente, Nota 3.3): sale de `featuredInterviews`,
+ * la selección curada del Studio (máx. 10, en el orden en que el editor las arrastró).
+ * Se trae también `latestInterviews` — las 10 más recientes de la categoría — como
+ * fallback para las categorías sin curar: hoy NINGUNA tiene `featuredInterviews`
+ * cargado, y sin fallback la página quedaría sin un solo slider. La elección la hace
+ * la página, no GROQ, porque las referencias a documentos sin publicar resuelven a
+ * `null` y hay que filtrarlas antes de decidir si la selección está vacía.
  *
- * Las categorías se traen TODAS, tengan o no entrevistas cargadas: son secciones del
- * diseño — su header y su copy existen igual, y un slider vacío es señal de que falta
- * cargar contenido, no motivo para esconder la sección.
+ * `featuredInterviews` no filtra por categoría propia en el schema: si el editor elige
+ * una entrevista de otra serie, se respeta su selección tal cual (sin validar acá).
  *
- * `references(^._id)` matchea contra el `category` singular de la entrevista; `^` es
- * la categoría del nivel de arriba.
+ * Las categorías NO se filtran por `defined(slug.current)`: el slug es opcional en el
+ * schema y, vacío, la URL se arma con el título (`mentorCategorySlug`). Filtrarlo acá
+ * haría desaparecer la categoría en vez de usar el fallback. Por eso `slug` puede
+ * llegar `null`.
+ *
+ * `interviewCount` decide si la sección (y su página de categoría) existe: una
+ * categoría sin entrevistas no se renderiza. `references(^._id)` matchea contra el
+ * `category` singular de la entrevista; `^` es la categoría del nivel de arriba.
+ *
+ * `interviews` es el catálogo entero para el modal de búsqueda. Ya no se puede
+ * derivar de los sliders: desde la Nota 3.3 muestran 10 por categoría, no todas.
+ *
+ * `featured` suma `bannerPost` a los campos de card: el destacado del índice usa el
+ * banner horizontal y no el `thumbnail` cuadrado (Nota 14).
  */
 export const mentorListQuery = `{
   "featured": *[_type == "edtechMentor" && isFeatured == true && defined(slug.current)]
-    | order(publishedAt desc)[0] {${MENTOR_CARD_FIELDS}},
+    | order(publishedAt desc)[0] {${MENTOR_CARD_FIELDS}, bannerPost},
 
-  "categories": *[_type == "mentorCategory" && defined(slug.current)] | order(order asc) {
+  "categories": *[_type == "mentorCategory"] | order(order asc) {
+    _id,
+    title,
+    "slug": slug.current,
+    color,
+    textColor,
+    sectionHeadline,
+    sectionSubtitle,
+    "interviewCount": count(*[_type == "edtechMentor" && defined(slug.current) && references(^._id)]),
+    "featuredInterviews": featuredInterviews[]->{${MENTOR_CARD_FIELDS}},
+    "latestInterviews": *[_type == "edtechMentor" && defined(slug.current) && references(^._id)]
+      | order(publishedAt desc)[0...10] {${MENTOR_CARD_FIELDS}}
+  },
+
+  "interviews": *[_type == "edtechMentor" && defined(slug.current)]
+    | order(publishedAt desc) {${MENTOR_CARD_FIELDS}}
+}`;
+
+/**
+ * Páginas de categoría de EdTech Mentor (`/edtech-mentor/[category]`, Nota 3.2).
+ *
+ * Una sola query para todas las categorías, con TODAS sus entrevistas anidadas (no
+ * `featuredInterviews`, que es exclusivo del slider del índice). Mismo patrón que las
+ * internas: una query por build, no una por página generada.
+ *
+ * `interviewSlugs` existe para detectar colisiones: la página de categoría comparte
+ * prefijo con la interna de la entrevista (`/edtech-mentor/[slug]`), así que un slug de
+ * categoría igual al de una entrevista generaría la misma ruta dos veces.
+ */
+export const mentorCategoryPagesQuery = `{
+  "categories": *[_type == "mentorCategory"] | order(order asc) {
     _id,
     title,
     "slug": slug.current,
     sectionHeadline,
     sectionSubtitle,
-    ctaUrl,
     "interviews": *[_type == "edtechMentor" && defined(slug.current) && references(^._id)]
       | order(publishedAt desc) {${MENTOR_CARD_FIELDS}}
-  }
+  },
+
+  "interviewSlugs": *[_type == "edtechMentor" && defined(slug.current)].slug.current
 }`;
 
 /* ──────────────────────────── EdTech Marketing ────────────────────────── */

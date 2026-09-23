@@ -1,0 +1,43 @@
+---
+/**
+ * Tag Pill — 27zero
+ * Pill small filled, sin hover (Nota 5.2 del feedback de EdTech Mentor): reemplaza al
+ * texto plano de `.card-edtech-mentor-tag` / `.card-featured-tag` y es también el pill
+ * de season de esas mismas cards (Nota 7.3).
+ *
+ * El fondo es el color de acento del CMS. El texto es `textColor` si la categoría lo
+ * trae (solo categorías: la season no tiene ese campo) y, si no, se elige por
+ * contraste en build (`accentColors()`). Sin color válido cae al negro del design
+ * system con texto blanco.
+ *
+ * Uppercase + `letter-spacing: .25px` (0.0156rem — CLAUDE.md §5, solo rem): segunda
+ * ronda de feedback, aplica a todos los pills de las cards.
+ *
+ * Los colores entran como custom properties inline y no como clases: vienen del CMS,
+ * así que no existen en build como utilidades de Tailwind.
+ */
+import { accentColors } from '../../lib/utils/color';
+
+interface Props {
+  label: string;
+  /** Hex del CMS (`mentorCategory.color` / `mentorSeason.color`). Vacío o inválido → negro. */
+  color?: string;
+  /** `mentorCategory.textColor`. Solo se respeta si `color` es válido. */
+  textColor?: string;
+  class?: string;
+}
+
+const { label, color, textColor, class: className } = Astro.props;
+
+const { background, text } = accentColors(color, textColor);
+---
+
+<span
+  style={`--tag-pill-bg:${background};--tag-pill-text:${text}`}
+  class:list={[
+    'tag-pill inline-flex items-center rounded-full bg-(--tag-pill-bg) px-[clamp(0.5rem,0.4286rem_+_0.3571vw,0.75rem)] py-[clamp(0.125rem,0.1071rem_+_0.0893vw,0.1875rem)] font-inter text-card-tag leading-[1.5] font-medium tracking-[0.0156rem] whitespace-nowrap uppercase text-(--tag-pill-text)',
+    className,
+  ]}
+>
+  {label}
+</span>

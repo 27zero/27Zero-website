@@ -40,11 +40,24 @@ export interface WorkGroup {
 
 /* ───────────────────────────── EdTech Mentor ──────────────────────────── */
 
+/** Pill de taxonomía de una card: texto + color de acento crudo del CMS. */
+export interface CardPill {
+  label: string;
+  /** Hex del CMS sin validar — lo normaliza `TagPill` (fallback negro). */
+  color?: string;
+}
+
 /** Props compartidas por `EdtechMentorCard` y `FeaturedCard`. */
 export interface MentorCardData {
   href: string;
   title: string;
   tag?: string;
+  /** `mentorCategory.color`: fondo del pill de `tag`. */
+  tagColor?: string;
+  /** `mentorCategory.textColor`: texto del pill de `tag`. Vacío → por contraste. */
+  tagTextColor?: string;
+  /** `mentorSeason` referenciada — segundo pill, al lado del de categoría. */
+  season?: CardPill;
   /** Fondo de `.card-edtech-mentor-body`, desde `edtechMentor.thumbnail`. */
   image?: { src: string; alt: string };
   role?: string;
@@ -67,6 +80,9 @@ export interface FeaturedCardData {
   href: string;
   title: string;
   tag?: string;
+  tagColor?: string;
+  tagTextColor?: string;
+  season?: CardPill;
   name?: string;
   role?: string;
   avatar?: { src: string; alt: string };
@@ -87,13 +103,20 @@ export interface FeaturedCardData {
 export interface MentorCategoryGroup {
   /** Slug de la categoría: `id` del `.category-anchor` y `data-filter` de su pill. */
   id: string;
-  /** Título del CMS. Label del pill y del botón "Go to {título}". */
+  /** Título del CMS. Label del pill de filtro. */
   title: string;
   /** `sectionHeadline`: Portable Text de una línea con el mark `em` como acento. */
   headline?: PortableTextBlock[];
   subtitle?: string;
-  /** `ctaUrl`. Vacío → el botón "Go to {título}" no se renderiza. */
-  ctaUrl?: string;
+  /**
+   * Página de la categoría (`/edtech-mentor/[category]`), destino de "View All". Sin
+   * página generada no hay botón. ("Go to {título}" se eliminó: era la misma URL.)
+   */
+  viewAllHref?: string;
+  /** Pill de filtro: `mentorCategory.color` / `textColor`, crudos. */
+  color?: string;
+  textColor?: string;
+  /** Slider: `featuredInterviews` curadas, o las 10 más recientes si no hay curadas. */
   items: MentorCardData[];
 }
 

@@ -153,13 +153,18 @@ export interface WorkCategory extends SanityDocument {
  * sale siempre de la query, nunca de un tipo.
  *
  * El botón "Go to {título}" NO tiene campo propio: se computa de `title` en el sitio.
+ * Tampoco tiene link propio (`ctaUrl` se eliminó): la URL de la página de categoría
+ * sale del `slug`, o del `title` normalizado si el slug está vacío.
  */
 export interface MentorCategory extends SanityDocument {
   _type: 'mentorCategory';
   title: string;
-  slug: SanitySlug;
+  /** Opcional en el schema: vacío → la URL se arma con `normalizeSlug(title)`. */
+  slug?: SanitySlug;
   description?: string;
   color?: string;
+  /** Texto de los pills con `color` de fondo. Vacío → blanco/negro por contraste. */
+  textColor?: string;
   order: number;
   /**
    * Portable Text de una sola línea, igual que los `headline` de Home: el editor marca
@@ -167,8 +172,24 @@ export interface MentorCategory extends SanityDocument {
    */
   sectionHeadline: PortableTextBlock[];
   sectionSubtitle?: string;
-  /** Vacío → el botón "Go to {título}" no se renderiza. */
-  ctaUrl?: string;
+  /**
+   * Slider curado de la sección (máx. 10). El orden del array ES el orden del slider —
+   * no hay campo de orden aparte. `SanityReference` sin `->`, `EdtechMentor` con `->`.
+   */
+  featuredInterviews?: ((SanityReference & { _key: string }) | EdtechMentor)[];
+}
+
+/**
+ * `mentorSeason` — segunda taxonomía de EdTech Mentor, solo para el pill de las cards.
+ * Sin `slug`, `order` ni copy de sección: no tiene página ni sección propia.
+ *
+ * `color` vacío → el pill cae al color oscuro por defecto. El color de texto no viene
+ * de Sanity: se calcula por luminancia en el sitio (mismo criterio que `mentorCategory`).
+ */
+export interface MentorSeason extends SanityDocument {
+  _type: 'mentorSeason';
+  title: string;
+  color?: string;
 }
 
 /**
@@ -349,29 +370,34 @@ export interface EdtechMentor extends SanityDocument {
   guestName?: string;
   guestCompany?: string;
   guestRole?: string;
-  guestPhoto?: SanityImage;
 
   // Content
   title?: string;
   shortDescription?: string;
-  thumbnail?: SanityImage;
   highlightTitle?: string;
-  bannerPost?: SanityImage;
-  /** Fieldset `interviewIntro`. */
+  /** Acompaña a `mainImage` en la interna (ya no comparten fieldset en el Studio). */
   introText?: string;
-  /** Fieldset `interviewIntro`. */
-  mainImage?: SanityImage;
   body?: (PortableTextBlock | PearlOfWisdomBlock)[];
   rapidFire?: {
     description?: string;
+    /** Queda dentro de `rapidFire`, fuera de la tab Images del Studio. */
     image?: SanityImage;
     questions?: { _key: string; question?: string; answer?: string }[];
   };
+
+  // Images
+  guestPhoto?: SanityImage;
+  thumbnail?: SanityImage;
+  mainImage?: SanityImage;
+  /** Banner horizontal — también es la imagen de la featured card del índice. */
+  bannerPost?: SanityImage;
 
   // Metadata
   slug?: SanitySlug;
   /** Requerido en el schema — `SanityReference` sin `->`, `MentorCategory` con `->`. */
   category: SanityReference | MentorCategory;
+  /** Opcional: las entrevistas migradas de Webflow no traen season. */
+  season?: SanityReference | MentorSeason;
   isFeatured?: boolean;
   publishedAt?: string;
   /** Requerido en el schema — `SanityReference` sin `->`, `Author` con `->`. */

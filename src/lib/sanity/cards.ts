@@ -52,6 +52,17 @@ export interface MentorCardProjection {
   thumbnail?: SanityImage;
   /** Título de la `mentorCategory` referenciada, ya resuelto por la query. */
   categoryTitle?: string;
+  /** `mentorCategory.color`, crudo — lo normaliza `TagPill`. */
+  categoryColor?: string | null;
+  /** `mentorCategory.textColor`, crudo. Vacío → texto por contraste. */
+  categoryTextColor?: string | null;
+  /** `mentorSeason` expandida. `null` si la entrevista no tiene season. */
+  season?: { title?: string; color?: string | null } | null;
+  /**
+   * Solo lo traen las proyecciones que lo piden aparte (el destacado de
+   * `mentorListQuery`): no es parte de `MENTOR_CARD_FIELDS`.
+   */
+  bannerPost?: SanityImage;
   isFeatured?: boolean;
   publishedAt?: string;
 }
@@ -149,22 +160,42 @@ export function toWorkCard(
  */
 export function toMentorCard(
   mentor: MentorCardProjection,
-  options: { imageWidth?: number } = {}
+  options: { imageWidth?: number; image?: 'thumbnail' | 'bannerPost' } = {}
 ): MentorCardData {
   const avatar = toImage(mentor.guestPhoto, { width: AVATAR_WIDTH, height: AVATAR_WIDTH });
+
+  /* `bannerPost` es la imagen horizontal del destacado del índice (Nota 14). Si una
+     entrevista no la tiene, la card cae a su `thumbnail` antes que quedar en gris. */
+  const background = options.image === 'bannerPost' ? (mentor.bannerPost ?? mentor.thumbnail) : mentor.thumbnail;
 
   return {
     href: mentorUrl(mentor.slug),
     title: mentor.title ?? mentor.guestName ?? '',
     tag: mentor.categoryTitle,
-    role: mentor.guestRole ?? mentor.guestCompany,
+    tagColor: mentor.categoryColor ?? undefined,
+    tagTextColor: mentor.categoryTextColor ?? undefined,
+    season: mentor.season?.title
+      ? { label: mentor.season.title, color: mentor.season.color ?? undefined }
+      : undefined,
+    role: formatGuestRole(mentor.guestRole, mentor.guestCompany),
     name: mentor.guestName,
     /* Fondo de la card. Es `thumbnail` y NO `guestPhoto`: esa última es la foto de la
        persona y ya se usa como avatar del header, acá arriba. */
-    image: toImage(mentor.thumbnail, { width: options.imageWidth ?? CARD_IMAGE_WIDTH }),
+    image: toImage(background, { width: options.imageWidth ?? CARD_IMAGE_WIDTH }),
     avatar,
     avatarInitials: avatar ? undefined : getInitials(mentor.guestName),
   };
+}
+
+/**
+ * `[ROLE] - [COMPANY]` (Nota 8). El guion aparece solo si los dos tienen texto; con uno
+ * solo, va ese solo. Hoy casi todas las entrevistas migradas traen el rol y la empresa
+ * juntos en `guestCompany` ("CEO, Ready Education") con `guestRole` vacío, así que la
+ * forma completa recién se va a ver cuando el contenido se divida en el Studio.
+ */
+function formatGuestRole(role?: string, company?: string): string | undefined {
+  const parts = [role, company].map((part) => part?.trim()).filter(Boolean);
+  return parts.length ? parts.join(' - ') : undefined;
 }
 
 /**

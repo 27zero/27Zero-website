@@ -14,9 +14,10 @@
  * convivía con él se eliminó del schema en `27zero-sanity@432cb5c`; el serializer de
  * abajo es del bloque inline, que sigue vigente.
  *
- * Secciones que se omiten enteras si el documento no tiene el dato: los dos botones del
- * hero, la imagen y la bajada del bloque Featured, el highlight, Rapid Fire y el slider
- * final. Hoy casi ninguna entrevista tiene esos campos cargados.
+ * Secciones que se omiten enteras si el documento no tiene el dato: los botones
+ * "Read on…" (junto al título desde la segunda ronda de feedback), la imagen y la bajada del bloque Featured, el highlight, Rapid Fire y el slider
+ * final. El bloque Featured en sí siempre se renderiza: desde el feedback de EdTech
+ * Mentor (Nota 1) lleva el breadcrumb y el `h1`.
  *
  * Valores: los del hero y el artículo están en px literales en el CSS del vanilla (así
  * se entregó el spec), el resto sigue la curva `em × 9` @320px → `em × 14` @1440px.
@@ -170,102 +171,118 @@ const ARTICLE_COMPONENTS = {
 
 <Page seo={seo} siteSettings={siteSettings} breadcrumb={breadcrumb} article={article} ogType={ogTypeFor('edtechMentor')} navVariant="white">
   <!-- 1. HERO -->
+  {/* Feedback EdTech Mentor:
+      - Nota 2 (ajustada en rondas siguientes): `margin-top` fijo de 4rem en mobile y
+        5rem en desktop, con corte en `md`. Valores fijos a pedido del cliente, no
+        `clamp()`: el salto es deliberado. Los dos superan el alto del navbar fijo
+        (45px mobile / 77px desktop), así que el nav no pisa el banner.
+      - Nota 1: breadcrumb, invitado y `h1` (`.hero-cms-content`) se mudaron a la
+        columna de texto de `.featured-grid`; en la segunda ronda los botones "Read on…"
+        los siguieron. El hero queda como banner puro. */}
   <section
-    class="section section--hero-cms relative overflow-hidden bg-[#D9D9D9] mt-[clamp(4.8rem,3.0286rem_+_8.8571vw,11rem)] pt-[25rem] pb-[4rem]"
+    class="section section--hero-cms relative overflow-hidden bg-[#D9D9D9] mt-[5rem] max-md:mt-[4rem] pt-[25rem] pb-[4rem]"
   >
     <div class="hero-cms-bg absolute inset-0 z-0">
       {heroBackground && <img src={heroBackground.src} alt={heroBackground.alt} class="size-full object-cover object-top" />}
     </div>
-
-    <div class:list={[CONTAINER, 'relative z-[1] gap-[2.5rem]']}>
-      <div class="hero-cms-content flex flex-col gap-[1.5625rem]">
-        <nav
-          class="breadcrumb flex items-center gap-xs font-inter text-[clamp(0.625rem,0.5rem_+_0.625vw,1.0625rem)] leading-[1.6] font-normal text-black"
-          aria-label="Breadcrumb"
-        >
-          {
-            /* Mismo array que alimenta el `BreadcrumbList` del JSON-LD (`detailTrail`),
-               para que la miga visible y el structured data no puedan divergir. El
-               último ítem viene sin `href`: es la página actual. */
-            breadcrumb.map((crumb, index) => (
-              <>
-                {index > 0 && <span>&gt;</span>}
-                {crumb.href ? (
-                  <a href={crumb.href} class="underline hover:text-indigo">
-                    {crumb.label}
-                  </a>
-                ) : (
-                  <span aria-current="page">{crumb.label}</span>
-                )}
-              </>
-            ))
-          }
-        </nav>
-
-        {
-          mentor.guestName && (
-            <span class="font-lora text-[clamp(1.5rem,1.2857rem_+_1.0714vw,2.25rem)] leading-[1.4] font-medium text-black">
-              {mentor.guestName}
-            </span>
-          )
-        }
-
-        <h1
-          class="font-lora text-h1 leading-[1.25] font-medium tracking-[clamp(-0.02rem,-0.0171rem_-_0.0143vw,-0.03rem)] text-black"
-        >
-          {mentor.title}
-        </h1>
-      </div>
-
-      {
-        (mentor.linkedinUrl || mentor.mediumUrl) && (
-          <div class="hero-cms-buttons flex flex-row gap-sm max-md:flex-col max-md:items-baseline">
-            {mentor.linkedinUrl && (
-              <Button href={mentor.linkedinUrl} target="_blank" rel="noopener" variant="blackWhite">
-                Subscribe on LinkedIn
-              </Button>
-            )}
-            {mentor.mediumUrl && (
-              <Button href={mentor.mediumUrl} target="_blank" rel="noopener" variant="blackWhite">
-                Follow on Medium
-              </Button>
-            )}
-          </div>
-        )
-      }
-    </div>
   </section>
 
-  <!-- 2. FEATURED — imagen + resumen + highlight -->
-  {
-    (introImage || introCopy || mentor.highlightTitle) && (
-      <section class="section section--featured-cms bg-white pt-[5.625rem] pb-[6.875rem]">
-        <div class:list={[CONTAINER, 'gap-[7.1875rem]']}>
-          {(introImage || introCopy) && (
-            <div class="featured-grid grid grid-cols-[1.25fr_1fr] items-start gap-[2.8125rem] max-md:grid-cols-1">
-              {introImage && (
-                <img
-                  src={introImage.src}
-                  alt={introImage.alt}
-                  class="h-full min-h-[28em] w-full rounded-[0.57em] object-cover max-md:min-h-[16em]"
-                  loading="lazy"
-                />
-              )}
-              {introCopy && (
-                <p class="font-inter text-body leading-[1.6] font-normal text-black">{introCopy}</p>
-              )}
-            </div>
-          )}
+  <!-- 2. FEATURED — imagen + encabezado de la entrevista + resumen + highlight -->
+  {/* Siempre se renderiza: desde la Nota 1 lleva el `h1` de la página.
 
-          {mentor.highlightTitle && (
-            <p class="featured-highlight text-center font-lora text-[clamp(1.5rem,1.2857rem_+_1.0714vw,2.25rem)] leading-[1.5] font-normal text-purple">
-              {mentor.highlightTitle}
-            </p>
+      Nota 15: `.featured-grid` es de 2 columnas solo si la entrevista tiene `mainImage`
+      real cargada; sin ella el texto ocupa el ancho completo en vez de dejar una
+      columna vacía. */}
+  {/* Padding: ~4rem en mobile (tercera ronda), el del vanilla en desktop. */}
+  <section class="section section--featured-cms bg-white pt-[clamp(4rem,3.5357rem_+_2.3214vw,5.625rem)] pb-[clamp(4rem,3.1786rem_+_4.1071vw,6.875rem)]">
+    <div class:list={[CONTAINER, 'gap-[7.1875rem]']}>
+      <div
+        class:list={[
+          'featured-grid grid items-start gap-[2.8125rem]',
+          introImage ? 'grid-cols-[1.25fr_1fr] max-md:grid-cols-1' : 'grid-cols-1',
+        ]}
+      >
+        {introImage && (
+          <img
+            src={introImage.src}
+            alt={introImage.alt}
+            class="h-full min-h-[28em] w-full rounded-[0.57em] object-cover max-md:min-h-[16em]"
+            loading="lazy"
+          />
+        )}
+
+        <div class="featured-text flex flex-col gap-[2.5rem]">
+          {/* Segunda ronda: gap 1.2rem, breadcrumb −30% en desktop (en mobile queda en
+              10px, el tamaño previo: con el −30% bajaba a 7px), invitado 3rem y `h1` 2rem. El
+              nombre queda más grande que el `h1` a pedido del cliente: jerarquía visual
+              invertida, pero el `h1` sigue siendo el título del episodio para SEO. */}
+          <div class="hero-cms-content flex flex-col gap-[1.2rem]">
+            <nav
+              class="breadcrumb flex flex-wrap items-center gap-xs font-inter text-[clamp(0.625rem,0.591rem_+_0.1697vw,0.7438rem)] leading-[1.6] font-normal text-black"
+              aria-label="Breadcrumb"
+            >
+              {
+                /* Mismo array que alimenta el `BreadcrumbList` del JSON-LD (`detailTrail`),
+                   para que la miga visible y el structured data no puedan divergir. El
+                   último ítem viene sin `href`: es la página actual. */
+                breadcrumb.map((crumb, index) => (
+                  <>
+                    {index > 0 && <span>&gt;</span>}
+                    {crumb.href ? (
+                      <a href={crumb.href} class="underline hover:text-indigo">
+                        {crumb.label}
+                      </a>
+                    ) : (
+                      <span aria-current="page">{crumb.label}</span>
+                    )}
+                  </>
+                ))
+              }
+            </nav>
+
+            {mentor.guestName && (
+              <span class="font-lora text-[clamp(2rem,1.7143rem_+_1.4286vw,3rem)] leading-[1.25] font-medium text-black">
+                {mentor.guestName}
+              </span>
+            )}
+
+            <h1
+              class="font-lora text-[2rem] leading-[1.25] font-medium tracking-[clamp(-0.02rem,-0.0171rem_-_0.0143vw,-0.03rem)] text-black"
+            >
+              {mentor.title}
+            </h1>
+
+            {(mentor.linkedinUrl || mentor.mediumUrl) && (
+              <div class="hero-cms-buttons flex flex-row flex-wrap gap-sm max-md:flex-col max-md:items-baseline">
+                {/* Nota 11: "Read on …" — el botón lleva al post de ESTA entrevista, no a
+                    suscribirse al newsletter (ese es el pill del índice). */}
+                {mentor.linkedinUrl && (
+                  <Button href={mentor.linkedinUrl} target="_blank" rel="noopener" variant="blackWhite">
+                    Read on LinkedIn
+                  </Button>
+                )}
+                {mentor.mediumUrl && (
+                  <Button href={mentor.mediumUrl} target="_blank" rel="noopener" variant="blackWhite">
+                    Read on Medium
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {introCopy && (
+            <p class="font-inter text-body leading-[1.6] font-normal text-black">{introCopy}</p>
           )}
         </div>
-      </section>
-    )
-  }
+      </div>
+
+      {mentor.highlightTitle && (
+        <p class="featured-highlight text-center font-lora text-[clamp(1.5rem,1.2857rem_+_1.0714vw,2.25rem)] leading-[1.5] font-normal text-purple">
+          {mentor.highlightTitle}
+        </p>
+      )}
+    </div>
+  </section>
 
   <!-- 3. CUERPO DEL ARTÍCULO -->
   <!-- `bg-gray` (#F5F5F5, token existente) y no el #D9D9D9 del vanilla: sobre ese gris

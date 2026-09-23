@@ -1,0 +1,152 @@
+---
+/**
+ * The EdTech Mentor — página de categoría — 27zero
+ * Feedback cliente, Nota 3.2: lista TODAS las entrevistas de una `mentorCategory`. Es
+ * el destino del botón "View All" de cada sección del índice (Nota 3.4).
+ *
+ * Estructura confirmada: versión reducida de `/work` — encabezado de la categoría +
+ * grid estático de `EdtechMentorCard`. Sin slider, sin secciones extra y sin
+ * paginación: la categoría más grande tiene hoy 38 entrevistas, que entran en una
+ * sola página sin problema. Si alguna pasa de ~60, es el momento de paginar.
+ *
+ * Ruta: comparte `/edtech-mentor/` con la interna de la entrevista (`[slug].astro`),
+ * que es la URL que pidió el cliente. Astro resuelve las dos rutas dinámicas por sus
+ * `getStaticPaths`; el único riesgo es que un slug de categoría coincida con el de una
+ * entrevista, y en ese caso gana la entrevista (ver `getStaticPaths` abajo).
+ *
+ * Solo se generan categorías con entrevistas: una página vacía no tiene nada que
+ * listar, y el índice tampoco renderiza su sección.
+ *
+ * SEO: `mentorCategory` no tiene objeto `seo` en el schema, así que title y description
+ * salen del propio documento (misma fuente, CLAUDE.md §8) y el resto cae al fallback
+ * global de `settings`.
+ */
+import Page from '../../layouts/Page.astro';
+import EdtechMentorCard from '../../components/ui/EdtechMentorCard.astro';
+import PortableText from '../../components/ui/PortableText.astro';
+import type { PortableTextComponents } from '@portabletext/to-html';
+import { toMentorCard, type MentorCardProjection } from '../../lib/sanity/cards';
+import { sanityClient } from '../../lib/sanity/client';
+import { mentorCategoryPagesQuery } from '../../lib/sanity/queries';
+import { getSeoSettings } from '../../lib/sanity/settings';
+import { detailTrail } from '../../lib/utils/breadcrumbs';
+import { accentMarkComponents, hasContent } from '../../lib/utils/portableText';
+import { mentorCategoryPageSlugs, mentorCategorySlug } from '../../lib/utils/routes';
+import type { PortableTextBlock } from '../../types/sanity';
+
+interface MentorCategoryPage {
+  _id: string;
+  title: string;
+  /** Opcional en el schema: vacío → `mentorCategorySlug` lo arma con el título. */
+  slug: string | null;
+  sectionHeadline?: PortableTextBlock[];
+  sectionSubtitle?: string;
+  interviews: MentorCardProjection[];
+}
+
+export async function getStaticPaths() {
+  const { categories, interviewSlugs } = await sanityClient.fetch<{
+    categories: MentorCategoryPage[];
+    interviewSlugs: string[];
+  }>(mentorCategoryPagesQuery);
+
+  /* Misma regla que decide los botones del índice: con entrevistas, sin chocar con el
+     slug de una entrevista ni con el de otra categoría. El slug es el resuelto (Studio
+     o título), el mismo que usa el índice para linkear. */
+  const resolved = categories.map((category) => ({ category, slug: mentorCategorySlug(category) }));
+  const pageSlugs = mentorCategoryPageSlugs(
+    resolved.map(({ category, slug }) => ({ slug, interviewCount: category.interviews.length })),
+    interviewSlugs
+  );
+
+  /* `pageSlugs` ya descartó los duplicados, pero la categoría que perdió el slug
+     también lo trae: `claimed` deja pasar solo a la primera, que es la que ganó. */
+  const claimed = new Set<string>();
+  return resolved
+    .filter(({ slug }) => pageSlugs.has(slug) && !claimed.has(slug) && claimed.add(slug))
+    .map(({ category, slug }) => ({ params: { category: slug }, props: category }));
+}
+
+const category = Astro.props as MentorCategoryPage;
+
+const cards = category.interviews.map((mentor) => toMentorCard(mentor));
+
+const breadcrumb = detailTrail('edtechMentor', { label: category.title });
+
+const siteSettings = await getSeoSettings();
+const seo = {
+  title: `${category.title.trim()} — The EdTech Mentor — 27zero`,
+  description: category.sectionSubtitle,
+};
+
+const CONTAINER = 'container mx-auto flex w-full max-w-(--container-max-width) flex-col px-container-x';
+const HEADING =
+  'font-lora text-[clamp(2rem,1.8464rem_+_0.7679vw,2.5375rem)] leading-[1.25] font-medium tracking-[clamp(-0.0213rem,-0.0012rem_-_0.0223vw,-0.0056rem)]';
+
+/* `sectionHeadline` es un bloque `h2` en el schema (es el encabezado de la sección en
+   el índice). Acá es el título de la página, así que se emite como `h1`, conservando
+   el acento del mark `em`. */
+const HEADLINE_AS_H1: PortableTextComponents = {
+  ...accentMarkComponents,
+  block: { h2: ({ children }) => `<h1 class="${HEADING}">${children}</h1>` },
+};
+---
+
+<Page seo={seo} siteSettings={siteSettings} breadcrumb={breadcrumb} navVariant="white">
+  <!-- HERO — mismo tratamiento que el hero del índice de EdTech Mentor -->
+  {/* `padding-top` fijo, sin `clamp()` (a pedido del cliente): 4rem en mobile y 6rem en
+      desktop, con corte en `md`. Los dos superan el alto del navbar fijo. */}
+  <section class="section section--hero pt-[6rem] max-md:pt-[4rem] pb-[clamp(1.6875rem,1.4196rem_+_1.3393vw,2.625rem)]">
+    <div class:list={[CONTAINER, 'hero-container gap-xs']}>
+      <nav
+        class="breadcrumb mb-xs flex flex-wrap items-center gap-xs font-inter text-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] leading-[1.5] font-normal text-black opacity-55"
+        aria-label="Breadcrumb"
+      >
+        {
+          breadcrumb.map((crumb, index) => (
+            <>
+              {index > 0 && <span class="breadcrumb-separator inline-block">&gt;</span>}
+              {crumb.href ? (
+                <a href={crumb.href} class="breadcrumb-link text-current underline hover:text-indigo">
+                  {crumb.label}
+                </a>
+              ) : (
+                <span class="breadcrumb-current" aria-current="page">{crumb.label}</span>
+              )}
+            </>
+          ))
+        }
+      </nav>
+
+      {/* El headline de sección del CMS si está cargado (con su acento tipográfico,
+          igual que en el índice); si no, el título plano de la categoría. */}
+      {
+        hasContent(category.sectionHeadline) ? (
+          <PortableText value={category.sectionHeadline} components={HEADLINE_AS_H1} />
+        ) : (
+          <h1 class={HEADING}>{category.title}</h1>
+        )
+      }
+
+      {
+        category.sectionSubtitle && (
+          <p class="text-body font-inter text-body leading-[1.6] font-medium tracking-normal">{category.sectionSubtitle}</p>
+        )
+      }
+    </div>
+  </section>
+
+  <!-- GRID DE ENTREVISTAS -->
+  {/* Sobre blanco, así que `role`/`name` (blancos por default, pensados para los
+      sliders sobre indigo/negro) se pisan a negro con el mismo override descendente
+      que usa el tema purple de `MentorCategorySection`. */}
+  <section class="section section--category-grid pt-0 pb-section-y">
+    <div class={CONTAINER}>
+      <div
+        class="mentor-category-grid flex flex-wrap gap-gap max-md:justify-center [&_.card-edtech-mentor-name]:text-black [&_.card-edtech-mentor-role]:text-black"
+      >
+        {cards.map((card) => <EdtechMentorCard {...card} />)}
+      </div>
+    </div>
+  </section>
+</Page>
