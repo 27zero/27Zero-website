@@ -60,7 +60,7 @@ Claude nunca crea contenido, secciones o estructura sin instrucciones explícita
   - Por qué: el plan Hobby de Vercel prohíbe uso comercial (cualquier deploy con código de un consultor pago califica como tal); Netlify free permite proyectos comerciales y su pricing es más simple para cuentas multi-usuario de cliente
 - **Imágenes:** Sanity Image CDN vía `urlFor()` (no cuenta contra bandwidth del hosting)
 
-**Nota sobre hosting gratuito de Sanity:** la URL del Studio es `cliente.sanity.studio` (dominio propio requiere plan pago) y hay tope de usuarios en el plan free — verificar si el cliente tendrá varios editores.
+**Nota sobre hosting gratuito de Sanity:** la URL del Studio es `cliente.sanity.studio` (dominio propio requiere plan pago) y hay tope de usuarios en el plan free — verificar si el cliente tendrá varios editores. *(Confirmado en Etapa 9: 1 solo editor por ahora — el equipo de 27zero gestiona si suman más en el futuro.)*
 
 ### Variables de entorno y secrets
 
@@ -68,6 +68,7 @@ Claude nunca crea contenido, secciones o estructura sin instrucciones explícita
 - **Local:** archivo `.env` en la raíz del proyecto, listado en `.gitignore` desde el primer commit — no después.
 - Se versiona un `.env.example` con las keys sin valores, como referencia para el cliente o para retomar el proyecto.
 - Mínimo por proyecto: `SANITY_PROJECT_ID`, `SANITY_DATASET`, `SANITY_API_TOKEN` (si hay contenido privado/draft), keys de servicios de terceros (forms, analytics) si aplica.
+  - **Nota de 27zero (Etapa 9):** este proyecto NO usa `SANITY_API_TOKEN` en ningún cliente del sitio — el dataset `production` se consume 100% público (`perspective: 'published'`, sin draft content). El token se eliminó del `.env`/Netlify por no tener uso real; existía solo para scripts de migración manual ya completados.
 
 ---
 
@@ -297,6 +298,8 @@ Cuando se defina o modifique un schema en el Studio, se actualiza `src/types/san
 
 **Accesibilidad ligada al schema:** campo `alt` **obligatorio** (no opcional) en cualquier `type: 'image'` — se refuerza a nivel de schema, no queda a criterio del editor.
 
+**Límites de caracteres reales (`objects/seo.ts`):** `title` con `Rule.max(70)`, `description` con `Rule.max(160)` — validación dura del schema, no solo recomendación. Cualquier copy migrado de fuentes externas (Webflow, etc.) que exceda esto se parafrasea preservando el mensaje, nunca se trunca a mitad de palabra ni se inventa contenido nuevo.
+
 ---
 
 ## 9. Workflow (Briefing → Código → QA)
@@ -332,18 +335,16 @@ Cuando se defina o modifique un schema en el Studio, se actualiza `src/types/san
 
 ## 11. Config del cliente
 
-`[completar al iniciar proyecto]`
-
 - **Cliente:** 27zero (agencia B2B de EdTech marketing)
 - **Repo sitio:** `https://github.com/27zero/27Zero-website.git`
 - **Repo studio:** `https://github.com/27zero/27zero-sanity.git` (ya existe, admin access)
 - **Repo vanilla (referencia read-only):** `https://github.com/SantiagoLopez0/27zero.git`
-- **Dominio producción:** `___`
-- **URL staging:** `___`
-- **Netlify site ID:** `___`
-- **Sanity project ID / dataset:** `___`
-- **URL del Studio:** `___.sanity.studio`
-- **Editores del Studio:** `___` (verificar tope del plan free)
+- **Dominio producción:** `www.27zero.agency` — destino final confirmado, **aún en Webflow**; el swap a Netlify es Etapa 9, condicionado a que el DNS apunte primero a Netlify.
+- **URL staging:** `https://27zero-web.netlify.app/`
+- **Netlify site ID:** `___` (sin confirmar)
+- **Sanity project ID / dataset:** `u9sntfl9` / `production`
+- **URL del Studio:** `___` — **pendiente:** hay 4 Studio apps deployadas sobre el mismo proyecto (2 vigentes, 2 desactualizadas); falta confirmar con el dev de 27zero cuál es la que usa el equipo antes de fijar esta URL.
+- **Editores del Studio:** 1 (confirmado en Etapa 9) — el equipo de 27zero gestiona si suman más en el futuro (verificar tope del plan free en ese momento).
 - **Figma:** `___`
 - **Contactos clave:** `___`
 - **Notas de briefing:** Etapa 0 cerrada — ver `PLANNING.md` para detalle. 7 documentTypes confirmados: `work`, `edtechMentor`, `resource`, `edtechMarketingPractice`, `edtechMarketingService`, `team`, `testimonial` (este último ya existía en Sanity, no se creó en esta migración — no contado originalmente en Etapa 0 por ser nivel-componente, no nivel-página)
