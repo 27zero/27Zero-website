@@ -3,10 +3,10 @@
  * PortableText — 27zero
  *
  * Renderer genérico de Portable Text. Vive en `ui/` y no en la interna de EdTech
- * Mentor porque hoy ya lo consumen cuatro campos de tres documentTypes distintos
- * (`edtechMentor.body`, `resource.body`, `work.description.projectContent`,
- * `work.challenge.challengeContent`, `work.solution.body`) y cada uno pide un markup
- * distinto para el mismo árbol de bloques.
+ * Mentor porque hoy lo consumen campos de tres documentTypes distintos
+ * (`edtechMentor.body`, `resource.body`, `work.challenge.challengeContent`,
+ * `work.communicationChallenge.content`, `work.solution.body`) y cada uno pide un
+ * markup distinto para el mismo árbol de bloques.
  *
  * Corre en build: `toHTML()` se resuelve en el frontmatter del `.astro`, así que el
  * navegador recibe HTML plano y cero JS (CLAUDE.md §7 — esto no es una island).

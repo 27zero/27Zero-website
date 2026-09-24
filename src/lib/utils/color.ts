@@ -72,3 +72,28 @@ export function accentColors(
 
   return { background, text };
 }
+
+/** `true` si el texto claro contrasta más que el oscuro sobre `hex` (ya normalizado). */
+export function isDarkColor(hex: string): boolean {
+  return contrast(hex, LIGHT_TEXT) > contrast(hex, DARK_TEXT);
+}
+
+/**
+ * Colores de una superficie entera (sección) cargados en el CMS: fondo + texto.
+ *
+ * A diferencia de `accentColors()` (pills), acá el fondo tiene un default propio de cada
+ * sección — blanco en las Additional Sections de Work, por ejemplo — y el `textValue`
+ * del editor se respeta aunque el fondo haya caído a ese default: el editor ve la
+ * sección con ese fondo en el diseño y elige el texto para él. Sin texto válido, se
+ * elige negro o blanco por contraste.
+ */
+export function surfaceColors(
+  value: string | null | undefined,
+  textValue: string | null | undefined,
+  fallbackBackground: string
+): { background: string; text: string } {
+  const background = normalizeHex(value) ?? fallbackBackground;
+  const text = normalizeHex(textValue) ?? (isDarkColor(background) ? LIGHT_TEXT : DARK_TEXT);
+
+  return { background, text };
+}

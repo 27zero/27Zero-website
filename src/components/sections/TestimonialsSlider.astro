@@ -25,6 +25,13 @@
  * `authorRole` es opcional porque el schema no lo marca `required()`: el slide se
  * renderiza igual con el nombre solo. `authorName` sí es obligatorio — de ahí salen
  * las iniciales del avatar cuando no hay foto.
+ *
+ * Reusado en la interna de Work (feedback Work, Nota 7.2) para "Client's feedback", que
+ * pasó de una sola cita a un slider con todos los testimonios del proyecto. El diseño
+ * es el mismo que el de Home, así que se extendió este componente en vez de duplicarlo:
+ *   - `label`: eyebrow opcional sobre el slider ("Client's feedback" en Work). Home no
+ *     lo pasa y no cambia.
+ *   - Con un solo testimonio no se renderizan flechas ni dots: no hay a dónde navegar.
  */
 interface Testimonial {
   quote: string;
@@ -36,9 +43,13 @@ interface Testimonial {
 
 interface Props {
   testimonials: Testimonial[];
+  /** Eyebrow sobre el slider. Hardcodeado por quien lo usa — no sale del CMS. */
+  label?: string;
 }
 
-const { testimonials } = Astro.props;
+const { testimonials, label } = Astro.props;
+
+const hasNavigation = testimonials.length > 1;
 
 /** "Erin Grant" → "EG". Reproduce las iniciales del placeholder del vanilla sin duplicarlas como dato. */
 function getInitials(name: string): string {
@@ -64,15 +75,27 @@ const ARROW =
 <section
   class="section section--testimonials-home bg-black pt-[clamp(4.4213rem,3.7195rem_+_3.5089vw,6.8775rem)] pb-[clamp(2.61rem,2.1957rem_+_2.0714vw,4.06rem)] text-white"
 >
+  {
+    label && (
+      <div class="mx-auto mb-[clamp(1.9688rem,1.6563rem_+_1.5625vw,3.0625rem)] max-w-(--container-max-width) px-container-x">
+        <span class="testimonials-label block font-inter text-[clamp(0.75rem,0.7143rem_+_0.1786vw,0.875rem)] leading-[1.5] font-normal text-white">
+          {label}
+        </span>
+      </div>
+    )
+  }
+
   <div
     class="testimonials-slider mx-auto flex max-w-(--container-max-width) items-center gap-gap px-container-x max-md:gap-[0.5625rem]"
   >
+    {hasNavigation && (
     <button class={ARROW} data-dir="prev" aria-label="Previous" disabled>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <line x1="19" y1="12" x2="5" y2="12"></line>
         <polyline points="12 19 5 12 12 5"></polyline>
       </svg>
     </button>
+    )}
 
     <div class="testimonials-track-wrap flex-1 overflow-hidden">
       <div class="testimonials-track flex transition-transform duration-[0.4s] ease-[ease]">
@@ -138,12 +161,14 @@ const ARROW =
       </div>
     </div>
 
+    {hasNavigation && (
     <button class={ARROW} data-dir="next" aria-label="Next">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <line x1="5" y1="12" x2="19" y2="12"></line>
         <polyline points="12 5 19 12 12 19"></polyline>
       </svg>
     </button>
+    )}
   </div>
 
   {/* El `<button>` mide 1.5rem (24px) y el punto visible es el `<span>` de adentro, que
@@ -158,6 +183,7 @@ const ARROW =
       anterior (5,4 → 10,8px) las áreas de dots vecinos se superpondrían y el click caería
       en el dot equivocado. Sin gap quedan exactamente pegadas, sin solaparse, y los
       puntos visibles terminan a 24px de centro a centro en vez de ~18px. */}
+  {hasNavigation && (
   <div
     class="testimonials-dots mt-[clamp(1.9688rem,1.6563rem_+_1.5625vw,3.0625rem)] flex items-center justify-center gap-0"
   >
@@ -175,6 +201,7 @@ const ARROW =
       ))
     }
   </div>
+  )}
 </section>
 
 <script>

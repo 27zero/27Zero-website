@@ -24,8 +24,8 @@ import EdtechMentorCard from '../components/ui/EdtechMentorCard.astro';
 import FeaturedCard from '../components/ui/FeaturedCard.astro';
 import PortableText from '../components/ui/PortableText.astro';
 import WorkCard from '../components/ui/WorkCard.astro';
-import { toFeaturedWorkCard, toMentorCard, toWorkCard } from '../lib/sanity/cards';
-import type { MentorCardProjection, TestimonialProjection, WorkCardProjection } from '../lib/sanity/cards';
+import { featuredWorksOf, toFeaturedWorkCard, toMentorCard, toWorkCard } from '../lib/sanity/cards';
+import type { FeaturedWorkCategoryProjection, MentorCardProjection, TestimonialProjection } from '../lib/sanity/cards';
 import { sanityClient } from '../lib/sanity/client';
 import { toImage } from '../lib/sanity/image';
 import { homeQuery } from '../lib/sanity/queries';
@@ -33,16 +33,21 @@ import { accentMarkComponents } from '../lib/utils/portableText';
 import type { MentorCardData, WorkCardData } from '../types/ui';
 
 /* Una sola query para las 3 secciones que consumen CMS (CLAUDE.md §10). */
-const { featuredWorks, featuredMentor, mentorPosts, testimonials } = await sanityClient.fetch<{
-  featuredWorks: WorkCardProjection[];
+const { featuredWorkCategories, featuredMentor, mentorPosts, testimonials } = await sanityClient.fetch<{
+  featuredWorkCategories: FeaturedWorkCategoryProjection[];
   featuredMentor: MentorCardProjection | null;
   mentorPosts: MentorCardProjection[];
   testimonials: TestimonialProjection[];
 }>(homeQuery);
 
-/* Slider "Los mejores": `work.isFeatured`, que en Etapa 5 reemplazó a la categoría
-   homónima — "Los mejores" nunca fue una categoría de servicio, era el destacado. */
-const FEATURED_WORKS: WorkCardData[] = featuredWorks.map((work) => toWorkCard(work));
+/* Slider "Los mejores": la selección curada de las categorías destacadas de Work, en el
+   `order` de las categorías y el orden de cada selección (feedback Work, Nota 9 —
+   `work.isFeatured` se eliminó del schema). Un mismo `work` elegido en dos categorías
+   se muestra una sola vez. Las cards van en su tamaño base: la variante alta es propia
+   del índice de Work. */
+const FEATURED_WORKS: WorkCardData[] = [
+  ...new Map(featuredWorkCategories.flatMap(featuredWorksOf).map((work) => [work._id, work])).values(),
+].map((work) => toWorkCard(work));
 
 /* La `FeaturedCard` de la sección EdTech Mentor: la entrevista destacada más reciente. */
 const FEATURED_MENTOR_POST: MentorCardData | null = featuredMentor ? toMentorCard(featuredMentor) : null;

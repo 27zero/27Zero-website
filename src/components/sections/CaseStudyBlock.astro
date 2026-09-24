@@ -1,0 +1,116 @@
+---
+/**
+ * Case Study Block — 27zero
+ * Un bloque de contenido de la interna de Work: título a la izquierda, cuerpo a la
+ * derecha y, debajo, la grilla de imágenes. Portado de `.section-content` / `.split-intro`
+ * de `/work-cms` del repo vanilla.
+ *
+ * Lo usan las tres secciones de la narrativa (Business Problem, Communication Challenge,
+ * Strategic Idea) y las Additional Sections — mismo layout, distinto origen del color:
+ * el `<section>` y sus colores los pone la página, este componente solo el contenido.
+ * El texto hereda el color del `<section>` (`currentColor`), por eso sirve igual para
+ * los temas fijos de la narrativa y para los hex del CMS de las Additional Sections.
+ *
+ * `heightVariant` (feedback Work, Nota 7.8) fija el alto de las imágenes; vacío es
+ * `medium`, el `initialValue` del schema.
+ */
+import PortableText from '../ui/PortableText.astro';
+import type { ImageHeightVariant, PortableTextBlock } from '../../types/sanity';
+
+interface Props {
+  title?: string;
+  /** Bajada destacada arriba del cuerpo (el `headline` de Strategic Idea). */
+  lead?: string;
+  /** Portable Text en la narrativa; `string` plano en las Additional Sections. */
+  content?: PortableTextBlock[] | string;
+  /** Ya resueltas con `toImage()`. */
+  images?: { src: string; alt: string }[];
+  /** GROQ devuelve `null` (no `undefined`) para un campo vacío. */
+  heightVariant?: ImageHeightVariant | null;
+}
+
+const { title, lead, content, images = [], heightVariant } = Astro.props;
+
+/* `??` y no un default en la desestructuración: ese solo cubre `undefined`, y un campo
+   vacío llega de GROQ como `null`. */
+const imageHeight = heightVariant ?? 'medium';
+
+/* Valores iniciales, a revisar en QA (320px → 1440px):
+     low     160 → 240px
+     medium  240 → 360px
+     high    320 → 512px */
+const IMAGE_HEIGHTS: Record<ImageHeightVariant, string> = {
+  low: 'h-[clamp(10rem,8.5714rem_+_7.1429vw,15rem)]',
+  medium: 'h-[clamp(15rem,12.8571rem_+_10.7143vw,22.5rem)]',
+  high: 'h-[clamp(20rem,16.5714rem_+_17.1429vw,32rem)]',
+};
+
+/* Columnas según cuántas imágenes hay: las variantes `grid-2col` / `grid-3col` /
+   `grid-4col` del vanilla sin pedirle al editor que elija un layout. */
+const GRID_COLS =
+  images.length === 1
+    ? 'grid-cols-1'
+    : images.length === 3
+      ? 'grid-cols-3'
+      : images.length >= 4
+        ? 'grid-cols-4'
+        : 'grid-cols-2';
+
+const BODY_CLASSES = {
+  normal: 'font-inter text-body-article leading-[1.6] font-normal',
+  h3: 'font-inter text-h4 leading-[1.3] font-semibold',
+  bullet: 'flex list-disc flex-col gap-xs pl-sm',
+  number: 'flex list-decimal flex-col gap-xs pl-sm',
+  listItem: 'font-inter text-body-article leading-[1.6]',
+  link: 'underline underline-offset-2',
+};
+
+const hasText = Boolean(lead) || (typeof content === 'string' ? Boolean(content.trim()) : Boolean(content?.length));
+---
+
+<div class="section-content flex flex-col gap-[clamp(3.015rem,2.5364rem_+_2.3929vw,4.69rem)]">
+  {
+    (title || hasText) && (
+      <div class="split-intro grid grid-cols-[1fr_1.4fr] items-start gap-[clamp(3.375rem,2.8393rem_+_2.6786vw,5.25rem)] max-md:grid-cols-1 max-md:gap-sm">
+        {title ? (
+          <h2 class="font-inter text-[clamp(1.5rem,1.4286rem_+_0.3571vw,1.75rem)] leading-[1.25] font-semibold tracking-[-0.42px]">
+            {title}
+          </h2>
+        ) : (
+          <div />
+        )}
+
+        <div class="flex flex-col gap-sm">
+          {lead && (
+            <p class="font-lora text-[clamp(1.25rem,1.1429rem_+_0.5357vw,1.625rem)] leading-[1.3] font-medium">{lead}</p>
+          )}
+          {typeof content === 'string'
+            ? content.trim() && (
+                <p class="font-inter text-body-article leading-[1.6] font-normal whitespace-pre-line">{content}</p>
+              )
+            : content && <PortableText value={content} classes={BODY_CLASSES} class="flex flex-col gap-sm" />}
+        </div>
+      </div>
+    )
+  }
+
+  {
+    images.length > 0 && (
+      <div
+        class:list={[
+          'image-stack grid gap-[clamp(0.6019rem,0.5063rem_+_0.4777vw,0.9363rem)] max-md:grid-cols-1',
+          GRID_COLS,
+        ]}
+      >
+        {images.map((image) => (
+          <img
+            src={image.src}
+            alt={image.alt}
+            class:list={['w-full rounded-[0.57em] object-cover', IMAGE_HEIGHTS[imageHeight]]}
+            loading="lazy"
+          />
+        ))}
+      </div>
+    )
+  }
+</div>

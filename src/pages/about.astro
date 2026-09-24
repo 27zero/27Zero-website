@@ -213,8 +213,12 @@ const { seo, siteSettings } = await getPageSeo('about');
     {/* Override scoped, page-specific: el vanilla fija `.section--work-slider
         .card--work` a 30em (vs. los 25em por defecto de `WorkCard`) solo acá — no se
         agregó como prop de tamaño al componente porque ninguna otra página lo pide
-        todavía. Si eso cambia, se revisa como variante compartida. */}
-    <div class="[&_.card--work]:h-[clamp(16.875rem,14.1964rem_+_13.3929vw,26.25rem)] [&_.card--work]:min-h-[clamp(16.875rem,14.1964rem_+_13.3929vw,26.25rem)]">
+        todavía. Si eso cambia, se revisa como variante compartida.
+
+        Desde el rediseño de la card (feedback Work, Nota 1) el alto vive en la imagen
+        (`.card-work-bg`) y el texto va debajo, así que el override apunta a la imagen: si
+        siguiera fijando el alto de `.card--work`, el texto quedaría apretado adentro. */}
+    <div class="[&_.card-work-bg]:h-[clamp(16.875rem,14.1964rem_+_13.3929vw,26.25rem)]">
       <CardsSlider title="Work">
         {WORKS.map((work) => <WorkCard {...work} />)}
       </CardsSlider>

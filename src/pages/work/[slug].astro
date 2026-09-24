@@ -1,75 +1,69 @@
 ---
 /**
  * Work — interna de un case study — 27zero
- * Portado 1:1 de `/work-cms/index.html` + `/work-cms/style.css` del repo vanilla.
- * Plantilla compartida por Work y Clientes: los dos listados son el mismo
- * `documentType` con distinto criterio de agrupación, y las dos linkean acá vía
- * `workUrl()`.
+ * Portado de `/work-cms/index.html` + `/work-cms/style.css` del repo vanilla y
+ * reorganizado en el feedback de Work (astro-changes-work.md). Plantilla compartida por
+ * Work y Clientes: los dos listados son el mismo `documentType` con distinto criterio de
+ * agrupación, y los dos linkean acá vía `workUrl()`.
  *
- * Los cuatro bloques de color del vanilla (purple / white / dark / indigo) mapean a los
- * tres objects curados en Etapa 5 — `description`, `challenge`, `solution` — más el
- * array `contentSections`, que sigue desde el cuarto alternando indigo y blanco. Cada
- * bloque se omite entero si no tiene ni título ni cuerpo ni imágenes: hoy ninguno de los
- * tres `work` cargados tiene imágenes en ninguno de ellos.
+ * Orden de la página (Nota 7.3 — el mismo del fieldset `narrative` del Studio):
  *
- * El testimonio llega por query INVERSA desde `testimonial.workProject` (el objeto
- * embebido `work.testimonial` se eliminó en Etapa 5), ya resuelto dentro de
- * `workDetailQuery`.
+ *   Hero (título, subtítulo, video o imagen) → Cliente → Results
+ *   → Business Problem → Communication Challenge → Strategic Idea
+ *   → Client's feedback (slider) → Additional Sections → Final CTA
+ *
+ * Cada sección se omite entera si no tiene contenido. Colores de la narrativa: purple /
+ * white / indigo, y el slider de testimonios sobre negro — ver `NARRATIVE_THEMES`.
  *
  * Valores fluidos con la curva del proyecto: mobile = `em × 9` @320px,
  * desktop = `em × 14` @1440px.
  */
 import Page from '../../layouts/Page.astro';
-import PortableText from '../../components/ui/PortableText.astro';
+import CaseStudyBlock from '../../components/sections/CaseStudyBlock.astro';
+import FinalCta from '../../components/sections/FinalCta.astro';
+import TestimonialsSlider from '../../components/sections/TestimonialsSlider.astro';
+import type { TestimonialProjection } from '../../lib/sanity/cards';
 import { sanityClient } from '../../lib/sanity/client';
 import { toImage } from '../../lib/sanity/image';
 import { workDetailQuery } from '../../lib/sanity/queries';
 import { getSeoSettings } from '../../lib/sanity/settings';
 import { ogTypeFor } from '../../lib/seo/ogType';
 import { resolveSeo } from '../../lib/seo/resolveSeo';
-import { getInitials } from '../../lib/utils/format';
+import { surfaceColors } from '../../lib/utils/color';
+import { truncateAtWord } from '../../lib/utils/format';
 import { hasContent } from '../../lib/utils/portableText';
 import { detailTrail } from '../../lib/utils/breadcrumbs';
 import { toStaticPaths } from '../../lib/utils/routes';
-import type { PortableTextBlock, SanityImage, Seo } from '../../types/sanity';
+import { toVideoEmbed } from '../../lib/utils/video';
+import type { ImageHeightVariant, PortableTextBlock, SanityImage, Seo, Work } from '../../types/sanity';
 
-interface ContentBlock {
-  title?: string;
-  /** Portable Text en los tres objects curados; `string` plano en `contentSections`. */
-  content?: PortableTextBlock[] | string;
-  images?: SanityImage[];
-}
+/** Imagen con `caption` opcional (galería y arrays de imágenes del Case Study). */
+type CaptionedImage = SanityImage & { caption?: string };
 
 export interface WorkDetail {
   _id: string;
   title?: string;
+  subtitle?: string;
   slug?: string;
   seo?: Seo;
-  excerpt?: string;
-  brief?: string;
+  clientTagline?: string;
+  briefParagraph?: string;
   projectType?: string;
   agencyRole?: string;
   year?: number;
   location?: string;
-  contributions?: string[];
-  clientTagline?: string;
-  clientLogo?: SanityImage;
   thumbnail?: SanityImage;
   heroImage?: SanityImage;
-  gallery?: SanityImage[];
+  heroVideo?: string;
+  gallery?: CaptionedImage[];
   results?: { _key: string; number?: string; description?: string }[];
   client?: { _id: string; name?: string; url?: string; logo?: SanityImage };
-  description?: { projectTitle?: string; projectContent?: PortableTextBlock[]; projectImages?: SanityImage[] };
-  challenge?: { challengeTitle?: string; challengeContent?: PortableTextBlock[]; challengeImages?: SanityImage[] };
-  solution?: { headline?: string; body?: PortableTextBlock[]; solutionImages?: SanityImage[] };
-  contentSections?: { _key: string; title?: string; body?: string; images?: SanityImage[] }[];
-  testimonial?: {
-    _id: string;
-    quote?: string;
-    authorName?: string;
-    authorRole?: string;
-    avatarPhoto?: SanityImage;
-  };
+  challenge?: Work['challenge'];
+  communicationChallenge?: Work['communicationChallenge'];
+  solution?: Work['solution'];
+  contentSections?: Work['contentSections'];
+  finalCta?: Work['finalCta'];
+  testimonials?: TestimonialProjection[];
 }
 
 export async function getStaticPaths() {
@@ -79,117 +73,166 @@ export async function getStaticPaths() {
 
 const work = Astro.props as WorkDetail;
 
-/* El `seo` del documento manda. Si el editor no lo cargó, title y description
-   salen del propio contenido — sigue siendo la misma fuente (el documento), no una
-   segunda — y recién después cae al fallback global de `settings`. Sin esto las 5
-   internas compartirían el title genérico del sitio mientras el SEO esté vacío. */
+/* El `seo` del documento manda. Si el editor no lo cargó, title y description salen del
+   propio contenido — sigue siendo la misma fuente (el documento), no una segunda — y
+   recién después cae al fallback global de `settings`.
+
+   Meta description (Nota 4): `seo.description` si está cargada; si no, `briefParagraph`
+   recortado a 160 caracteres en el render, sin cortar una palabra al medio (CLAUDE.md
+   §8.1). */
 const siteSettings = await getSeoSettings();
-/* Fuente única del breadcrumb: alimenta el `BreadcrumbList` del JSON-LD y,
-   donde el diseño lo tiene, el `<nav>` visible. */
 const breadcrumb = detailTrail('work', { label: work.title });
 
 const seo = {
   ...resolveSeo(work.seo),
-  title: work.seo?.title ?? `${work.title ?? 'Work'} — 27zero`,
-  description: work.seo?.description ?? work.excerpt,
+  title: work.seo?.title ?? `${work.title?.trim() ?? 'Work'} — 27zero`,
+  description: work.seo?.description ?? truncateAtWord(work.briefParagraph, 160),
 };
 
-const heroImage = toImage(work.heroImage ?? work.thumbnail, { width: 1600 });
-/* El logo del cliente puede estar cargado en el `work` (override por proyecto) o en el
-   documento `client` (el canónico). Gana el del proyecto, cae al del cliente, y sin
-   ninguno el círculo muestra las iniciales. */
-const clientLogo = toImage(work.clientLogo ?? work.client?.logo, { width: 160 });
-const clientInitials = getInitials(work.client?.name);
-const avatar = toImage(work.testimonial?.avatarPhoto, { width: 100, height: 100 });
+/* ─────────────────────────────── Hero ───────────────────────────────── */
+
+/* Nota 10: `heroVideo` (YouTube o Vimeo) reemplaza a la imagen cuando está cargado y
+   se reconoce. Una URL que no es de ninguno de los dos cae a la imagen. */
+const heroVideo = toVideoEmbed(work.heroVideo);
+const heroImage = heroVideo ? undefined : toImage(work.heroImage ?? work.thumbnail, { width: 1600 });
+
+/* ────────────────────────────── Cliente ─────────────────────────────── */
+
+/* Notas 3.3 y 3.4: una sola fuente, `client.logo` (`work.clientLogo` se eliminó). El
+   schema de `client.logo` no tiene campo `alt`, y `toImage()` descarta toda imagen sin
+   `alt` — así el logo no se vería nunca. Para un logo el texto alternativo correcto es
+   el nombre de la marca, así que se deriva de `client.name`. Guard defensivo: sin
+   cliente o sin logo, no hay imagen. */
+const clientLogo =
+  work.client?.logo && work.client.name
+    ? toImage({ ...work.client.logo, alt: work.client.logo.alt ?? `${work.client.name} logo` }, { width: 480 })
+    : undefined;
+
+/* Notas 6.2 y 6.3: los 4 campos de la tab "Project Brief". "Contribution" se eliminó
+   del schema. */
+const details: { label: string; value?: string }[] = [
+  { label: 'Project Type', value: work.projectType },
+  { label: 'Agency Role', value: work.agencyRole },
+  { label: 'Location', value: work.location },
+  { label: 'Year', value: work.year ? String(work.year) : undefined },
+].filter((detail) => detail.value?.trim());
+
+/* ───────────────────────────── Results ──────────────────────────────── */
 
 const results = (work.results ?? []).filter((r) => r.number || r.description);
-const galleryImages = (work.gallery ?? [])
-  .map((image) => toImage(image, { width: 900 }))
-  .filter((image) => image !== undefined);
 
-/* La bajada del proyecto son los dos párrafos del `.client-content` del vanilla.
-   `excerpt` solo se suma si aporta algo distinto de `brief`: en el dataset actual hay
-   documentos donde los dos traen el mismo texto, y repetirlo se lee como un error. */
-const introParagraphs = [work.brief, work.excerpt !== work.brief ? work.excerpt : undefined].filter(
-  (text): text is string => Boolean(text)
-);
+/* Nota 10: la galería de Results muestra el `caption` de cada imagen debajo de ella. */
+const galleryImages = (work.gallery ?? []).flatMap((image) => {
+  const resolved = toImage(image, { width: 900 });
+  return resolved ? [{ ...resolved, caption: image.caption?.trim() }] : [];
+});
 
-/* Pares label/valor de la columna derecha del bloque de cliente. `projectType` y
-   `agencyRole` (curados en Etapa 5) entran acá: es el único lugar de la plantilla que
-   modela metadata del proyecto en formato etiqueta + valor. */
-const details: { label: string; values: string[] }[] = [
-  { label: 'Contribution', values: work.contributions ?? [] },
-  { label: 'Project Type', values: work.projectType ? [work.projectType] : [] },
-  { label: 'Agency Role', values: work.agencyRole ? [work.agencyRole] : [] },
-  { label: 'Location', values: work.location ? [work.location] : [] },
-  { label: 'Year', values: work.year ? [String(work.year)] : [] },
-].filter((group) => group.values.length > 0);
+/* ───────────────────────────── Narrativa ────────────────────────────── */
+
+interface ContentBlock {
+  key: string;
+  title?: string;
+  /** Solo Strategic Idea: el headline va como bajada destacada arriba del cuerpo. */
+  lead?: string;
+  /** Portable Text en la narrativa; `string` plano en `contentSections`. */
+  content?: PortableTextBlock[] | string;
+  images?: SanityImage[];
+  heightVariant?: ImageHeightVariant;
+}
 
 /**
- * Los bloques de contenido, en orden y con su color.
- *
- * `description` / `challenge` / `solution` son los tres objects curados en Etapa 5 y van
- * siempre en purple / white / dark. `contentSections` sigue desde el cuarto alternando
- * indigo y blanco — es un array legacy con `body` como `string` plano (no Portable
- * Text), así que se renderiza como párrafo suelto.
+ * Colores de la narrativa. Challenge abre en purple (el color del primer bloque en el
+ * vanilla), Communication Challenge en blanco y Strategic Idea en indigo: así ninguna
+ * sección queda pegada a otra del mismo fondo — Results arriba es blanca y el slider de
+ * testimonios abajo es negro.
  */
-const CURATED_BLOCKS: { block: ContentBlock; theme: 'purple' | 'white' | 'dark' }[] = [
+const NARRATIVE_THEMES = {
+  purple: { section: 'bg-purple', text: 'text-black' },
+  white: { section: 'bg-white', text: 'text-black' },
+  indigo: { section: 'bg-indigo', text: 'text-white' },
+} as const;
+
+/* El label de cada sección es editable por proyecto (ej. "RFP Brief"). Vacío — pasa en
+   documentos anteriores al campo, porque el `initialValue` solo aplica a los nuevos —
+   cae al nombre estándar de la sección. */
+const narrative: { block: ContentBlock; theme: keyof typeof NARRATIVE_THEMES }[] = [
   {
     block: {
-      title: work.description?.projectTitle,
-      content: work.description?.projectContent,
-      images: work.description?.projectImages,
+      key: 'challenge',
+      title: work.challenge?.challengeTitle?.trim() || 'Business Problem',
+      content: work.challenge?.challengeContent,
+      images: work.challenge?.challengeImages,
+      heightVariant: work.challenge?.heightVariant,
     },
     theme: 'purple',
   },
   {
     block: {
-      title: work.challenge?.challengeTitle,
-      content: work.challenge?.challengeContent,
-      images: work.challenge?.challengeImages,
+      key: 'communication-challenge',
+      title: work.communicationChallenge?.sectionLabel?.trim() || 'Communication Challenge',
+      content: work.communicationChallenge?.content,
+      images: work.communicationChallenge?.images,
+      heightVariant: work.communicationChallenge?.heightVariant,
     },
     theme: 'white',
   },
   {
     block: {
-      title: work.solution?.headline,
+      key: 'strategic-idea',
+      title: work.solution?.sectionLabel?.trim() || 'Strategic Idea',
+      lead: work.solution?.headline?.trim(),
       content: work.solution?.body,
       images: work.solution?.solutionImages,
+      heightVariant: work.solution?.heightVariant,
     },
-    theme: 'dark',
+    theme: 'indigo',
   },
 ];
 
-const extraBlocks = (work.contentSections ?? []).map((section, index) => ({
-  block: { title: section.title, content: section.body, images: section.images },
-  theme: (index % 2 === 0 ? 'indigo' : 'white') as 'indigo' | 'white',
-}));
+/* Un bloque sin cuerpo, bajada ni imágenes se omite: el label solo, con su default, no
+   es contenido. */
+const hasBody = (block: ContentBlock) =>
+  Boolean(block.lead) ||
+  (typeof block.content === 'string' ? Boolean(block.content.trim()) : hasContent(block.content)) ||
+  (block.images ?? []).length > 0;
 
-const isEmpty = (block: ContentBlock) =>
-  !block.title &&
-  !(typeof block.content === 'string' ? block.content : hasContent(block.content)) &&
-  (block.images ?? []).length === 0;
+const narrativeBlocks = narrative.filter(({ block }) => hasBody(block));
 
-const blocks = [...CURATED_BLOCKS, ...extraBlocks].filter(({ block }) => !isEmpty(block));
+/* Nota 7.7: cada Additional Section trae su fondo y su texto. Fondo vacío → blanco;
+   texto vacío → negro o blanco según el fondo. */
+const additionalSections = (work.contentSections ?? [])
+  .map((section) => ({
+    block: {
+      key: section._key,
+      title: section.title?.trim(),
+      content: section.body,
+      images: section.images,
+      heightVariant: section.heightVariant,
+    } satisfies ContentBlock,
+    colors: surfaceColors(section.bgColor, section.textColor, '#ffffff'),
+  }))
+  .filter(({ block }) => block.title || hasBody(block));
 
-/* Columnas de la grilla de imágenes según cuántas hay: reproduce las variantes
-   `grid-2col` / `grid-3col` / `grid-4col` + `placeholder--xl` del vanilla sin pedirle al
-   editor que elija un layout. */
+const testimonials = (work.testimonials ?? [])
+  .filter((testimonial) => testimonial.quote && testimonial.authorName)
+  .map((testimonial) => ({
+    quote: testimonial.quote,
+    authorName: testimonial.authorName!,
+    authorRole: testimonial.authorRole,
+    avatarPhoto: toImage(testimonial.avatarPhoto, { width: 100, height: 100 }),
+  }));
+
+/* ───────────────────────────── Imágenes ─────────────────────────────── */
+
+/* Columnas de la grilla de la galería de Results según cuántas imágenes hay (las de la
+   narrativa las resuelve `CaseStudyBlock`, con el mismo criterio). */
 const gridCols = (count: number) =>
-  count === 1
-    ? 'grid-cols-1'
-    : count === 3
-      ? 'grid-cols-3'
-      : count >= 4
-        ? 'grid-cols-4'
-        : 'grid-cols-2';
+  count === 1 ? 'grid-cols-1' : count === 3 ? 'grid-cols-3' : count >= 4 ? 'grid-cols-4' : 'grid-cols-2';
 
-const THEMES = {
-  purple: { section: 'bg-purple', heading: 'text-black', body: 'text-black' },
-  white: { section: 'bg-white', heading: 'text-black', body: 'text-black' },
-  dark: { section: 'bg-black', heading: 'text-white', body: 'text-white' },
-  indigo: { section: 'bg-indigo', heading: 'text-white', body: 'text-white' },
-} as const;
+const resolveImages = (images?: SanityImage[]) =>
+  (images ?? []).map((image) => toImage(image, { width: 900 })).filter((image) => image !== undefined);
+
+/* ─────────────────────────────── Clases ─────────────────────────────── */
 
 const CONTAINER =
   'container mx-auto flex w-full max-w-(--container-max-width) flex-col gap-[clamp(2.2106rem,1.8597rem_+_1.7545vw,3.4388rem)] px-container-x max-md:gap-[clamp(1.9688rem,1.6563rem_+_1.5625vw,3.0625rem)]';
@@ -198,17 +241,6 @@ const SECTION_Y = 'py-[clamp(5.0231rem,4.2258rem_+_3.9866vw,7.8137rem)]';
 const IMAGE_GAP = 'gap-[clamp(0.6019rem,0.5063rem_+_0.4777vw,0.9363rem)]';
 const IMAGE_RADIUS = 'rounded-[0.57em] object-cover w-full';
 const EYEBROW = 'block font-inter text-[clamp(0.5rem,0.4286rem_+_0.3571vw,0.75rem)] leading-[1.5] font-normal capitalize';
-const BLOCK_HEADING =
-  'font-inter text-[clamp(1.5rem,1.4286rem_+_0.3571vw,1.75rem)] leading-[1.25] font-semibold tracking-[-0.42px]';
-
-const BODY_CLASSES = (tone: string) => ({
-  normal: `font-inter text-body-article leading-[1.6] font-normal ${tone}`,
-  h3: `font-inter text-h4 leading-[1.3] font-semibold ${tone}`,
-  bullet: `flex list-disc flex-col gap-xs pl-sm ${tone}`,
-  number: `flex list-decimal flex-col gap-xs pl-sm ${tone}`,
-  listItem: `font-inter text-body-article leading-[1.6] ${tone}`,
-  link: 'underline underline-offset-2',
-});
 ---
 
 <Page seo={seo} siteSettings={siteSettings} breadcrumb={breadcrumb} ogType={ogTypeFor('work')} navVariant="white">
@@ -217,18 +249,44 @@ const BODY_CLASSES = (tone: string) => ({
     class="section section--hero pt-[clamp(6.75rem,5.6786rem_+_5.3571vw,10.5rem)] pb-[clamp(2.2106rem,1.8597rem_+_1.7545vw,3.4388rem)]"
   >
     <div class={CONTAINER}>
-      <h1
-        class="font-lora text-h1 leading-[1.25] font-medium tracking-[clamp(-0.02rem,-0.0171rem_-_0.0143vw,-0.03rem)]"
-      >
-        {work.title}
-      </h1>
+      {/* Nota 4: el `h1` ocupa hasta el 75% del ancho en desktop y el 100% en mobile; el
+          subtítulo va inmediatamente debajo, por eso comparten un wrapper con su propio
+          gap en vez de heredar el del container. */}
+      <div class="flex flex-col gap-sm">
+        <h1
+          class="max-w-[75%] font-lora text-h1 leading-[1.25] font-medium tracking-[clamp(-0.02rem,-0.0171rem_-_0.0143vw,-0.03rem)] max-md:max-w-full"
+        >
+          {work.title}
+        </h1>
+        {
+          work.subtitle && (
+            <p class="max-w-[75%] font-inter text-body leading-[1.6] font-medium tracking-normal text-black max-md:max-w-full">
+              {work.subtitle}
+            </p>
+          )
+        }
+      </div>
+
       {
-        heroImage && (
-          <img
-            src={heroImage.src}
-            alt={heroImage.alt}
-            class:list={[IMAGE_RADIUS, 'h-[clamp(21.375rem,17.9821rem_+_16.9643vw,33.25rem)]']}
-          />
+        heroVideo ? (
+          <div class="aspect-video w-full overflow-hidden rounded-[0.57em] bg-black">
+            <iframe
+              src={heroVideo.src}
+              title={`${work.title?.trim() ?? 'Case study'} — video`}
+              class="size-full border-0"
+              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerpolicy="strict-origin-when-cross-origin"
+              allowfullscreen
+            />
+          </div>
+        ) : (
+          heroImage && (
+            <img
+              src={heroImage.src}
+              alt={heroImage.alt}
+              class:list={[IMAGE_RADIUS, 'h-[clamp(21.375rem,17.9821rem_+_16.9643vw,33.25rem)]']}
+            />
+          )
         )
       }
     </div>
@@ -241,26 +299,19 @@ const BODY_CLASSES = (tone: string) => ({
         class="client-block grid grid-cols-[1fr_1.6fr] items-start gap-[clamp(3.375rem,2.8393rem_+_2.6786vw,5.25rem)] max-md:grid-cols-1 max-md:gap-[clamp(1.9688rem,1.6563rem_+_1.5625vw,3.0625rem)]"
       >
         <div class="client-meta flex flex-col gap-[clamp(2.4131rem,2.0301rem_+_1.9152vw,3.7538rem)]">
-          <div class="client-logo-wrap flex items-center gap-sm">
-            <div
-              class="flex size-[clamp(2.25rem,1.8929rem_+_1.7857vw,3.5rem)] shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#D9D9D9]"
-            >
-              {
-                clientLogo ? (
-                  <img src={clientLogo.src} alt={clientLogo.alt} class="size-full object-contain" />
-                ) : (
-                  <span class="font-inter text-[clamp(0.3125rem,0.2589rem_+_0.2679vw,0.5rem)] font-semibold text-black/35 uppercase">
-                    {clientInitials}
-                  </span>
-                )
-              }
-            </div>
-            <div
-              class="client-name-wrap flex flex-col gap-[clamp(0.1125rem,0.0946rem_+_0.0893vw,0.175rem)]"
-            >
-              <span
-                class="font-inter text-[clamp(0.75rem,0.6429rem_+_0.5357vw,1.125rem)] font-bold text-black"
-              >
+          <div class="client-logo-wrap flex flex-col items-start gap-sm">
+            {/* Logo completo de la marca, en su proporción, con 70px de alto máximo. */}
+            {
+              clientLogo && (
+                <img
+                  src={clientLogo.src}
+                  alt={clientLogo.alt}
+                  class="block h-auto max-h-[4.375rem] w-auto max-w-full object-contain"
+                />
+              )
+            }
+            <div class="client-name-wrap flex flex-col gap-[clamp(0.1125rem,0.0946rem_+_0.0893vw,0.175rem)]">
+              <span class="font-inter text-[clamp(0.75rem,0.6429rem_+_0.5357vw,1.125rem)] font-bold text-black">
                 {work.client?.name}
               </span>
               {
@@ -275,40 +326,39 @@ const BODY_CLASSES = (tone: string) => ({
 
           {
             details.length > 0 && (
-              <div class="client-details grid grid-cols-2 gap-sm">
-                {details.map((group) => (
+              <dl class="client-details grid grid-cols-2 gap-sm">
+                {details.map((detail) => (
                   <div class="client-detail-group flex flex-col gap-xs">
-                    <span class="font-inter text-[clamp(0.4375rem,0.3661rem_+_0.3571vw,0.6875rem)] font-medium tracking-[0.03125rem] text-black/40 uppercase">
-                      {group.label}
-                    </span>
-                    <ul class="flex list-none flex-col gap-[0.3em]">
-                      {group.values.map((value) => (
-                        <li class="font-inter text-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] leading-[1.5] font-normal text-black">
-                          {value}
-                        </li>
-                      ))}
-                    </ul>
+                    <dt class="font-inter text-[clamp(0.4375rem,0.3661rem_+_0.3571vw,0.6875rem)] font-medium tracking-[0.03125rem] text-black/40 uppercase">
+                      {detail.label}
+                    </dt>
+                    <dd class="font-inter text-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] leading-[1.5] font-normal text-black">
+                      {detail.value}
+                    </dd>
                   </div>
                 ))}
-              </div>
+              </dl>
             )
           }
         </div>
 
-        <div class="client-content flex flex-col gap-sm">
-          {
-            introParagraphs.map((paragraph) => (
-              <p class="font-inter text-body-article leading-[1.6] font-normal text-black">{paragraph}</p>
-            ))
-          }
-        </div>
+        {/* Nota 6.4: un solo párrafo, `briefParagraph` (antes `brief` + `excerpt`). */}
+        {
+          work.briefParagraph && (
+            <div class="client-content flex flex-col gap-sm">
+              <p class="font-inter text-body-article leading-[1.6] font-normal whitespace-pre-line text-black">
+                {work.briefParagraph}
+              </p>
+            </div>
+          )
+        }
       </div>
 
       <hr class="w-full border-0 border-t border-solid border-black/15" />
     </div>
   </section>
 
-  <!-- 3. RESULTADOS -->
+  <!-- 3. RESULTS -->
   {
     (results.length > 0 || galleryImages.length > 0) && (
       <section class="section section--results pt-0 pb-[clamp(5.0231rem,4.2258rem_+_3.9866vw,7.8137rem)]">
@@ -333,12 +383,19 @@ const BODY_CLASSES = (tone: string) => ({
           {galleryImages.length > 0 && (
             <div class:list={['grid', gridCols(galleryImages.length), IMAGE_GAP, 'max-md:grid-cols-1']}>
               {galleryImages.map((image) => (
-                <img
-                  src={image.src}
-                  alt={image.alt}
-                  class:list={[IMAGE_RADIUS, 'h-[clamp(12.375rem,10.4107rem_+_9.8214vw,19.25rem)]']}
-                  loading="lazy"
-                />
+                <figure class="flex flex-col gap-xs">
+                  <img
+                    src={image.src}
+                    alt={image.alt}
+                    class:list={[IMAGE_RADIUS, 'h-[clamp(12.375rem,10.4107rem_+_9.8214vw,19.25rem)]']}
+                    loading="lazy"
+                  />
+                  {image.caption && (
+                    <figcaption class="font-inter text-body-sm leading-[1.5] font-normal text-black/60">
+                      {image.caption}
+                    </figcaption>
+                  )}
+                </figure>
               ))}
             </div>
           )}
@@ -347,113 +404,46 @@ const BODY_CLASSES = (tone: string) => ({
     )
   }
 
-  <!-- 4. TESTIMONIO -->
+  <!-- 4–6. NARRATIVA — Business Problem / Communication Challenge / Strategic Idea -->
   {
-    work.testimonial?.quote && (
-      <section class:list={['section section--dark bg-black', SECTION_Y]}>
+    narrativeBlocks.map(({ block, theme }) => (
+      <section
+        class:list={['section', `section--${block.key}`, NARRATIVE_THEMES[theme].section, NARRATIVE_THEMES[theme].text, SECTION_Y]}
+      >
         <div class={CONTAINER}>
-          <div class="testimonial-grid grid grid-cols-[0.6fr_1fr_1.4fr] items-center gap-[clamp(3.375rem,2.8393rem_+_2.6786vw,5.25rem)] max-md:grid-cols-1 max-md:gap-[clamp(1.9688rem,1.6563rem_+_1.5625vw,3.0625rem)]">
-            <div class="h-full">
-              <span class:list={[EYEBROW, 'text-white max-md:text-[0.75rem]']}>Client's feedback</span>
-            </div>
-
-            <div class="flex items-center justify-center max-md:hidden" aria-hidden="true">
-              <svg
-                viewBox="0 0 376 296"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-auto w-full max-w-[clamp(15.1088rem,12.7105rem_+_11.9911vw,23.5025rem)]"
-              >
-                <path
-                  d="M63.1627 124.2H0V0H170.91V29.0037C170.91 163.619 152.334 256.584 135.985 295.997H52.759C60.9337 243.937 63.9066 174.773 63.1627 124.2ZM268.253 124.2H205.09V0H376V29.0037C376 163.619 357.422 256.584 341.075 295.997H257.849C266.021 243.937 268.994 174.773 268.253 124.2Z"
-                  fill="#C286FF"
-                />
-              </svg>
-            </div>
-
-            <div class="testimonial-content flex flex-col gap-sm">
-              <p class="font-inter text-[clamp(0.8044rem,0.6767rem_+_0.6384vw,1.2512rem)] leading-[1.5] font-medium text-white">
-                {work.testimonial.quote}
-              </p>
-              <hr class="w-full border-0 border-t border-solid border-white/25" />
-              <div class="testimonial-author flex items-center gap-sm">
-                <div class="flex size-[clamp(1.6875rem,1.4196rem_+_1.3393vw,2.625rem)] shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#D9D9D9]">
-                  {avatar ? (
-                    <img src={avatar.src} alt={avatar.alt} class="size-full object-cover" loading="lazy" />
-                  ) : (
-                    <span class="font-inter text-[clamp(0.3125rem,0.2589rem_+_0.2679vw,0.5rem)] font-semibold text-black/35 uppercase">
-                      {getInitials(work.testimonial.authorName)}
-                    </span>
-                  )}
-                </div>
-                <div>
-                  <span class="block font-inter text-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] font-semibold text-white">
-                    {work.testimonial.authorName}
-                  </span>
-                  {work.testimonial.authorRole && (
-                    <span class="block font-inter text-[clamp(0.5rem,0.4286rem_+_0.3571vw,0.75rem)] font-normal text-white/55">
-                      {work.testimonial.authorRole}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
+          <CaseStudyBlock {...block} images={resolveImages(block.images)} />
         </div>
       </section>
-    )
+    ))
   }
 
-  <!-- 5+. BLOQUES DE CONTENIDO — description / challenge / solution / contentSections -->
+  <!-- 7. CLIENT'S FEEDBACK — Nota 7.2: todos los testimonios linkeados, en slider -->
+  {/* El label queda hardcodeado: el `sectionLabel` de `clientQuote` se eliminó del
+      schema junto con el campo. */}
+  {testimonials.length > 0 && <TestimonialsSlider testimonials={testimonials} label="Client's feedback" />}
+
+  <!-- 8. ADDITIONAL SECTIONS — Nota 7.7: fondo y texto del CMS -->
   {
-    blocks.map(({ block, theme }) => {
-      const tone = THEMES[theme];
-      const images = (block.images ?? [])
-        .map((image) => toImage(image, { width: 900 }))
-        .filter((image) => image !== undefined);
-
-      return (
-        <section class:list={['section', tone.section, SECTION_Y]}>
-          <div class={CONTAINER}>
-            <div class="section-content flex flex-col gap-[clamp(3.015rem,2.5364rem_+_2.3929vw,4.69rem)]">
-              <div class="split-intro grid grid-cols-[1fr_1.4fr] items-start gap-[clamp(3.375rem,2.8393rem_+_2.6786vw,5.25rem)] max-md:grid-cols-1 max-md:gap-sm">
-                {block.title && <h2 class:list={[BLOCK_HEADING, tone.heading]}>{block.title}</h2>}
-                {typeof block.content === 'string' ? (
-                  <p class:list={['font-inter text-body-article leading-[1.6] font-normal', tone.body]}>
-                    {block.content}
-                  </p>
-                ) : (
-                  <PortableText
-                    value={block.content}
-                    classes={BODY_CLASSES(tone.body)}
-                    class="flex flex-col gap-sm"
-                  />
-                )}
-              </div>
-
-              {images.length > 0 && (
-                <div class:list={['image-stack grid', gridCols(images.length), IMAGE_GAP, 'max-md:grid-cols-1']}>
-                  {images.map((image) => (
-                    <img
-                      src={image.src}
-                      alt={image.alt}
-                      class:list={[
-                        IMAGE_RADIUS,
-                        images.length === 1
-                          ? 'h-[clamp(15.75rem,13.25rem_+_12.5vw,24.5rem)]'
-                          : images.length >= 3
-                            ? 'h-[clamp(7.875rem,6.625rem_+_6.25vw,12.25rem)]'
-                            : 'h-[clamp(12.375rem,10.4107rem_+_9.8214vw,19.25rem)]',
-                      ]}
-                      loading="lazy"
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-      );
-    })
+    additionalSections.map(({ block, colors }) => (
+      <section
+        class:list={['section section--additional bg-(--section-bg) text-(--section-text)', SECTION_Y]}
+        style={`--section-bg:${colors.background};--section-text:${colors.text}`}
+      >
+        <div class={CONTAINER}>
+          <CaseStudyBlock {...block} images={resolveImages(block.images)} />
+        </div>
+      </section>
+    ))
   }
+
+  <!-- 9. FINAL CTA — Nota 7.9 -->
+  <FinalCta
+    bgColor={work.finalCta?.sectionBgColor}
+    headlineColor={work.finalCta?.sectionHeadlineColor}
+    bodyTextColor={work.finalCta?.sectionBodyTextColor}
+    headline={work.finalCta?.headline}
+    bodyText={work.finalCta?.bodyText}
+    ctaText={work.finalCta?.ctaText}
+    ctaLink={work.finalCta?.ctaLink}
+  />
 </Page>

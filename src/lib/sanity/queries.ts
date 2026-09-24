@@ -15,19 +15,41 @@
  */
 /* ─────────────────────────── Fragmentos comunes ───────────────────────── */
 
-/** Campos de `work` que consume una `WorkCard`. Nada del detalle del case study. */
+/**
+ * Campos de `work` que consume una `WorkCard`. Nada del detalle del case study.
+ *
+ * Feedback Work (Notas 1 y 2): el título de la card es `clientTagline` (con `title`
+ * de respaldo, lo resuelve `toWorkCard`) y el círculo del cliente lee `client.icon`.
+ * `clientLogo`, `excerpt` e `isFeatured` se eliminaron del schema.
+ */
 const WORK_CARD_FIELDS = `
   _id,
   title,
   "slug": slug.current,
-  excerpt,
-  isFeatured,
+  clientTagline,
   order,
   thumbnail,
-  clientLogo,
   "clientName": client->name,
+  "clientIcon": client->icon,
   "categoryTitle": category->title,
   "categorySlug": category->slug.current
+`;
+
+/**
+ * Categorías destacadas de Work (Nota 9): reemplazan a `work.isFeatured` y al bloque
+ * fijo "Los mejores". Cada una trae su selección curada en el orden del Studio.
+ *
+ * Se filtra por `isFeaturedCategory` y no solo por tener `featuredWorks`: el Studio
+ * oculta el array cuando se desmarca la categoría, pero el dato puede quedar cargado.
+ */
+const FEATURED_WORK_CATEGORIES = `
+  *[_type == "workCategory" && isFeaturedCategory == true && defined(slug.current)]
+    | order(order asc, title asc) {
+      _id,
+      title,
+      "slug": slug.current,
+      "works": featuredWorks[]->{${WORK_CARD_FIELDS}}
+    }
 `;
 
 /**
@@ -80,8 +102,9 @@ const TESTIMONIAL_FIELDS = `
 /**
  * Home — works destacados, la sección EdTech Mentor y los testimonios.
  *
- * `featuredWorks` usa `isFeatured == true`: en Etapa 5 ese booleano asumió el rol del
- * slider "Los mejores", que dejó de existir como `workCategory`.
+ * `featuredWorkCategories` alimenta el slider de works destacados: desde el feedback de
+ * Work (Nota 9) la selección vive en las categorías marcadas como destacadas, no en
+ * `work.isFeatured`, que se eliminó del schema.
  *
  * `testimonials` es la lista general ordenada por `order`, no la filtrada por
  * proyecto: Home muestra todos los testimonios destacados, sin importar a qué `work`
@@ -137,8 +160,7 @@ export const siteSettingsSeoQuery = `
 `;
 
 export const homeQuery = `{
-  "featuredWorks": *[_type == "work" && isFeatured == true && defined(slug.current)]
-    | order(order asc, title asc) {${WORK_CARD_FIELDS}},
+  "featuredWorkCategories": ${FEATURED_WORK_CATEGORIES},
 
   "featuredMentor": *[_type == "edtechMentor" && isFeatured == true && defined(slug.current)]
     | order(publishedAt desc)[0] {${MENTOR_CARD_FIELDS}},
@@ -199,8 +221,12 @@ export const aboutQuery = `{
  * `categories` usa el campo `order` de `workCategory` (agregado en el Studio después
  * de 6B) para respetar el orden del Figma, con `title asc` como desempate para las
  * categorías que todavía no lo tengan cargado.
+ *
+ * `featuredCategories` son los sliders destacados que van arriba de todo (Nota 9).
  */
 export const workListQuery = `{
+  "featuredCategories": ${FEATURED_WORK_CATEGORIES},
+
   "categories": *[_type == "workCategory" && defined(slug.current)]
     | order(order asc, title asc) {_id, title, "slug": slug.current},
 
@@ -390,36 +416,40 @@ export const edtechMarketingQuery = `{
  * Etapa 5. Resolverlo acá y no como query aparte evita una segunda llamada y deja el
  * documento entero disponible en las props de la página.
  *
- * `[0]` porque la interna muestra un solo testimonio (la sección "Client's feedback" del
- * template tiene una sola cita). Si un `work` tuviera más de uno cargado, gana el de
- * `order` más bajo.
+ * `testimonials` trae TODOS los testimonios linkeados, ordenados por `order`: desde el
+ * feedback de Work (Nota 7.2) "Client's feedback" es un slider, no una sola cita.
+ *
+ * Los tres bloques narrativos traen su `sectionLabel` / `challengeTitle` y su
+ * `heightVariant`; el label puede venir vacío en documentos cargados antes de que
+ * existiera el campo (el `initialValue` solo aplica a documentos nuevos), y la página
+ * cae al nombre estándar de la sección.
  */
 export const workDetailQuery = `
   *[_type == "work"] {
     _id,
     title,
+    subtitle,
     "slug": slug.current,
     seo,
-    excerpt,
-    brief,
+    clientTagline,
+    briefParagraph,
     projectType,
     agencyRole,
     year,
     location,
-    contributions,
-    clientTagline,
-    clientLogo,
     thumbnail,
     heroImage,
+    heroVideo,
     gallery,
     results[]{_key, number, description},
     "client": client->{_id, name, url, logo},
-    description{projectTitle, projectContent, projectImages},
-    challenge{challengeTitle, challengeContent, challengeImages},
-    solution{headline, body, solutionImages},
-    contentSections[]{_key, title, body, images},
-    "testimonial": *[_type == "testimonial" && workProject._ref == ^._id]
-      | order(order asc)[0] {${TESTIMONIAL_FIELDS}}
+    challenge{challengeTitle, challengeContent, challengeImages, heightVariant},
+    communicationChallenge{sectionLabel, content, images, heightVariant},
+    solution{sectionLabel, headline, body, solutionImages, heightVariant},
+    contentSections[]{_key, title, body, images, heightVariant, bgColor, textColor},
+    finalCta,
+    "testimonials": *[_type == "testimonial" && workProject._ref == ^._id]
+      | order(order asc) {${TESTIMONIAL_FIELDS}}
   }
 `;
 

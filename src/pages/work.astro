@@ -21,33 +21,37 @@ import { getPageSeo } from '../lib/sanity/settings';
 import CategorySliders from '../components/sections/CategorySliders.astro';
 import FilterPills from '../components/sections/FilterPills.astro';
 import MarqueeLogos from '../components/sections/MarqueeLogos.astro';
-import { toWorkCard } from '../lib/sanity/cards';
-import type { WorkCardProjection } from '../lib/sanity/cards';
+import { featuredWorksOf, toWorkCard } from '../lib/sanity/cards';
+import type { FeaturedWorkCategoryProjection, WorkCardProjection } from '../lib/sanity/cards';
 import { sanityClient } from '../lib/sanity/client';
 import { workListQuery } from '../lib/sanity/queries';
 import type { WorkGroup } from '../types/ui';
 
-const { categories, works, hero } = await sanityClient.fetch<{
+const { featuredCategories, categories, works, hero } = await sanityClient.fetch<{
+  featuredCategories: FeaturedWorkCategoryProjection[];
   categories: { _id: string; title: string; slug: string }[];
   works: WorkCardProjection[];
   hero: { eyebrow?: string; headline?: string; subtitle?: string } | null;
 }>(workListQuery);
 
-/* "Los mejores" va primero y NO es una categoría: en Etapa 5 se sacó de `workCategory`
-   y su rol lo asumió `work.isFeatured` (brief-cierre-etapa-5.md §3). Por eso se arma a
-   mano acá y queda fuera de los pills, igual que en el vanilla. */
-const FEATURED_GROUP: WorkGroup = {
-  id: 'los-mejores',
-  label: 'Los mejores',
-  items: works.filter((work) => work.isFeatured).map((work) => toWorkCard(work)),
-};
+/* Sliders destacados, arriba de todo (feedback Work, Nota 9). Reemplazan al bloque fijo
+   "Los mejores": uno por cada `workCategory` con `isFeaturedCategory`, en su `order`,
+   con su selección curada (`featuredWorks`) y las cards en su variante alta.
+
+   El `id` lleva el prefijo `featured-` porque la misma categoría tiene además su slider
+   normal más abajo, con el slug como `id` (destino de su pill). Sin prefijo habría dos
+   anchors con el mismo `id`. Los destacados no llevan pill, igual que "Los mejores". */
+const FEATURED_GROUPS: WorkGroup[] = featuredCategories.flatMap((category) => {
+  const items = featuredWorksOf(category).map((work) => toWorkCard(work, { eyebrow: category.title }));
+
+  return items.length > 0
+    ? [{ id: `featured-${category.slug}`, label: category.title, items, cardSize: 'tall' as const }]
+    : [];
+});
 
 /* Un grupo por categoría, con el título de la categoría como eyebrow de sus cards.
    Las categorías sin ningún `work` no se renderizan: dejarlas daría un slider vacío y
-   un pill que scrollea a un anchor sin contenido.
-
-   ⚠️ El orden es alfabético, no el del Figma: `workCategory` no tiene campo `order`
-   en el schema. Ver reporte de entrega. */
+   un pill que scrollea a un anchor sin contenido. El orden es el `order` del Studio. */
 const CATEGORY_GROUPS: WorkGroup[] = categories.flatMap((category) => {
   const items = works
     .filter((work) => work.categorySlug === category.slug)
@@ -56,14 +60,11 @@ const CATEGORY_GROUPS: WorkGroup[] = categories.flatMap((category) => {
   return items.length > 0 ? [{ id: category.slug, label: category.title, items }] : [];
 });
 
-const WORK_BY_CATEGORY: WorkGroup[] = [
-  ...(FEATURED_GROUP.items.length > 0 ? [FEATURED_GROUP] : []),
-  ...CATEGORY_GROUPS,
-];
+const WORK_BY_CATEGORY: WorkGroup[] = [...FEATURED_GROUPS, ...CATEGORY_GROUPS];
 
-/* Los pills salen de las categorías reales, sin "Los mejores" — en el vanilla esa
-   sección tiene slider pero no pill (el "All" lo antepone `FilterPills`). Derivarlos
-   de los mismos grupos garantiza que todo pill apunte a un anchor existente. */
+/* Los pills salen de las categorías normales, sin los destacados — mismo criterio que
+   "Los mejores" en el vanilla (el "All" lo antepone `FilterPills`). Derivarlos de los
+   mismos grupos garantiza que todo pill apunte a un anchor existente. */
 const WORK_FILTER_CATEGORIES = CATEGORY_GROUPS.map(({ id, label }) => ({ id, label }));
 
 /* `.container` con el `padding-left` propio del hero/pills de Work (13em desktop,
@@ -73,14 +74,6 @@ const WORK_FILTER_CATEGORIES = CATEGORY_GROUPS.map(({ id, label }) => ({ id, lab
    orden del atributo `class`, y el override perdería en silencio. */
 const HERO_CONTAINER =
   'container mx-auto flex w-full max-w-(--container-max-width) flex-col pr-container-x pl-[clamp(1.125rem,-1.8036rem_+_14.6429vw,11.375rem)]';
-
-/* Override scoped de la categoría "Los mejores": sus cards son más altas que las del
-   resto (32em vs. los 25em por defecto de `WorkCard`), igual que el
-   `#los-mejores .card--work` de `work/style.css`. Va como clase de la página y no como
-   prop de `CategorySliders` para que el componente siga siendo la plantilla genérica
-   que Clientes reutiliza — mismo criterio que el override del Work Slider en About. */
-const LOS_MEJORES_CARD_HEIGHT =
-  '[&_#los-mejores_.card--work]:h-[clamp(20rem,17.7143rem_+_11.4286vw,28rem)] [&_#los-mejores_.card-work-body]:min-h-[clamp(20rem,17.7143rem_+_11.4286vw,28rem)]';
 
 /* SEO de esta página: `settings.workSeo` en Sanity, con fallback global.
    `getPageSeo()` memoiza el singleton — una sola query para todo el build. */
@@ -116,5 +109,5 @@ const { seo, siteSettings } = await getPageSeo('work');
   </section>
 
   <!-- CATEGORY SLIDERS -->
-  <CategorySliders categories={WORK_BY_CATEGORY} class={LOS_MEJORES_CARD_HEIGHT} />
+  <CategorySliders categories={WORK_BY_CATEGORY} />
 </Page>

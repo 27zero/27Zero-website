@@ -13,6 +13,9 @@
  * `scrollIntoView` de `FilterPills` (que usa el mismo slug como `data-filter`) y por
  * eso lleva `scroll-margin-top`, para que el navbar fijo no tape el título al llegar.
  *
+ * `cardSize` de cada grupo elige la variante de `WorkCard` (`tall` en las categorías
+ * destacadas de Work, feedback Nota 9).
+ *
  * No renderiza flechas propias: cada categoría delega en `CardsSlider`, que en esta
  * página usa su `arrowVariant` por defecto (`dark`) — `work/style.css` no override a
  * `.slider-arrow`, a diferencia de la sección EdTech Mentor de Home/About.
@@ -42,7 +45,7 @@ const { categories, class: className } = Astro.props;
         <div id={category.id} class="category-anchor scroll-mt-[clamp(4.5rem,3.7857rem_+_3.5714vw,7rem)]">
           <CardsSlider title={category.label}>
             {category.items.map((item) => (
-              <WorkCard {...item} />
+              <WorkCard {...item} size={category.cardSize} />
             ))}
           </CardsSlider>
         </div>

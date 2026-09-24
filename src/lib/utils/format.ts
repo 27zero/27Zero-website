@@ -53,3 +53,18 @@ export function slugify(value: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 }
+
+/**
+ * Recorta un texto a `max` caracteres sin cortar una palabra al medio (CLAUDE.md §8.1):
+ * corta en el último espacio que entra y agrega "…", que cuenta dentro del límite. Un
+ * texto que ya entra vuelve tal cual. Pensado para metadata (meta description a 160).
+ */
+export function truncateAtWord(text: string | undefined | null, max: number): string | undefined {
+  const clean = text?.replace(/\s+/g, ' ').trim();
+  if (!clean) return undefined;
+  if (clean.length <= max) return clean;
+
+  const cut = clean.slice(0, max - 1);
+  const lastSpace = cut.lastIndexOf(' ');
+  return `${(lastSpace > 0 ? cut.slice(0, lastSpace) : cut).replace(/[\s,.;:–—-]+$/, '')}…`;
+}

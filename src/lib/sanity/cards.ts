@@ -30,12 +30,12 @@ export interface WorkCardProjection {
   _id: string;
   title: string;
   slug: string;
-  excerpt?: string;
-  isFeatured?: boolean;
+  clientTagline?: string;
   order?: number;
   thumbnail?: SanityImage;
-  clientLogo?: SanityImage;
   clientName?: string;
+  /** `client.icon` — isotipo del círculo de la card. */
+  clientIcon?: SanityImage;
   categoryTitle?: string;
   categorySlug?: string;
 }
@@ -65,6 +65,15 @@ export interface MentorCardProjection {
   bannerPost?: SanityImage;
   isFeatured?: boolean;
   publishedAt?: string;
+}
+
+/** Una categoría de `FEATURED_WORK_CATEGORIES`, con su selección curada ya expandida. */
+export interface FeaturedWorkCategoryProjection {
+  _id: string;
+  title: string;
+  slug: string;
+  /** Referencias expandidas: un `work` sin publicar o borrado llega `null`. */
+  works?: (WorkCardProjection | null)[] | null;
 }
 
 /** Devuelve `TESTIMONIAL_FIELDS`. */
@@ -106,7 +115,7 @@ export interface ResourceProjection {
  * |-----------------------|-----------------|--------------|
  * | card de work          | 350px           | 700          |
  * | card de mentor        | 350px           | 700          |
- * | logo de cliente       | 28px            | 64           |
+ * | ícono de cliente      | 28px            | 64           |
  * | avatar de invitado    | 50px            | 128          |
  */
 const CARD_IMAGE_WIDTH = 700;
@@ -135,16 +144,35 @@ export function toWorkCard(
   work: WorkCardProjection,
   options: { eyebrow?: string; imageWidth?: number } = {}
 ): WorkCardData {
+  const clientIcon = toImage(work.clientIcon, { width: CLIENT_LOGO_WIDTH, height: CLIENT_LOGO_WIDTH });
+
   return {
     href: workUrl(work.slug),
-    title: work.title,
+    title: workCardTitle(work),
     eyebrow: options.eyebrow ?? work.categoryTitle,
     image: toImage(work.thumbnail, { width: options.imageWidth ?? CARD_IMAGE_WIDTH }),
     clientName: work.clientName,
-    clientLogo: toImage(work.clientLogo, { width: CLIENT_LOGO_WIDTH }),
-    /* Solo si no hay logo: la card muestra uno u otro, nunca los dos. */
-    clientInitials: work.clientLogo ? undefined : getInitials(work.clientName),
+    clientIcon,
+    /* Solo si no hay ícono: la card muestra uno u otro, nunca los dos. */
+    clientInitials: clientIcon ? undefined : getInitials(work.clientName),
   };
+}
+
+/**
+ * Título de la card de un `work` (feedback Work, Nota 2): el tagline del cliente. Cae
+ * al título del proyecto cuando el tagline está vacío — hoy 2 de los 4 `work` no lo
+ * tienen, y una card sin título no se entiende.
+ */
+function workCardTitle(work: WorkCardProjection): string {
+  return work.clientTagline?.trim() || work.title;
+}
+
+/**
+ * Categoría destacada → los `work` de su slider, sin nulos (referencias a documentos
+ * sin publicar) ni documentos sin slug, que no tienen a dónde linkear.
+ */
+export function featuredWorksOf(category: FeaturedWorkCategoryProjection): WorkCardProjection[] {
+  return (category.works ?? []).filter((work): work is WorkCardProjection => Boolean(work?.slug));
 }
 
 /**
@@ -205,13 +233,16 @@ function formatGuestRole(role?: string, company?: string): string | undefined {
  * genéricos del componente: la categoría entra como `tag`, el cliente como `name` y
  * su logo como `avatar`, con las mismas iniciales de fallback. `role` queda afuera —
  * `work` no tiene nada equivalente al rol del invitado de una entrevista.
+ *
+ * Feedback Work: mismo título (`clientTagline`) y mismo ícono (`client.icon`) que
+ * `WorkCard`, para que un proyecto se vea igual en las dos cards.
  */
 export function toFeaturedWorkCard(work: WorkCardProjection): FeaturedCardData {
-  const avatar = toImage(work.clientLogo, { width: CLIENT_LOGO_WIDTH });
+  const avatar = toImage(work.clientIcon, { width: CLIENT_LOGO_WIDTH, height: CLIENT_LOGO_WIDTH });
 
   return {
     href: workUrl(work.slug),
-    title: work.title,
+    title: workCardTitle(work),
     tag: work.categoryTitle,
     name: work.clientName,
     avatar,

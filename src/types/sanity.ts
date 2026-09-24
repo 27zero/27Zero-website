@@ -27,8 +27,8 @@ export interface SanitySlug {
 
 /**
  * Imagen de Sanity. `alt` y `caption` son campos custom que agrega el schema, no
- * parte del tipo `image` nativo — por eso no están en todas: `settings.logo`,
- * `client.logo` y `edtechMarketingPractice.heroImage` no los declaran.
+ * parte del tipo `image` nativo — por eso no están en todas: `settings.logo` y
+ * `edtechMarketingPractice.heroImage` no los declaran.
  */
 export interface SanityImage {
   _type: 'image';
@@ -141,6 +141,18 @@ export interface WorkCategory extends SanityDocument {
   slug: SanitySlug;
   description?: string;
   color?: string;
+  order: number;
+  /**
+   * Reemplazó a `work.isFeatured` (feedback Work, Nota 9): el destacado se elige desde
+   * la categoría. Si hay más de una marcada, se ordenan por `order`.
+   */
+  isFeaturedCategory?: boolean;
+  /**
+   * Selección curada (máx. 10). El orden del array ES el orden en el sitio. Oculto en
+   * el Studio si `isFeaturedCategory` es `false`, pero el dato puede seguir ahí: filtrar
+   * siempre por `isFeaturedCategory`. `SanityReference` sin `->`, `Work` con `->`.
+   */
+  featuredWorks?: ((SanityReference & { _key: string }) | Work)[];
 }
 
 /**
@@ -231,34 +243,49 @@ export interface Client extends SanityDocument {
   _type: 'client';
   name: string;
   url?: string;
+  /** Logo completo — interna de Work. `alt` requerido en el schema. */
   logo?: SanityImage;
-  logoLight?: SanityImage;
+  /** Isotipo — círculo pequeño de la card de Work. `alt` requerido en el schema. */
+  icon?: SanityImage;
   isFeatured?: boolean;
   logoHeight?: number;
   logoOrder?: number;
   description?: string;
 }
 
-/** `work` — un case study. Alimenta Work, Clientes y la interna compartida. */
+/** Altura de las imágenes de una sección del Case Study. Los valores rem/vh viven en el sitio. */
+export type ImageHeightVariant = 'low' | 'medium' | 'high';
+
+/**
+ * `work` — un case study. Alimenta Work, Clientes y la interna compartida.
+ *
+ * Feedback Work (sanity-changes-work.md): se eliminaron `clientLogo` (el logo sale de
+ * `client.logo` / `client.icon`), `excerpt` y `brief` (unificados en `briefParagraph`),
+ * `impact`, `contributions`, `clientQuote` (el quote sale de `testimonial.workProject`)
+ * e `isFeatured` (ver `WorkCategory.featuredWorks`). También `description` (Project
+ * Description): su contenido se migró a `communicationChallenge`.
+ */
 export interface Work extends SanityDocument {
   _type: 'work';
 
   // Overview
   title: string;
+  subtitle?: string;
   slug: SanitySlug;
   client: SanityReference | Client;
-  clientLogo?: SanityImage;
   category: SanityReference | WorkCategory;
   services?: string[];
+
+  // Project Brief
+  clientTagline?: string;
+  /** Fallback de la meta description, truncado a 160 caracteres en el sitio. */
+  briefParagraph?: string;
   projectType?: string;
   agencyRole?: string;
+  location?: string;
   year?: number;
-  excerpt: string;
-  clientTagline?: string;
 
   // Metadata
-  /** Asumió el rol del slider "Los mejores" — no es una categoría más (Etapa 5). */
-  isFeatured?: boolean;
   order?: number;
 
   // Media
@@ -268,32 +295,45 @@ export interface Work extends SanityDocument {
   gallery?: SanityImage[];
 
   // Case study
-  brief?: string;
-  description?: {
-    projectTitle?: string;
-    projectContent?: PortableTextBlock[];
-    projectImages?: SanityImage[];
-  };
+  results?: { _key: string; number?: string; description?: string }[];
   challenge?: {
     challengeTitle?: string;
     challengeContent?: PortableTextBlock[];
     challengeImages?: SanityImage[];
+    heightVariant?: ImageHeightVariant;
+  };
+  communicationChallenge?: {
+    sectionLabel?: string;
+    content?: PortableTextBlock[];
+    images?: SanityImage[];
+    heightVariant?: ImageHeightVariant;
   };
   solution?: {
+    sectionLabel?: string;
     headline?: string;
     body?: PortableTextBlock[];
     solutionImages?: SanityImage[];
+    heightVariant?: ImageHeightVariant;
   };
-  impact?: { _key: string; verb?: string; result?: string }[];
-  results?: { _key: string; number?: string; description?: string }[];
   contentSections?: {
     _key: string;
     title?: string;
     body?: string;
     images?: SanityImage[];
+    heightVariant?: ImageHeightVariant;
+    /** Vacío → blanco. */
+    bgColor?: string;
+    textColor?: string;
   }[];
-  contributions?: string[];
-  location?: string;
+  finalCta?: {
+    sectionBgColor?: string;
+    sectionHeadlineColor?: string;
+    sectionBodyTextColor?: string;
+    headline?: string;
+    bodyText?: string;
+    ctaText?: string;
+    ctaLink?: string;
+  };
 
   seo?: Seo;
 }

@@ -1,0 +1,87 @@
+---
+/**
+ * Final CTA — 27zero
+ * Bloque de cierre de la interna de Work (feedback Work, Nota 7.9), wireado a
+ * `work.finalCta`. Estructura del resto de los CTA del sitio (`.section--cta-mentor`):
+ * headline + bajada + un botón, todo centrado; el headline ocupa hasta el 80% del ancho
+ * y la bajada hasta el 70%.
+ *
+ * Los tres colores son hex libres del CMS, así que entran como custom properties inline
+ * (no existen como utilidades en build) y pasan por `surfaceColors()`:
+ *   - fondo vacío o inválido → purple del design system (ver `DEFAULT_BACKGROUND`);
+ *   - headline / cuerpo vacíos → negro o blanco, el que contraste con el fondo.
+ * El botón no tiene color propio en el schema: la variante se elige según si el fondo
+ * es oscuro o claro, para que siempre se lea.
+ *
+ * No se renderiza si no hay nada que mostrar: sin headline, y sin un botón completo
+ * (texto + link), la sección quedaría como una franja de color vacía.
+ */
+import Button from '../ui/Button.astro';
+import { isDarkColor, surfaceColors } from '../../lib/utils/color';
+
+interface Props {
+  bgColor?: string;
+  headlineColor?: string;
+  bodyTextColor?: string;
+  headline?: string;
+  bodyText?: string;
+  ctaText?: string;
+  ctaLink?: string;
+}
+
+const { bgColor, headlineColor, bodyTextColor, headline, bodyText, ctaText, ctaLink } = Astro.props;
+
+/**
+ * `--color-purple` de `global.css`. No indigo: en la interna, el Strategic Idea va sobre
+ * indigo, y en un proyecto sin testimonios ni Additional Sections las dos secciones
+ * quedarían pegadas con el mismo fondo.
+ */
+const DEFAULT_BACKGROUND = '#b382f9';
+
+const { background, text: headlineText } = surfaceColors(bgColor, headlineColor, DEFAULT_BACKGROUND);
+const { text: bodyColor } = surfaceColors(bgColor, bodyTextColor, DEFAULT_BACKGROUND);
+
+const hasButton = Boolean(ctaText?.trim() && ctaLink?.trim());
+/* Solo http(s) abre en pestaña nueva: un `mailto:` abre el cliente de correo igual. */
+const isExternal = hasButton && /^https?:/i.test(ctaLink!.trim());
+const isVisible = Boolean(headline?.trim()) || hasButton;
+
+const CONTAINER = 'container mx-auto flex w-full max-w-(--container-max-width) flex-col px-container-x';
+---
+
+{
+  isVisible && (
+    <section
+      class="section section--final-cta bg-(--final-cta-bg) py-[clamp(3.2119rem,2.7021rem_+_2.5491vw,4.9962rem)]"
+      style={`--final-cta-bg:${background};--final-cta-headline:${headlineText};--final-cta-body:${bodyColor}`}
+    >
+      <div class:list={[CONTAINER, 'items-center gap-[clamp(1.4063rem,1.183rem_+_1.1161vw,2.1875rem)] text-center']}>
+        <div class="flex w-full flex-col items-center gap-[clamp(0.3994rem,0.336rem_+_0.317vw,0.6212rem)]">
+          {headline && (
+            <h2 class="max-w-[80%] font-lora text-[clamp(1.5rem,1.0711rem_+_2.1446vw,3.0013rem)] leading-[1.25] font-medium tracking-[-0.36px] text-(--final-cta-headline)">
+              {headline}
+            </h2>
+          )}
+          {bodyText && (
+            <p class="max-w-[70%] font-inter text-body leading-[1.6] font-medium tracking-normal text-(--final-cta-body)">
+              {bodyText}
+            </p>
+          )}
+        </div>
+
+        {hasButton && (
+          <div class="flex flex-wrap justify-center">
+            <Button
+              href={ctaLink!.trim()}
+              variant={isDarkColor(background) ? 'whiteOnDark' : 'dark'}
+              target={isExternal ? '_blank' : undefined}
+              rel={isExternal ? 'noopener' : undefined}
+            >
+              {ctaText}
+            </Button>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}

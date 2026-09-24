@@ -22,8 +22,9 @@ export interface WorkCardData {
   eyebrow?: string;
   image?: { src: string; alt: string };
   clientName?: string;
-  clientLogo?: { src: string; alt: string };
-  /** Alternativa al logo: iniciales del cliente dentro del círculo. */
+  /** `client.icon` — el círculo pequeño de la card. */
+  clientIcon?: { src: string; alt: string };
+  /** Alternativa al ícono: iniciales del cliente dentro del círculo. */
   clientInitials?: string;
 }
 
@@ -36,6 +37,8 @@ export interface WorkGroup {
   id: string;
   label: string;
   items: WorkCardData[];
+  /** Variante de `WorkCard` del slider. `tall` = categoría destacada (Nota 9). */
+  cardSize?: 'base' | 'tall';
 }
 
 /* ───────────────────────────── EdTech Mentor ──────────────────────────── */
@@ -74,7 +77,7 @@ export interface MentorCardData {
  * siendo compatibles; este tipo es el mismo contrato con nombres genéricos, para las
  * páginas que le pasan un `work` (el destacado del Intro de Home). No es
  * `WorkCardData`: ese es el contrato de `WorkCard.astro`, con `eyebrow`,
- * `clientName` y `clientLogo` en vez de `tag`, `name` y `avatar`.
+ * `clientName` y `clientIcon` en vez de `tag`, `name` y `avatar`.
  */
 export interface FeaturedCardData {
   href: string;
