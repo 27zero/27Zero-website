@@ -18,7 +18,10 @@
  *   `pageCta`        → Closing CTA
  *
  * El menú de servicios reusa `ServiceMenu` de la página EdTech Marketing, con un solo
- * bloque: el de la categoría que la práctica declara en `relatedServiceCategory`.
+ * bloque sin título de categoría: los `relatedServices` curados en el Studio, en el orden
+ * guardado y sin importar a qué categoría pertenece cada uno (feedback Practices,
+ * sept 2026). Sin servicios curados, la sección queda solo con el "View All" que
+ * linkea al índice completo.
  *
  * Valores fluidos con la curva del proyecto: mobile = `em × 9` @320px,
  * desktop = `em × 14` @1440px, salvo donde el vanilla fija un valor mobile propio.
@@ -28,24 +31,23 @@ import ServiceMenu from '../../../components/sections/ServiceMenu.astro';
 import Button from '../../../components/ui/Button.astro';
 import Dropdown from '../../../components/ui/Dropdown.astro';
 import { sanityClient } from '../../../lib/sanity/client';
-import { toImage } from '../../../lib/sanity/image';
+import { imageDimensions, toImage } from '../../../lib/sanity/image';
 import { practiceDetailQuery } from '../../../lib/sanity/queries';
 import { getSeoSettings } from '../../../lib/sanity/settings';
 import { ogTypeFor } from '../../../lib/seo/ogType';
 import { resolveSeo } from '../../../lib/seo/resolveSeo';
 import { detailTrail } from '../../../lib/utils/breadcrumbs';
-import { serviceUrl, toStaticPaths } from '../../../lib/utils/routes';
-import type { SanityImage, Seo, ServiceCategoryId, ServiceIconId } from '../../../types/sanity';
-import { SERVICE_CATEGORY_LABELS } from '../../../types/sanity';
+import { externalLinkAttrs, serviceUrl, toStaticPaths } from '../../../lib/utils/routes';
+import type { SanityImage, Seo, ServiceIconId, ServiceRef } from '../../../types/sanity';
 import type { ServiceGroup } from '../../../types/ui';
 
 export interface PracticeDetail {
   _id: string;
   title?: string;
+  practiceName?: string;
   slug?: string;
   seo?: Seo;
   shortDescription?: string;
-  relatedServiceCategory?: ServiceCategoryId;
   heroHeadline?: string;
   heroText?: string;
   heroImage?: SanityImage;
@@ -59,7 +61,7 @@ export interface PracticeDetail {
   ctaTitle?: string;
   ctaLabel?: string;
   ctaHref?: string;
-  services?: { _id: string; title: string; slug: string; category: ServiceCategoryId; iconId?: ServiceIconId }[];
+  relatedServices?: ServiceRef[];
 }
 
 export async function getStaticPaths() {
@@ -77,27 +79,39 @@ const practice = Astro.props as PracticeDetail;
    segunda — y recién después cae al fallback global de `settings`. Sin esto las 5
    internas compartirían el title genérico del sitio mientras el SEO esté vacío. */
 const siteSettings = await getSeoSettings();
+
+/* Nombre de la práctica para breadcrumb y title de fallback: `practiceName` (el nombre
+   corto, requerido), no `title` — desde el feedback Practices (sept 2026) `title` es el
+   titular de la card en voz del comprador ("You've Outgrown Your Brand"), no el nombre
+   de la página. `title` queda solo como red para documentos previos al campo. */
+const practiceLabel = practice.practiceName ?? practice.title;
+
 /* Fuente única del breadcrumb: alimenta el `BreadcrumbList` del JSON-LD y,
    donde el diseño lo tiene, el `<nav>` visible. */
-const breadcrumb = detailTrail('edtechMarketingPractice', { label: practice.title });
+const breadcrumb = detailTrail('edtechMarketingPractice', { label: practiceLabel });
 
 const seo = {
   ...resolveSeo(practice.seo),
-  title: practice.seo?.title ?? `${practice.title ?? 'EdTech Marketing'} — 27zero`,
+  title: practice.seo?.title ?? `${practiceLabel ?? 'EdTech Marketing'} — 27zero`,
   description: practice.seo?.description ?? practice.shortDescription,
 };
 
-const heroImage = toImage(practice.heroImage, { width: 1920 });
+/* Sin `alt` no se renderiza (CLAUDE.md §8.1): el hero queda en su fondo gris. Es el
+   caso de New Product Launch, con asset cargado antes de que `heroImage.alt` existiera. */
+const HERO_IMAGE_WIDTH = 1920;
+const heroImage = toImage(practice.heroImage, { width: HERO_IMAGE_WIDTH });
+const heroImageSize = imageDimensions(practice.heroImage, HERO_IMAGE_WIDTH);
 
-/* El hero cae al `title` del documento si `heroHeadline` está vacío: es el único texto
-   que la práctica tiene garantizado por schema (`title` es requerido) y una interna sin
-   `h1` no es navegable ni indexable.
+/* H1 = `heroHeadline`, el nombre corto de la práctica — NUNCA `title`, que es el
+   titular de la card. Si el editor lo deja vacío cae a `practiceName`, requerido por
+   schema y con el mismo valor en la práctica: una interna sin `h1` no es navegable ni
+   indexable.
 
    La bajada NO tiene fallback: el `<p>` del `.hero-marketing-text` es `heroText` y nada
    más. `shortDescription` es el copy de la card (Home y el índice de Agency), no el del
    hero — usarlo de reemplazo metía texto de card en la interna. Sin `heroText` cargado,
    el hero queda solo con el `h1`. */
-const heroHeadline = practice.heroHeadline ?? practice.title;
+const heroHeadline = practice.heroHeadline ?? practiceLabel;
 const heroText = practice.heroText;
 
 const capabilities = (practice.capabilities ?? []).filter(Boolean);
@@ -108,12 +122,15 @@ const scopes = (practice.practiceScopes ?? []).filter((scope) => scope.title || 
    rota entre los 3 marcos de marca. */
 const ICON_ROTATION: ServiceIconId[] = ['asterisk', 'quatrefoil', 'arc'];
 
+/* Un único bloque, sin título de categoría: la lista curada mezcla categorías y su
+   orden es el del Studio, así que agrupar por categoría lo reordenaría. Vacío → `[]` y
+   la sección muestra solo el fallback "View All". */
+const relatedServices = practice.relatedServices ?? [];
 const serviceGroup: ServiceGroup[] =
-  (practice.services ?? []).length > 0 && practice.relatedServiceCategory
+  relatedServices.length > 0
     ? [
         {
-          title: SERVICE_CATEGORY_LABELS[practice.relatedServiceCategory],
-          services: (practice.services ?? []).map((service, index) => ({
+          services: relatedServices.map((service, index) => ({
             href: serviceUrl(service.slug),
             title: service.title,
             iconId: service.iconId ?? ICON_ROTATION[index % ICON_ROTATION.length],
@@ -121,6 +138,11 @@ const serviceGroup: ServiceGroup[] =
         },
       ]
     : [];
+
+/* El menú se pega al acordeón de scopes (los dos van sobre negro), por eso arranca sin
+   padding superior. Sin scopes, queda debajo de una sección de otro color y toma el
+   mismo padding superior que tendría el acordeón. */
+const MENU_PADDING_TOP = scopes.length > 0 ? 'pt-0' : 'pt-[clamp(4.6181rem,3.8851rem_+_3.6652vw,7.1838rem)]';
 
 const CONTAINER = 'container mx-auto flex w-full max-w-(--container-max-width) flex-col gap-gap px-container-x';
 
@@ -132,26 +154,37 @@ const H2 = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px]';
 <Page seo={seo} siteSettings={siteSettings} breadcrumb={breadcrumb} ogType={ogTypeFor('edtechMarketingPractice')} navVariant="white">
   <!-- HERO -->
   <section
-    class="section section--hero-marketing relative mt-[clamp(6rem,5.2143rem_+_3.9286vw,8.75rem)] overflow-hidden pt-[clamp(6rem,8.3304rem_-_2.5893vw,7.8125rem)] pb-[clamp(7.8125rem,11.8304rem_-_4.4643vw,10.9375rem)]"
+    class="section section--hero-marketing relative mt-page-offset overflow-hidden pt-[clamp(6rem,8.3304rem_-_2.5893vw,7.8125rem)] pb-[clamp(7.8125rem,11.8304rem_-_4.4643vw,10.9375rem)]"
   >
     <div class="hero-marketing-bg absolute inset-0 z-0 flex items-center justify-center bg-gray">
       {
         heroImage && (
-          <img src={heroImage.src} alt={heroImage.alt} class="size-full object-cover" />
+          <img
+            src={heroImage.src}
+            alt={heroImage.alt}
+            width={heroImageSize?.width}
+            height={heroImageSize?.height}
+            class="size-full object-cover"
+          />
         )
       }
     </div>
 
+    {/* Velo oscuro sobre la imagen (mismo `bg-black/50` que el hero de Home): el copy
+        del hero es blanco. Va siempre, también sobre el placeholder gris, para que el
+        texto blanco nunca quede sobre fondo claro. */}
+    <div class="hero-marketing-overlay absolute inset-0 z-0 bg-black/50" aria-hidden="true"></div>
+
     <div
       class:list={[CONTAINER, 'hero-marketing-container relative z-[1] gap-[clamp(1.2038rem,1.0127rem_+_0.9554vw,1.8725rem)]']}
     >
-      <div class="hero-marketing-text flex max-w-[50%] flex-col gap-xs max-md:max-w-full">
-        <h1 class="font-lora text-h1 leading-[1.25] font-medium tracking-[-0.48px]">{heroHeadline}</h1>
-        {heroText && <p class:list={[BODY, 'max-w-[90%] text-black']}>{heroText}</p>}
+      <div class="hero-marketing-text flex max-w-[75%] flex-col gap-xs max-md:max-w-full">
+        <h1 class="font-lora text-h1 leading-[1.25] font-medium tracking-[-0.48px] text-white">{heroHeadline}</h1>
+        {heroText && <p class:list={[BODY, 'max-w-[90%] text-white']}>{heroText}</p>}
       </div>
 
       <div class="hero-home-cta mr-auto flex flex-col items-center gap-xs">
-        <Button href="/contact" variant="white" class="border-white!">Book a strategy session</Button>
+        <Button href="/contact" variant="whiteOnDark">Book a strategy session</Button>
       </div>
     </div>
   </section>
@@ -166,7 +199,7 @@ const H2 = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px]';
               <h2 class:list={[H2, 'max-w-[55%] text-black max-md:max-w-full']}>{practice.introTitle}</h2>
             )}
             {practice.introDescription && (
-              <p class:list={[BODY_SM, 'max-w-[80%] text-black max-md:max-w-full']}>
+              <p class:list={[BODY_SM, 'max-w-[85%] text-black max-md:max-w-full']}>
                 {practice.introDescription}
               </p>
             )}
@@ -197,7 +230,7 @@ const H2 = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px]';
       <section class="section section--brand-logos bg-indigo py-[clamp(4.8206rem,4.0554rem_+_3.8259vw,7.4988rem)]">
         <div class:list={[CONTAINER, 'gap-[clamp(3.2119rem,2.7021rem_+_2.5491vw,4.9962rem)]']}>
           {practice.clientSectionTitle && (
-            <h2 class:list={[H2, 'max-w-[30%] text-white max-md:max-w-full']}>
+            <h2 class:list={[H2, 'max-w-[40%] text-white max-md:max-w-full']}>
               {practice.clientSectionTitle}
             </h2>
           )}
@@ -231,7 +264,12 @@ const H2 = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px]';
               <Dropdown title={scope.title ?? ''}>
                 {scope.description && <p>{scope.description}</p>}
                 {scope.ctaLabel && scope.ctaHref && (
-                  <Button href={scope.ctaHref} variant="purple" class="dropdown-cta mt-xs mr-auto">
+                  <Button
+                    href={scope.ctaHref}
+                    {...externalLinkAttrs(scope.ctaHref)}
+                    variant="purpleOnDark"
+                    class="dropdown-cta mt-xs mr-auto"
+                  >
                     {scope.ctaLabel}
                   </Button>
                 )}
@@ -243,23 +281,22 @@ const H2 = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px]';
     )
   }
 
-  <!-- MENU — servicios de la categoría relacionada -->
-  {
-    serviceGroup.length > 0 && (
-      <section class="section section--menu bg-black pt-0 pb-[clamp(3.2119rem,2.7021rem_+_2.5491vw,4.9962rem)]">
-        <div class="container menu-container mx-auto grid w-full max-w-(--container-max-width) grid-cols-[0.45fr_1fr] items-start gap-[clamp(4.6181rem,3.8851rem_+_3.6652vw,7.1838rem)] px-container-x max-md:grid-cols-1 max-md:gap-[clamp(2.4131rem,2.0301rem_+_1.9152vw,3.7538rem)]">
-          <div class="menu-intro flex flex-col items-start gap-[clamp(1.4063rem,1.183rem_+_1.1161vw,2.1875rem)]">
-            <h2 class="font-lora text-[clamp(1.4456rem,1.2162rem_+_1.1473vw,2.2487rem)] leading-[1.25] font-medium tracking-[-0.36px] text-white max-md:text-[1.75rem]">
-              What's on the menu?
-            </h2>
-            <Button href="/edtech-marketing" variant="purple">For all</Button>
-          </div>
+  <!-- MENU — `relatedServices` curados; vacío → solo el fallback "View All" -->
+  <section
+    class:list={['section section--menu bg-black pb-[clamp(3.2119rem,2.7021rem_+_2.5491vw,4.9962rem)]', MENU_PADDING_TOP]}
+  >
+    <div class="container menu-container mx-auto grid w-full max-w-(--container-max-width) grid-cols-[0.45fr_1fr] items-start gap-[clamp(4.6181rem,3.8851rem_+_3.6652vw,7.1838rem)] px-container-x max-md:grid-cols-1 max-md:gap-[clamp(2.4131rem,2.0301rem_+_1.9152vw,3.7538rem)]">
+      <div class="menu-intro flex flex-col items-start gap-[clamp(1.4063rem,1.183rem_+_1.1161vw,2.1875rem)]">
+        <h2 class="font-lora text-[clamp(1.4456rem,1.2162rem_+_1.1473vw,2.2487rem)] leading-[1.25] font-medium tracking-[-0.36px] text-white max-md:text-[1.75rem]">
+          What's on the menu?
+        </h2>
+        {/* Label fijo de UI, no campo de Sanity (CLAUDE.md §4). */}
+        <Button href="/edtech-marketing" variant="purpleOnDark">View All</Button>
+      </div>
 
-          <ServiceMenu categories={serviceGroup} />
-        </div>
-      </section>
-    )
-  }
+      {serviceGroup.length > 0 && <ServiceMenu categories={serviceGroup} />}
+    </div>
+  </section>
 
   <!-- CLOSING CTA — fieldset `pageCta` -->
   {
@@ -273,7 +310,7 @@ const H2 = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px]';
         >
           <h2 class:list={[H2, 'max-w-[50%] text-black max-md:max-w-full']}>{practice.ctaTitle}</h2>
           {practice.ctaLabel && (
-            <Button href={practice.ctaHref ?? '/contact'} variant="blackWhite">
+            <Button href={practice.ctaHref ?? '/contact'} {...externalLinkAttrs(practice.ctaHref)} variant="blackWhite">
               {practice.ctaLabel}
             </Button>
           )}

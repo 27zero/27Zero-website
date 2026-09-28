@@ -8,7 +8,8 @@
  * Autocontenido a propósito: no depende de `ServiceMenu` ni de ningún wrapper externo.
  * Recibe una sola categoría, así que la página interna de Practice (Etapa 6) puede
  * instanciarlo suelto para listar los servicios de esa práctica, sin arrastrar el loop
- * del menú completo.
+ * del menú completo. `title` es opcional: la lista curada de una práctica mezcla
+ * categorías, así que ahí el bloque va sin `h3`.
  *
  * El override de tamaño de `ServiceCard` (cuadrada y fluida en vez del tamaño fijo del
  * componente) vive acá y no en la página: es propio de este grid, y así viaja con el
@@ -30,11 +31,13 @@ const GRID =
 ---
 
 <div class="menu-block flex flex-col gap-md">
-  <h3
-    class="menu-block-title font-lora text-[clamp(1.3125rem,1.26rem_+_0.2625vw,1.4962rem)] leading-[1.4] font-medium tracking-normal text-white"
-  >
-    {title}
-  </h3>
+  {
+    title && (
+      <h3 class="menu-block-title font-lora text-[clamp(1.3125rem,1.26rem_+_0.2625vw,1.4962rem)] leading-[1.4] font-medium tracking-normal text-white">
+        {title}
+      </h3>
+    )
+  }
 
   <div class={GRID}>
     {

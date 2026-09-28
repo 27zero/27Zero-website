@@ -6,34 +6,73 @@
  * El fondo (`.practices-card-bg`) es la `cardImage` del documento; sin imagen cargada
  * cae al placeholder `[image]` del vanilla, que es el estado en que se entregó el spec.
  *
+ * Dos tonos según haya imagen, resueltos acá y no por prop: la imagen ES la condición.
+ *   - Sin imagen: contenido negro sobre el gris del placeholder (el diseño del vanilla).
+ *   - Con imagen: overlay `--color-black` al 50% entre la imagen y el contenido, y todo
+ *     el contenido en `--color-white` — texto, CTA, flecha e ícono. Sin el overlay, el
+ *     texto oscuro no tiene contraste garantizado sobre una foto real.
+ *
  * El ícono es intercambiable (así está documentado en design-system-components.md):
- * va por `<slot name="icon">`, con el ícono de 3 rombos del vanilla como fallback.
- * "Explore the practice" es un label fijo de UI, por eso queda hardcodeado
- * (CLAUDE.md §4 — labels de UI siempre estáticos).
+ * va por `<slot name="icon">`, con el ícono de 3 rombos del vanilla como fallback. Los
+ * SVG llegan con `fill="black"` como atributo; en el tono claro los recolorea el CSS
+ * del contenedor (`[&_path]:fill-white`), que le gana al atributo de presentación, así
+ * que `PracticeIcon` no necesita saber sobre qué fondo va.
+ *
+ * Texto (feedback Practices, sept 2026): `title` es el titular grande; `name` es el
+ * nombre corto de la práctica, en negrita antes del `body` — el peso lo pone el
+ * componente, no un marcado dentro del texto. Misma tipografía que el `body` con
+ * `font-semibold`, para no sumar un estilo nuevo al design system.
+ *
+ * `ctaLabel` es opcional: vacío → "Explore the practice", el label genérico de UI que
+ * la card usó siempre (CLAUDE.md §4).
+ *
+ * La flecha invierte sus colores en hover y también en foco de teclado
+ * (`group-focus-visible`), para que el estado activo se vea igual con mouse que con Tab.
  *
  * Props genéricas, sin acoplar al schema de Sanity (Etapa 5).
  */
 interface Props {
   href: string;
   title: string;
+  name?: string;
   body?: string;
+  ctaLabel?: string;
   image?: { src: string; alt: string };
 }
 
-const { href, title, body, image } = Astro.props;
+const { href, title, name, body, ctaLabel, image } = Astro.props;
+
+const hasImage = Boolean(image);
+
+const TEXT_COLOR = hasImage ? 'text-white' : 'text-black';
+
+const TEXT_SM = 'font-inter text-body-sm leading-[1.6] tracking-normal';
+
+const ICON_COLOR = hasImage ? '[&_path]:fill-white' : '';
+
+/* Borde y flecha del color del texto; en hover/foco se rellena y la flecha toma el
+   color opuesto. */
+const ARROW_COLORS = hasImage
+  ? 'border-white text-white group-hover/card:bg-white group-hover/card:text-black group-focus-visible/card:bg-white group-focus-visible/card:text-black'
+  : 'border-black text-black group-hover/card:bg-black group-hover/card:text-white group-focus-visible/card:bg-black group-focus-visible/card:text-white';
 ---
 
 <a
   href={href}
-  class="practices-card group/card relative flex w-full cursor-pointer flex-col justify-between gap-[clamp(5.625rem,4.7321rem_+_4.4643vw,8.75rem)] overflow-hidden rounded-card bg-gray px-[clamp(1.0463rem,0.8802rem_+_0.8304vw,1.6275rem)] py-[clamp(1.6087rem,1.3534rem_+_1.2768vw,2.5025rem)] text-black no-underline"
+  class:list={[
+    'practices-card group/card relative flex w-full cursor-pointer flex-col justify-between gap-[4.5rem] overflow-hidden rounded-card bg-gray px-[clamp(1.0463rem,0.8802rem_+_0.8304vw,1.6275rem)] py-[clamp(1.6087rem,1.3534rem_+_1.2768vw,2.5025rem)] no-underline',
+    TEXT_COLOR,
+  ]}
 >
-  {/* Fondo de la card: `cardImage` del CMS y, sin ella, el placeholder de wireframe del
-      vanilla (`.practices-card-bg span`, "[image]" sobre gris al 40%). El placeholder es
-      el estado real de hoy — ningún `edtechMarketingPractice` tiene la imagen cargada. */}
+  {/* Fondo de la card: `cardImage` del CMS con su overlay y, sin ella, el placeholder
+      de wireframe del vanilla (`.practices-card-bg span`, "[image]" sobre gris al 40%). */}
   <div class="practices-card-bg absolute inset-0 z-0 flex items-center justify-center bg-gray">
     {
       image ? (
-        <img src={image.src} alt={image.alt} class="size-full object-cover" />
+        <>
+          <img src={image.src} alt={image.alt} class="size-full object-cover" />
+          <span class="practices-card-overlay absolute inset-0 bg-black/50" aria-hidden="true" />
+        </>
       ) : (
         <span class="font-inter text-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] font-semibold tracking-[1px] text-black uppercase opacity-40">
           [image]
@@ -46,7 +85,10 @@ const { href, title, body, image } = Astro.props;
     class="practices-card-block practices-card-block--intro relative z-[1] flex flex-col gap-[clamp(2.4131rem,2.0301rem_+_1.9152vw,3.7538rem)]"
   >
     <div
-      class="practices-card-icon [&_svg]:block [&_svg]:h-[clamp(1.5694rem,1.3203rem_+_1.2455vw,2.4413rem)] [&_svg]:w-[clamp(2.3681rem,1.9922rem_+_1.8795vw,3.6837rem)]"
+      class:list={[
+        'practices-card-icon [&_svg]:block [&_svg]:h-[clamp(1.5694rem,1.3203rem_+_1.2455vw,2.4413rem)] [&_svg]:w-[clamp(2.3681rem,1.9922rem_+_1.8795vw,3.6837rem)]',
+        ICON_COLOR,
+      ]}
     >
       <slot name="icon">
         <svg width="59" height="39" viewBox="0 0 59 39" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -58,17 +100,15 @@ const { href, title, body, image } = Astro.props;
     </div>
     <div class="practices-card-text flex flex-col gap-[clamp(0.3994rem,0.336rem_+_0.317vw,0.6212rem)]">
       <h3
-        class="practices-card-title font-lora text-[clamp(0.9619rem,0.8092rem_+_0.7634vw,1.4962rem)] leading-[1.4] font-medium tracking-normal text-black"
+        class:list={[
+          'practices-card-title font-lora text-[clamp(0.9619rem,0.8092rem_+_0.7634vw,1.4962rem)] leading-[1.4] font-medium tracking-normal',
+          TEXT_COLOR,
+        ]}
       >
         {title}
       </h3>
-      {
-        body && (
-          <p class="practices-card-body font-inter text-body-sm leading-[1.6] font-normal tracking-normal text-black">
-            {body}
-          </p>
-        )
-      }
+      {name && <p class:list={['practices-card-name font-semibold', TEXT_SM, TEXT_COLOR]}>{name}</p>}
+      {body && <p class:list={['practices-card-body font-normal', TEXT_SM, TEXT_COLOR]}>{body}</p>}
     </div>
   </div>
 
@@ -76,11 +116,16 @@ const { href, title, body, image } = Astro.props;
     class="practices-card-block practices-card-block--cta relative z-[1] flex items-center justify-between gap-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)]"
   >
     <span
-      class="practices-card-cta-text font-lora text-[clamp(0.6806rem,0.5726rem_+_0.5402vw,1.0587rem)] leading-[1.4] font-medium tracking-normal text-black"
-      >Explore the practice</span
+      class:list={[
+        'practices-card-cta-text font-lora text-[clamp(0.6806rem,0.5726rem_+_0.5402vw,1.0587rem)] leading-[1.4] font-medium tracking-normal',
+        TEXT_COLOR,
+      ]}>{ctaLabel || 'Explore the practice'}</span
     >
     <div
-      class="practices-card-arrow flex size-icon-btn shrink-0 items-center justify-center rounded-full border-[0.0875rem] border-black bg-transparent text-black transition-all duration-200 ease-in-out group-hover/card:bg-black group-hover/card:text-white"
+      class:list={[
+        'practices-card-arrow flex size-icon-btn shrink-0 items-center justify-center rounded-full border-[0.0875rem] bg-transparent transition-all duration-200 ease-in-out',
+        ARROW_COLORS,
+      ]}
     >
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <line x1="7" y1="17" x2="17" y2="7"></line>

@@ -132,9 +132,12 @@ export interface ServiceCardData {
   iconId: string;
 }
 
-/** Un bloque de `ServiceCategoryBlock`: título de categoría + grid de servicios. */
+/**
+ * Un bloque de `ServiceCategoryBlock`: título de categoría + grid de servicios. Sin
+ * `title` en la interna de Practice, donde la lista curada mezcla categorías.
+ */
 export interface ServiceGroup {
-  title: string;
+  title?: string;
   services: ServiceCardData[];
 }
 

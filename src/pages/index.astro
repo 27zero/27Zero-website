@@ -92,7 +92,7 @@ const homeContent = await getHomeContent();
 <Page seo={seo} siteSettings={siteSettings} navVariant="white">
   <!-- HERO -->
   <section
-    class="section section--hero-home relative mt-[clamp(3.0938rem,2.6027rem_+_2.4554vw,4.8125rem)] overflow-hidden bg-gray py-[clamp(10.125rem,9.9829rem_+_0.7107vw,10.6225rem)]"
+    class="section section--hero-home relative mt-page-offset overflow-hidden bg-gray py-[clamp(10.125rem,9.9829rem_+_0.7107vw,10.6225rem)]"
   >
     {/* Fondo del hero: el video si está cargado, el poster si no. `bg-gray` de la
         sección queda de fallback cuando no hay ninguno de los dos. */}
@@ -137,8 +137,7 @@ const homeContent = await getHomeContent();
               href={homeContent.hero.ctaLink}
               target="_blank"
               rel="noopener noreferrer"
-              variant="white"
-              class="border-white!"
+              variant="whiteOnDark"
             >
               Book a strategy session
             </Button>

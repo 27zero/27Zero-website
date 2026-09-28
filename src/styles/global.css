@@ -105,6 +105,11 @@
   /* Gap genérico de 2em del design system: no es solo del container — lo usan
      también el navbar, las cards y el shapes slider. */
   --spacing-gap: clamp(1.125rem, 0.9464rem + 0.8929vw, 1.75rem);
+  /* Margen superior de la primera sección de cada página (debajo del navbar fijo).
+     Fijo, no fluido: 4.5rem desktop → 3rem mobile es un salto, no una escala lineal,
+     así que va por breakpoint (CLAUDE.md §5). El valor mobile se redefine al final del
+     archivo; la utilidad `mt-page-offset` ya cambia sola, sin `max-md:` en cada página. */
+  --spacing-page-offset: 4.5rem;
 
   /* ============================================================
      Breakpoints
@@ -144,4 +149,13 @@
   --text-card-name:     clamp(1.0062rem, 1.1589rem - 0.1696vw, 1.125rem);  /* 1.15em → 18/16px (mobile mayor) */
   --text-card-role:     clamp(0.625rem, 0.5911rem + 0.1696vw, 0.7438rem);  /* 0.85em → 10/12px */
   --text-card-tag:      clamp(0.7438rem, 0.8321rem - 0.0982vw, 0.8125rem); /* 0.85em → 13/12px (mobile mayor) */
+}
+
+/* Valor mobile de `--spacing-page-offset`. `@variant max-md` y no un `@media` a mano:
+   así usa el mismo corte que las utilidades `max-md:` (`--breakpoint-md`). Fuera de
+   `@layer`, le gana a la declaración de `@theme`. */
+:root {
+  @variant max-md {
+    --spacing-page-offset: 3rem;
+  }
 }

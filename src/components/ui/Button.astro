@@ -54,7 +54,7 @@
  * `submit`. `type` solo aplica en este segundo caso.
  */
 interface Props {
-  variant: 'nav' | 'dark' | 'outline' | 'white' | 'whiteOnDark' | 'whiteIndigo' | 'purple' | 'blackWhite';
+  variant: 'nav' | 'dark' | 'outline' | 'white' | 'whiteOnDark' | 'whiteIndigo' | 'purple' | 'purpleOnDark' | 'blackWhite';
   /** Con `href` renderiza `<a>`. Sin `href`, renderiza `<button>` (ver `type`). */
   href?: string;
   /** Solo se usa cuando no hay `href` (renderiza `<button type={type}>`). */
@@ -99,6 +99,9 @@ const VARIANTS = {
   whiteOnDark: 'border-white bg-white text-black hover:border-white hover:bg-transparent hover:text-white',
   whiteIndigo: 'border-white bg-white text-indigo hover:border-white hover:bg-transparent hover:text-white',
   purple: 'border-purple bg-purple text-black hover:border-black hover:bg-transparent hover:text-black',
+  /* `purple` sobre fondo oscuro: en hover el borde y el texto siguen en purple, porque
+     el negro de `purple` desaparece sobre `bg-black`. */
+  purpleOnDark: 'border-purple bg-purple text-black hover:border-purple hover:bg-transparent hover:text-purple',
   blackWhite: 'border-black bg-black text-white hover:border-black hover:bg-transparent hover:text-black',
 } as const;
 

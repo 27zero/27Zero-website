@@ -364,20 +364,23 @@ export const mentorCategoryPagesQuery = `{
  * página siguiendo `SERVICE_CATEGORY_ORDER` (el orden del Figma), porque el orden de
  * las 8 categorías es de diseño y no un dato del CMS.
  *
- * `practices` NO trae `iconId` ni `description`: los dos se borraron del schema. Los 3
- * íconos de `.practices-card` son fijos y posicionales, resueltos en la página
- * (`PRACTICE_ICONS` en `edtech-marketing.astro`), y el body de la card sale de
- * `shortDescription`, que es requerido por schema.
+ * `practices` es una lista abierta (hoy 9, va a crecer): sin slice ni límite, el orden
+ * lo decide `order`. NO trae `iconId` ni `description`: los dos se borraron del schema.
+ * Los íconos de `.practices-card` son fijos y rotan por posición (`PRACTICE_ICONS` en
+ * `edtech-marketing.astro`).
  *
- * `practices` SÍ trae `cardImage` (campo nuevo, `27zero-sanity@612215b`): es el fondo de
- * la `.practices-card`, el `.practices-card-bg` que en el vanilla era placeholder. Va
- * cruda, como el resto de las imágenes, para que la página la resuelva con `toImage()`.
- * Ningún documento la tiene cargada todavía, así que hoy la card cae al placeholder.
+ * Card (feedback Practices, sept 2026): `title` es el titular en voz del comprador,
+ * `practiceName` el label corto que va antes de `shortDescription`, y `cardCtaLabel` el
+ * texto del link (vacío → "Explore the practice", lo resuelve `PracticesCard`).
+ *
+ * `cardImage` es el fondo de la `.practices-card`. Va cruda, como el resto de las
+ * imágenes, para que la página la resuelva con `toImage()`; sin imagen (o sin `alt`) la
+ * card cae al placeholder `[image]` del vanilla.
  */
 export const edtechMarketingQuery = `{
   "practices": *[_type == "edtechMarketingPractice"]
     | order(order asc, title asc) {
-      _id, title, "slug": slug.current, shortDescription, cardImage
+      _id, title, practiceName, "slug": slug.current, shortDescription, cardCtaLabel, cardImage
     },
 
   "services": *[_type == "edtechMarketingService" && defined(slug.current)]
@@ -525,20 +528,22 @@ export const resourceDetailQuery = `
  * `conversationItems`, `closingCtaHeadline`) ya no existen: se borraron del schema junto
  * con `description` e `iconId`, que tampoco se leían acá.
  *
- * `services` trae los `edtechMarketingService` de la categoría que la práctica declara
- * en `relatedServiceCategory`. NO es una `reference`: las dos taxonomías comparten los 8
- * valores pero se declaran por separado en cada schema, así que el join es por valor.
- * Es el único mecanismo — el `relatedServices` (array de references) que convivió con
- * este un rato se borró del schema sin haberse renderizado nunca.
+ * `relatedServices` (feedback Practices, sept 2026) reemplazó al join por valor de
+ * `relatedServiceCategory`: la práctica elige servicios sueltos, de cualquier categoría,
+ * y el orden del array ES el orden del menú. El filtro va sobre las referencias ANTES
+ * de expandirlas y descarta las que no resuelven (servicio borrado o sin publicar) o no
+ * tienen slug, que no tendrían página a la que linkear. Filtrar después de la
+ * proyección (`->{...}[defined(slug)]`) no sirve: GROQ lo aplica por elemento y
+ * devuelve un array de `null`.
  */
 export const practiceDetailQuery = `
   *[_type == "edtechMarketingPractice"] {
     _id,
     title,
+    practiceName,
     "slug": slug.current,
     seo,
     shortDescription,
-    relatedServiceCategory,
     heroHeadline,
     heroText,
     heroImage,
@@ -552,10 +557,9 @@ export const practiceDetailQuery = `
     ctaTitle,
     ctaLabel,
     ctaHref,
-    "services": *[_type == "edtechMarketingService"
-        && defined(slug.current)
-        && category == ^.relatedServiceCategory]
-      | order(title asc) {_id, title, "slug": slug.current, category, iconId}
+    "relatedServices": relatedServices[defined(@->slug.current)]->{
+      title, "slug": slug.current, category, iconId, description
+    }
   }
 `;
 
@@ -569,6 +573,7 @@ export const serviceDetailQuery = `
     category,
     iconId,
     description,
+    heroImage,
     introTitle,
     introDescription,
     featuresTitle,

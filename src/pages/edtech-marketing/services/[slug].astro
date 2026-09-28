@@ -6,13 +6,13 @@
  *
  * La ruta es `/edtech-marketing/services/[slug]` (plural), que es lo que emite
  * `serviceUrl()` y lo que el menú de servicios ya linkea desde 6B. Práctica y servicio
- * viven en subcarpetas distintas porque sus slugs se solapan por nombre ("Project
- * Management" existe en las dos taxonomías).
+ * viven en subcarpetas distintas porque sus slugs pueden solaparse por nombre.
  *
  * Todos los campos de esta página se crearon en Etapa 5 — el doctype estaba
  * prácticamente vacío antes:
  *
  *   `description`  → bajada del hero
+ *   `heroImage`    → fondo del hero (feedback Practices, sept 2026)
  *   `intro`        → sección Credibility
  *   `features`     → acordeón "From a single conversation to a content engine"
  *   `proofPoint`   → sección Proof Point
@@ -26,13 +26,13 @@ import Button from '../../../components/ui/Button.astro';
 import Dropdown from '../../../components/ui/Dropdown.astro';
 import ServiceIcon from '../../../components/ui/ServiceIcon.astro';
 import { sanityClient } from '../../../lib/sanity/client';
-import { toImage } from '../../../lib/sanity/image';
+import { imageDimensions, toImage } from '../../../lib/sanity/image';
 import { serviceDetailQuery } from '../../../lib/sanity/queries';
 import { getSeoSettings } from '../../../lib/sanity/settings';
 import { ogTypeFor } from '../../../lib/seo/ogType';
 import { resolveSeo } from '../../../lib/seo/resolveSeo';
 import { detailTrail } from '../../../lib/utils/breadcrumbs';
-import { toStaticPaths } from '../../../lib/utils/routes';
+import { externalLinkAttrs, toStaticPaths } from '../../../lib/utils/routes';
 import type { SanityImage, Seo, ServiceCategoryId, ServiceIconId } from '../../../types/sanity';
 
 export interface ServiceDetail {
@@ -43,6 +43,7 @@ export interface ServiceDetail {
   category?: ServiceCategoryId;
   iconId?: ServiceIconId;
   description?: string;
+  heroImage?: SanityImage;
   introTitle?: string;
   introDescription?: string;
   featuresTitle?: string;
@@ -80,6 +81,12 @@ const seo = {
   description: service.seo?.description ?? service.description,
 };
 
+/* Mismo slot y patrón que el hero de Practice: el `.hero-marketing-bg` gris del vanilla
+   ("[HERO BACKGROUND IMAGE]") pasa a ser la imagen cuando hay asset con `alt`. */
+const HERO_IMAGE_WIDTH = 1920;
+const heroImage = toImage(service.heroImage, { width: HERO_IMAGE_WIDTH });
+const heroImageSize = imageDimensions(service.heroImage, HERO_IMAGE_WIDTH);
+
 const proofPointImage = toImage(service.proofPointImage, { width: 1200 });
 
 const features = (service.features ?? []).filter((feature) => feature.title || feature.description);
@@ -94,9 +101,26 @@ const H2 = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px]';
 <Page seo={seo} siteSettings={siteSettings} breadcrumb={breadcrumb} ogType={ogTypeFor('edtechMarketingService')} navVariant="white">
   <!-- HERO -->
   <section
-    class="section section--hero-marketing relative mt-[clamp(6rem,5.2143rem_+_3.9286vw,8.75rem)] overflow-hidden pt-[clamp(6rem,8.3304rem_-_2.5893vw,7.8125rem)] pb-[clamp(7.8125rem,11.8304rem_-_4.4643vw,10.9375rem)]"
+    class="section section--hero-marketing relative mt-page-offset overflow-hidden pt-[clamp(6rem,8.3304rem_-_2.5893vw,7.8125rem)] pb-[clamp(7.8125rem,11.8304rem_-_4.4643vw,10.9375rem)]"
   >
-    <div class="hero-marketing-bg absolute inset-0 z-0 bg-gray"></div>
+    <div class="hero-marketing-bg absolute inset-0 z-0 flex items-center justify-center bg-gray">
+      {
+        heroImage && (
+          <img
+            src={heroImage.src}
+            alt={heroImage.alt}
+            width={heroImageSize?.width}
+            height={heroImageSize?.height}
+            class="size-full object-cover"
+          />
+        )
+      }
+    </div>
+
+    {/* Velo oscuro sobre la imagen (mismo `bg-black/50` que el hero de Home): el copy
+        del hero es blanco. Va siempre, también sobre el placeholder gris, para que el
+        texto blanco nunca quede sobre fondo claro. */}
+    <div class="hero-marketing-overlay absolute inset-0 z-0 bg-black/50" aria-hidden="true"></div>
 
     <div
       class:list={[CONTAINER, 'hero-marketing-container relative z-[1] gap-[clamp(1.2038rem,1.0127rem_+_0.9554vw,1.8725rem)]']}
@@ -104,17 +128,17 @@ const H2 = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px]';
       <div class="hero-marketing-text flex max-w-[50%] flex-col gap-xs max-md:max-w-full">
         {
           service.iconId && (
-            <div class="hero-marketing-icon mb-xs size-[clamp(3.2119rem,2.7021rem_+_2.5491vw,4.9962rem)] text-black [&_svg]:size-full">
+            <div class="hero-marketing-icon mb-xs size-[clamp(3.2119rem,2.7021rem_+_2.5491vw,4.9962rem)] text-white [&_svg]:size-full">
               <ServiceIcon iconId={service.iconId} />
             </div>
           )
         }
-        <h1 class="font-lora text-h1 leading-[1.25] font-medium tracking-[-0.48px]">{service.title}</h1>
-        {service.description && <p class:list={[BODY, 'max-w-[90%] text-black']}>{service.description}</p>}
+        <h1 class="font-lora text-h1 leading-[1.25] font-medium tracking-[-0.48px] text-white">{service.title}</h1>
+        {service.description && <p class:list={[BODY, 'max-w-[90%] text-white']}>{service.description}</p>}
       </div>
 
       <div class="hero-home-cta mr-auto flex flex-col items-center gap-xs">
-        <Button href="/contact" variant="white" class="border-white!">Book a strategy session</Button>
+        <Button href="/contact" variant="whiteOnDark">Book a strategy session</Button>
       </div>
     </div>
   </section>
@@ -160,9 +184,10 @@ const H2 = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px]';
     )
   }
 
-  <!-- PROOF POINT — fieldset `proofPoint` -->
+  <!-- PROOF POINT — fieldset `proofPoint`. Sin `proofPointDescription` no hay sección,
+       aunque haya título (tiene `initialValue`) o imagen: sin texto no hay proof point. -->
   {
-    (service.proofPointDescription || proofPointImage) && (
+    service.proofPointDescription && (
       <section class="section section--proof-point bg-indigo pt-[clamp(3.75rem,3.1071rem_+_3.2143vw,6rem)] pb-[clamp(3.75rem,2.7679rem_+_4.9107vw,7.1875rem)]">
         <div class="container proof-point-container mx-auto grid w-full max-w-(--container-max-width) grid-cols-[2fr_1.5fr] gap-[2.8125rem] px-container-x max-md:grid-cols-1">
           <div class="proof-point-media flex aspect-[5/3] items-center justify-center overflow-hidden rounded-[0.5em] bg-gray max-md:aspect-[16/9]">
@@ -182,9 +207,7 @@ const H2 = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px]';
             <h3 class="font-lora text-[clamp(1.5rem,1.2857rem_+_1.0714vw,2.25rem)] leading-[1.25] font-medium tracking-[-0.36px] text-white">
               {service.proofPointTitle ?? 'Proof Point'}
             </h3>
-            {service.proofPointDescription && (
-              <p class:list={[BODY, 'text-white']}>{service.proofPointDescription}</p>
-            )}
+            <p class:list={[BODY, 'text-white']}>{service.proofPointDescription}</p>
           </div>
         </div>
       </section>
@@ -203,7 +226,7 @@ const H2 = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px]';
         >
           <h2 class:list={[H2, 'max-w-[50%] text-black max-md:max-w-full']}>{service.ctaTitle}</h2>
           {service.ctaLabel && (
-            <Button href={service.ctaHref ?? '/contact'} variant="blackWhite">
+            <Button href={service.ctaHref ?? '/contact'} {...externalLinkAttrs(service.ctaHref)} variant="blackWhite">
               {service.ctaLabel}
             </Button>
           )}

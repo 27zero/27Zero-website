@@ -18,6 +18,7 @@
  */
 import Button from '../ui/Button.astro';
 import { isDarkColor, surfaceColors } from '../../lib/utils/color';
+import { isExternalHref } from '../../lib/utils/routes';
 
 interface Props {
   bgColor?: string;
@@ -43,7 +44,7 @@ const { text: bodyColor } = surfaceColors(bgColor, bodyTextColor, DEFAULT_BACKGR
 
 const hasButton = Boolean(ctaText?.trim() && ctaLink?.trim());
 /* Solo http(s) abre en pestaña nueva: un `mailto:` abre el cliente de correo igual. */
-const isExternal = hasButton && /^https?:/i.test(ctaLink!.trim());
+const isExternal = hasButton && isExternalHref(ctaLink);
 const isVisible = Boolean(headline?.trim()) || hasButton;
 
 const CONTAINER = 'container mx-auto flex w-full max-w-(--container-max-width) flex-col px-container-x';

@@ -16,14 +16,13 @@
 import Page from '../layouts/Page.astro';
 import { getPageSeo } from '../lib/sanity/settings';
 import ServiceMenu from '../components/sections/ServiceMenu.astro';
-import ShapesSlider from '../components/sections/ShapesSlider.astro';
 import Button from '../components/ui/Button.astro';
 import PracticeIcon from '../components/ui/PracticeIcon.astro';
 import PracticesCard from '../components/ui/PracticesCard.astro';
 import { sanityClient } from '../lib/sanity/client';
 import { toImage } from '../lib/sanity/image';
 import { edtechMarketingQuery } from '../lib/sanity/queries';
-import { practiceUrl, serviceUrl } from '../lib/utils/routes';
+import { externalLinkAttrs, practiceUrl, serviceUrl } from '../lib/utils/routes';
 import type { PracticeIconId, SanityImage, ServiceCategoryId, ServiceIconId } from '../types/sanity';
 import { SERVICE_CATEGORY_LABELS, SERVICE_CATEGORY_ORDER } from '../types/sanity';
 import type { ServiceGroup } from '../types/ui';
@@ -32,8 +31,10 @@ const { practices, services, settings } = await sanityClient.fetch<{
   practices: {
     _id: string;
     title: string;
+    practiceName?: string;
     slug: string;
     shortDescription?: string;
+    cardCtaLabel?: string;
     cardImage?: SanityImage;
   }[];
   services: { _id: string; title: string; slug: string; category: ServiceCategoryId; iconId?: ServiceIconId }[];
@@ -52,23 +53,28 @@ const { practices, services, settings } = await sanityClient.fetch<{
   } | null;
 }>(edtechMarketingQuery);
 
-/* El body de la card sale de `shortDescription`, sin fallback: `description` era el
-   campo duplicado que el brief de Etapa 5 dejó marcado, y se borró del schema.
-   `shortDescription` es requerido, así que la card siempre tiene copy. */
+/* La lista de prácticas es abierta (hoy 9, va a crecer): se renderizan todas las que
+   devuelve la query, en el orden de `order`, sin slice ni cantidad fija.
+
+   Card (feedback Practices, sept 2026): `title` es el titular en voz del comprador y
+   `practiceName` el nombre corto que la card muestra en negrita antes del body. El body
+   sale de `shortDescription`, sin fallback: es requerido por schema. `cardCtaLabel`
+   vacío lo resuelve `PracticesCard` con su label genérico. */
 const PRACTICES = practices.map((practice) => ({
   href: practiceUrl(practice.slug),
   title: practice.title,
+  name: practice.practiceName,
   body: practice.shortDescription ?? undefined,
+  ctaLabel: practice.cardCtaLabel,
   /* `toImage()` devuelve `undefined` si falta el asset o el `alt` (CLAUDE.md §8.1) y ahí
-     la card cae a su placeholder. Hoy es el caso de las 3: `cardImage` está vacía en
-     todos los documentos. */
+     la card cae a su placeholder `[image]`. */
   image: toImage(practice.cardImage, { width: 700 }),
 }));
 
-/* Los 3 íconos de `.practices-card` son fijos y POSICIONALES: el primero de la grilla
-   siempre lleva `waves`, el segundo `spiral` y el tercero `square-circle`, sin importar
-   qué práctica caiga en cada posición. Es el mismo orden en que están hardcodeados en
-   `/edtech-marketing/index.html` del vanilla.
+/* Los 3 íconos de `.practices-card` son fijos y POSICIONALES: rotan `waves` → `spiral`
+   → `square-circle` por posición en la grilla (módulo 3, así que sirven para cualquier
+   cantidad de prácticas), sin importar qué práctica caiga en cada lugar. Es el mismo
+   orden en que están hardcodeados en `/edtech-marketing/index.html` del vanilla.
 
    No salen de Sanity a propósito. Antes se leía `practice.iconId`, que casi ningún
    documento tenía cargado, así que el slot no recibía contenido y las cards se
@@ -80,9 +86,11 @@ const PRACTICE_ICONS: PracticeIconId[] = ['waves', 'spiral', 'square-circle'];
 
 /* El orden de las 8 categorías es de diseño, no un dato del CMS: `category` es una
    `options.list` sin campo de orden, así que se recorre `SERVICE_CATEGORY_ORDER` (el
-   orden del Figma) en vez de dejar que lo decida el alfabeto. Las categorías sin
-   servicios cargados no se renderizan — un `.menu-block` con título y grid vacío no
-   comunica nada.
+   orden del RFC de oferta) en vez de dejar que lo decida el alfabeto. Las categorías
+   sin servicios cargados no se renderizan — un `.menu-block` con título y grid vacío no
+   comunica nada. Un servicio con una categoría fuera de la lista (valor viejo sin
+   reasignar en el Studio) no rompe el build: queda fuera del menú, pero su interna se
+   sigue generando.
 
    El ícono del servicio sale de `iconId` y, si el editor no lo eligió, se rota entre
    los 3 marcos de marca reiniciando en cada categoría, que es exactamente lo que hace
@@ -138,7 +146,7 @@ const { seo, siteSettings } = await getPageSeo('agency');
 <Page seo={seo} siteSettings={siteSettings} navVariant="white">
   <!-- HERO -->
   <section
-    class="section section--hero-marketing relative mt-[clamp(6.0019rem,5.2167rem_+_3.9259vw,8.75rem)] overflow-hidden pt-[clamp(3.7538rem,8.9729rem_-_5.7991vw,7.8131rem)] pb-[clamp(7.4988rem,11.9168rem_-_4.9089vw,10.935rem)]"
+    class="section section--hero-marketing relative mt-page-offset overflow-hidden pt-[clamp(3.7538rem,8.9729rem_-_5.7991vw,7.8131rem)] pb-[clamp(7.4988rem,11.9168rem_-_4.9089vw,10.935rem)]"
   >
     {
       HERO_IMAGE ? (
@@ -154,6 +162,11 @@ const { seo, siteSettings } = await getPageSeo('agency');
       )
     }
 
+    {/* Velo oscuro sobre la imagen (mismo `bg-black/50` que el hero de Home): el copy
+        del hero es blanco. Va siempre, también sobre el placeholder gris, para que el
+        texto blanco nunca quede sobre fondo claro. */}
+    <div class="hero-marketing-overlay absolute inset-0 z-0 bg-black/50" aria-hidden="true"></div>
+
     <div
       class:list={[
         CONTAINER,
@@ -161,10 +174,10 @@ const { seo, siteSettings } = await getPageSeo('agency');
       ]}
     >
       <div class="hero-marketing-text flex max-w-[50%] flex-col gap-xs max-md:max-w-full">
-        <h1 class="font-lora text-h1 leading-[1.25] font-medium tracking-[-0.48px]">
+        <h1 class="font-lora text-h1 leading-[1.25] font-medium tracking-[-0.48px] text-white">
           {settings?.agencyHero?.headline}
         </h1>
-        <p class:list={[BODY, 'max-w-[90%] text-black']}>
+        <p class:list={[BODY, 'max-w-[90%] text-white']}>
           {settings?.agencyHero?.text}
         </p>
       </div>
@@ -176,10 +189,8 @@ const { seo, siteSettings } = await getPageSeo('agency');
           settings?.agencyHero?.ctaLink && (
             <Button
               href={settings.agencyHero.ctaLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              variant="white"
-              class="border-white!"
+              {...externalLinkAttrs(settings.agencyHero.ctaLink)}
+              variant="whiteOnDark"
             >
               Book a strategy session
             </Button>
@@ -187,7 +198,7 @@ const { seo, siteSettings } = await getPageSeo('agency');
         }
         {
           settings?.agencyHero?.ctaCaption && (
-            <p class="text-caption font-inter text-body-sm leading-[1.6] font-normal tracking-normal text-black">
+            <p class="text-caption font-inter text-body-sm leading-[1.6] font-normal tracking-normal text-white">
               {settings.agencyHero.ctaCaption}
             </p>
           )
@@ -196,16 +207,14 @@ const { seo, siteSettings } = await getPageSeo('agency');
     </div>
   </section>
 
-  {/* PENDIENTE (planning-maquetado-edtech-marketing.md #2): 2 de las 3 shapes siguen
-      con lorem ipsum a la espera del copy del cliente — desde la Sesión 5 ese contenido
-      vive en `settings.apartSection`, así que se resuelve cargándolo en el Studio. */}
-  <ShapesSlider />
-
+  {/* Sin "What Sets 27zero Apart" (`ShapesSlider`): el feedback Practices (sept 2026)
+      lo sacó de esta página, así que Practices va inmediatamente después del Hero. El
+      componente y `settings.apartSection` siguen en uso en Home y About. */}
   <!-- PRACTICES -->
   <section
     class="section section--practices bg-indigo pt-[clamp(5.0231rem,4.2258rem_+_3.9866vw,7.8137rem)] pb-[clamp(6.0244rem,5.0681rem_+_4.7812vw,9.3712rem)]"
   >
-    <div class:list={[CONTAINER, 'practices-container gap-[clamp(4.0162rem,3.3787rem_+_3.1875vw,6.2475rem)]']}>
+    <div class:list={[CONTAINER, 'practices-container gap-[2rem]']}>
       <div class="practices-intro flex flex-col gap-[clamp(0.3994rem,0.336rem_+_0.317vw,0.6212rem)]">
         <h2 class="font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px] text-white">
           {settings?.agencyPracticesSection?.headline}
@@ -224,7 +233,14 @@ const { seo, siteSettings } = await getPageSeo('agency');
       >
         {
           PRACTICES.map((practice, index) => (
-            <PracticesCard href={practice.href} title={practice.title} body={practice.body} image={practice.image}>
+            <PracticesCard
+              href={practice.href}
+              title={practice.title}
+              name={practice.name}
+              body={practice.body}
+              ctaLabel={practice.ctaLabel}
+              image={practice.image}
+            >
               <PracticeIcon slot="icon" iconId={PRACTICE_ICONS[index % PRACTICE_ICONS.length]} />
             </PracticesCard>
           ))
@@ -271,8 +287,7 @@ const { seo, siteSettings } = await getPageSeo('agency');
         settings?.agencyClosingCta?.ctaLink && (
           <Button
             href={settings.agencyClosingCta.ctaLink}
-            target="_blank"
-            rel="noopener noreferrer"
+            {...externalLinkAttrs(settings.agencyClosingCta.ctaLink)}
             variant="blackWhite"
           >
             Book a strategy session

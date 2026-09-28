@@ -27,8 +27,13 @@ export interface SanitySlug {
 
 /**
  * Imagen de Sanity. `alt` y `caption` son campos custom que agrega el schema, no
- * parte del tipo `image` nativo — por eso no están en todas: `settings.logo` y
- * `edtechMarketingPractice.heroImage` no los declaran.
+ * parte del tipo `image` nativo — por eso no están en todas: `settings.logo` no los
+ * declara.
+ *
+ * `alt` queda opcional aunque el schema lo marque requerido: la validación del Studio
+ * no impide publicar un asset viejo sin él (ej. `heroImage` de New Product Launch,
+ * cargado antes de que el campo existiera). `toImage()` no renderiza una imagen sin
+ * `alt` (CLAUDE.md §8.1).
  */
 export interface SanityImage {
   _type: 'image';
@@ -73,46 +78,46 @@ export interface Seo {
 /* ──────────────────────────── Taxonomías ──────────────────────────────── */
 
 /**
- * `edtechMarketingService.category` y `edtechMarketingPractice.relatedServiceCategory`
- * — la misma lista de 8 valores, declarada por separado en cada schema.
+ * `edtechMarketingService.category` — espejo de `SERVICE_CATEGORIES` del schema
+ * (taxonomía del RFC de oferta, feedback Practices sept 2026). Es la ÚNICA fuente de
+ * verdad de categoría: `edtechMarketingPractice` ya no declara categoría propia, elige
+ * servicios sueltos vía `relatedServices`.
  *
- * ⚠️ Taxonomía INDEPENDIENTE de `workCategory`: no comparte doctype, campo ni valores
- * (esta tiene "Project Management", "Content Development" y "Others"; `workCategory`
- * tiene "Thought Leadership Programs" y "Content Marketing"). Se parecen de nombre en
- * algunos casos y no son lo mismo.
+ * ⚠️ Taxonomía INDEPENDIENTE de `workCategory`: no comparte doctype, campo ni valores,
+ * aunque algunos nombres coincidan ("Content Marketing" existe en las dos).
  */
 export type ServiceCategoryId =
-  | 'ux-ui-web-design'
-  | 'brand-messaging-strategy'
-  | 'project-management'
-  | 'events'
-  | 'content-development'
-  | 'marketing-programs'
   | 'strategic-services'
-  | 'others';
+  | 'brand-identity'
+  | 'ux-ui-web-design'
+  | 'content-marketing'
+  | 'demand-generation'
+  | 'marketing-operations'
+  | 'sales-enablement'
+  | 'events-experiences';
 
-/** Labels de `ServiceCategoryId`, en el orden en que se muestran en EdTech Marketing. */
+/** Labels de `ServiceCategoryId` — mismos `title` que el schema. */
 export const SERVICE_CATEGORY_LABELS: Record<ServiceCategoryId, string> = {
-  'ux-ui-web-design': 'UX/UI & Web Design',
-  'brand-messaging-strategy': 'Brand & Messaging Strategy',
-  'project-management': 'Project Management',
-  events: 'Events',
-  'content-development': 'Content Development',
-  'marketing-programs': 'Marketing Programs',
   'strategic-services': 'Strategic Services',
-  others: 'Others',
+  'brand-identity': 'Brand & Identity',
+  'ux-ui-web-design': 'UX/UI & Web Design',
+  'content-marketing': 'Content Marketing',
+  'demand-generation': 'Demand Generation',
+  'marketing-operations': 'Marketing Operations',
+  'sales-enablement': 'Sales Enablement',
+  'events-experiences': 'Events & Experiences',
 };
 
-/** Orden de aparición de las categorías en el menú de servicios (orden del vanilla). */
+/** Orden de aparición de las categorías en el menú de servicios (orden del RFC). */
 export const SERVICE_CATEGORY_ORDER: ServiceCategoryId[] = [
-  'ux-ui-web-design',
-  'brand-messaging-strategy',
-  'project-management',
-  'events',
-  'content-development',
-  'marketing-programs',
   'strategic-services',
-  'others',
+  'brand-identity',
+  'ux-ui-web-design',
+  'content-marketing',
+  'demand-generation',
+  'marketing-operations',
+  'sales-enablement',
+  'events-experiences',
 ];
 
 /** Íconos de `ServiceIcon.astro` — espejo de `ICON_OPTIONS` del schema. */
@@ -448,18 +453,43 @@ export interface EdtechMentor extends SanityDocument {
   seo?: Seo;
 }
 
-/** `edtechMarketingPractice` — una de las 3 prácticas. Card en EdTech Marketing + interna. */
+/**
+ * Servicio de `relatedServices` expandido con `->` — la proyección de
+ * `practiceDetailQuery`, no el documento completo.
+ */
+export interface ServiceRef {
+  title: string;
+  slug: string;
+  category: ServiceCategoryId;
+  iconId?: ServiceIconId;
+  description?: string;
+}
+
+/**
+ * `edtechMarketingPractice` — una práctica. Card en EdTech Marketing + interna.
+ * Lista abierta (hoy 9): nada del sitio asume una cantidad fija.
+ */
 export interface EdtechMarketingPractice extends SanityDocument {
   _type: 'edtechMarketingPractice';
 
   // Card
+  /** Titular en voz del comprador — el texto grande de la card. NO es el H1 de la interna. */
   title: string;
+  /** Nombre corto de la práctica. Label de la card y fuente del `slug`. */
+  practiceName: string;
   slug: SanitySlug;
   shortDescription: string;
+  /** Texto del link de la card. Vacío → "Explore the practice". */
+  cardCtaLabel?: string;
   /** Fondo de la card de la práctica en el índice de EdTech Marketing (800×600). */
   cardImage?: SanityImage;
   order?: number;
-  relatedServiceCategory?: ServiceCategoryId;
+  /**
+   * Menú "What's on the menu?" de la interna, curado a mano: el orden del array ES el
+   * orden en el sitio, sin importar la categoría. Vacío → fallback "View All".
+   * `SanityReference` sin `->`, `ServiceRef` con `->`.
+   */
+  relatedServices?: ((SanityReference & { _key: string }) | ServiceRef)[];
 
   // Page Content — fieldset `intro`
   introTitle?: string;
@@ -467,6 +497,7 @@ export interface EdtechMarketingPractice extends SanityDocument {
   capabilities?: string[];
 
   // Hero
+  /** H1 real de la interna — el nombre corto, no el `title` de la card. */
   heroHeadline?: string;
   heroText?: string;
   heroImage?: SanityImage;
@@ -501,6 +532,8 @@ export interface EdtechMarketingService extends SanityDocument {
   category: ServiceCategoryId;
   iconId?: ServiceIconId;
   description?: string;
+  /** Fondo del hero de la interna (Conflicto 6 del feedback Practices). */
+  heroImage?: SanityImage;
 
   // Fieldset `intro`
   introTitle?: string;

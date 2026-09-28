@@ -64,6 +64,20 @@ export const practiceUrl = (slug: string): string => `/edtech-marketing/practice
 export const serviceUrl = (slug: string): string => `/edtech-marketing/services/${normalizeSlug(slug)}`;
 
 /**
+ * `true` si el href sale del sitio. Solo http(s): un `mailto:` o `tel:` abre su app igual,
+ * sin pestaña nueva de por medio.
+ */
+export const isExternalHref = (href: string | null | undefined): boolean => /^https?:/i.test(href?.trim() ?? '');
+
+/**
+ * `target`/`rel` para spreadear en un link cuyo href viene del CMS: pestaña nueva solo si
+ * es externo. Los CTAs de EdTech Marketing pasaron de HubSpot a `/contact` (feedback
+ * Practices, sept 2026) y un `target="_blank"` fijo abría el propio sitio en otra pestaña.
+ */
+export const externalLinkAttrs = (href: string | null | undefined): { target?: '_blank'; rel?: string } =>
+  isExternalHref(href) ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+
+/**
  * Lista de documentos → `paths` de `getStaticPaths()`, saltando los que no pueden
  * tener URL.
  *
