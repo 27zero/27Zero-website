@@ -258,8 +258,36 @@ export interface Client extends SanityDocument {
   description?: string;
 }
 
-/** Altura de las imágenes de una sección del Case Study. Los valores rem/vh viven en el sitio. */
-export type ImageHeightVariant = 'low' | 'medium' | 'high';
+/**
+ * Paleta cerrada de fondos y textos de sección (`schemaTypes/lib/paletteColor.ts` en el
+ * Studio). Se guarda el nombre del token, nunca el hex: mapea a `var(--color-<valor>)`
+ * de `global.css`.
+ */
+export type PaletteColor = 'indigo' | 'purple' | 'black' | 'white';
+
+/**
+ * Altura de las imágenes de una sección del Case Study. Los valores rem/vh de
+ * low/medium/high viven en el sitio; `custom` usa el `customHeight` hermano.
+ */
+export type ImageHeightVariant = 'low' | 'medium' | 'high' | 'custom';
+
+/**
+ * `cta` — CTA reutilizable de cierre (headline + bajada + un botón). Reemplaza al
+ * objeto embebido `work.finalCta` (feedback Work, ronda 2); se referencia desde `work.cta`.
+ */
+export interface Cta extends SanityDocument {
+  _type: 'cta';
+  /** Nombre interno para elegirlo en el Studio. No se renderiza. */
+  title: string;
+  headline?: string;
+  bodyText?: string;
+  ctaText?: string;
+  /** Acepta rutas relativas (`/contact`), http(s) y mailto. */
+  ctaLink?: string;
+  bgColor?: PaletteColor;
+  headlineColor?: PaletteColor;
+  bodyTextColor?: PaletteColor;
+}
 
 /**
  * `work` — un case study. Alimenta Work, Clientes y la interna compartida.
@@ -269,11 +297,15 @@ export type ImageHeightVariant = 'low' | 'medium' | 'high';
  * `impact`, `contributions`, `clientQuote` (el quote sale de `testimonial.workProject`)
  * e `isFeatured` (ver `WorkCategory.featuredWorks`). También `description` (Project
  * Description): su contenido se migró a `communicationChallenge`.
+ *
+ * Ronda 2 (sanity-changes-work-r2.md): `clientTagline` → `headline` (título público),
+ * `title` pasa a ser solo interno, y `finalCta` embebido → `cta` (reference a `Cta`).
  */
 export interface Work extends SanityDocument {
   _type: 'work';
 
   // Overview
+  /** Nombre interno para el Studio. No se renderiza: el título público es `headline`. */
   title: string;
   subtitle?: string;
   slug: SanitySlug;
@@ -282,7 +314,8 @@ export interface Work extends SanityDocument {
   services?: string[];
 
   // Project Brief
-  clientTagline?: string;
+  /** H1 de la interna y título de las cards de Work. */
+  headline: string;
   /** Fallback de la meta description, truncado a 160 caracteres en el sitio. */
   briefParagraph?: string;
   projectType?: string;
@@ -306,12 +339,15 @@ export interface Work extends SanityDocument {
     challengeContent?: PortableTextBlock[];
     challengeImages?: SanityImage[];
     heightVariant?: ImageHeightVariant;
+    /** px del diseño desktop, 80–1200. Solo cuando `heightVariant === 'custom'`. */
+    customHeight?: number;
   };
   communicationChallenge?: {
     sectionLabel?: string;
     content?: PortableTextBlock[];
     images?: SanityImage[];
     heightVariant?: ImageHeightVariant;
+    customHeight?: number;
   };
   solution?: {
     sectionLabel?: string;
@@ -319,6 +355,7 @@ export interface Work extends SanityDocument {
     body?: PortableTextBlock[];
     solutionImages?: SanityImage[];
     heightVariant?: ImageHeightVariant;
+    customHeight?: number;
   };
   contentSections?: {
     _key: string;
@@ -326,19 +363,13 @@ export interface Work extends SanityDocument {
     body?: string;
     images?: SanityImage[];
     heightVariant?: ImageHeightVariant;
+    customHeight?: number;
     /** Vacío → blanco. */
-    bgColor?: string;
-    textColor?: string;
+    bgColor?: PaletteColor;
+    textColor?: PaletteColor;
   }[];
-  finalCta?: {
-    sectionBgColor?: string;
-    sectionHeadlineColor?: string;
-    sectionBodyTextColor?: string;
-    headline?: string;
-    bodyText?: string;
-    ctaText?: string;
-    ctaLink?: string;
-  };
+  /** Final CTA Section. */
+  cta?: SanityReference | Cta;
 
   seo?: Seo;
 }
