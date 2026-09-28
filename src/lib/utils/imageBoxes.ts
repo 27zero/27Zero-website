@@ -75,8 +75,17 @@ export const IMAGE_BOXES = {
   /** Logo del cliente en la interna: 70px de alto máximo, ancho según su proporción. */
   clientLogo: (() => ({ width: 0, height: 70 })) as ImageBox,
 
-  /** `WorkCard` base y `EdtechMentorCard`: el cuadrado de `--spacing-card`. */
+  /** `WorkCard` base: el cuadrado de `--spacing-card`. */
   card: ((viewport) => ({ width: card(viewport), height: card(viewport) })) as ImageBox,
+  /**
+   * `EdtechMentorCard`: el cuadrado de `--spacing-card` en desktop; en mobile, 4:5 al 85%
+   * del viewport (sliders) o al ancho del container (grids) — se toma el mayor de los dos.
+   */
+  mentorCard: ((viewport) => {
+    if (viewport > MOBILE_MAX) return { width: card(viewport), height: card(viewport) };
+    const width = Math.max(viewport * 0.85, containerWidth(viewport));
+    return { width, height: (width * 5) / 4 };
+  }) as ImageBox,
   /** `WorkCard size="tall"` (categorías destacadas de Work). */
   cardTall: ((viewport) => ({ width: card(viewport), height: fluid(320, 480)(viewport) })) as ImageBox,
   /** `WorkCard` en el slider de About: alto 30em, clamp(16.875rem → 26.25rem). */

@@ -47,6 +47,9 @@ interface Props extends MentorCategoryGroup {
  * (`.section--investor-mentor .card-edtech-mentor-role/-name`). Va como clase
  * arbitraria descendente sobre el wrapper del slider, mismo patrón que el override de
  * altura de card en Work.
+ *
+ * `cardSurface` es el fondo del tema tal como lo lee la card (`surface`): define el color
+ * del título, que en mobile va fuera de la imagen.
  */
 const THEMES = [
   {
@@ -54,18 +57,21 @@ const THEMES = [
     buttonVariant: 'whiteIndigo' as const,
     arrowVariant: 'light' as const,
     cardTextClass: undefined,
+    cardSurface: 'dark' as const,
   },
   {
     sectionClass: 'bg-purple text-black',
     buttonVariant: 'blackWhite' as const,
     arrowVariant: 'dark' as const,
     cardTextClass: '[&_.card-edtech-mentor-role]:text-black [&_.card-edtech-mentor-name]:text-black',
+    cardSurface: 'light' as const,
   },
   {
     sectionClass: 'bg-black text-white',
     buttonVariant: 'whiteIndigo' as const,
     arrowVariant: 'light' as const,
     cardTextClass: undefined,
+    cardSurface: 'dark' as const,
   },
 ];
 
@@ -106,7 +112,7 @@ const SLIDERS_CONTAINER = 'sliders-container pt-[clamp(2.2106rem,1.7697rem_+_2.2
 
   <div class:list={[SLIDERS_CONTAINER, theme.cardTextClass]}>
     <CardsSlider arrowVariant={theme.arrowVariant}>
-      {items.map((item) => <EdtechMentorCard {...item} />)}
+      {items.map((item) => <EdtechMentorCard {...item} surface={theme.cardSurface} />)}
     </CardsSlider>
   </div>
 </section>

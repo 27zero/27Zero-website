@@ -52,7 +52,7 @@ const FEATURED_WORKS: WorkCardData[] = [
 
 /* La `FeaturedCard` de la sección EdTech Mentor: la entrevista destacada más reciente. */
 const FEATURED_MENTOR_POST: MentorCardData | null = featuredMentor
-  ? toMentorCard(featuredMentor, { box: IMAGE_BOXES.featuredHalf })
+  ? toMentorCard(featuredMentor, { image: 'bannerPost', box: IMAGE_BOXES.featuredHalf })
   : null;
 
 const MENTOR_POSTS: MentorCardData[] = mentorPosts.map((mentor) => toMentorCard(mentor));
@@ -234,7 +234,7 @@ const homeContent = await getHomeContent();
         `.section--mentor-home .slider-arrow` del vanilla. */}
     <div class={SLIDERS_CONTAINER}>
       <CardsSlider arrowVariant="light">
-        {MENTOR_POSTS.map((post) => <EdtechMentorCard {...post} />)}
+        {MENTOR_POSTS.map((post) => <EdtechMentorCard {...post} surface="dark" />)}
       </CardsSlider>
     </div>
   </section>

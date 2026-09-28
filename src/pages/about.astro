@@ -79,7 +79,7 @@ const PROOF_POINT = {
 const WORKS: WorkCardData[] = works.map((work) => toWorkCard(work, { box: IMAGE_BOXES.cardAbout }));
 
 const FEATURED_MENTOR_POST: MentorCardData | null = featuredMentor
-  ? toMentorCard(featuredMentor, { box: IMAGE_BOXES.featuredHalf })
+  ? toMentorCard(featuredMentor, { image: 'bannerPost', box: IMAGE_BOXES.featuredHalf })
   : null;
 
 const MENTOR_POSTS: MentorCardData[] = mentorPosts.map((mentor) => toMentorCard(mentor));
@@ -133,6 +133,10 @@ const { seo, siteSettings } = await getPageSeo('about');
       )
     }
 
+    {/* Velo oscuro (mismo `bg-black/50` que Home y EdTech Marketing): el copy es blanco y
+        se espera una imagen de fondo real. Va siempre, también sobre el placeholder. */}
+    <div class="hero-marketing-overlay absolute inset-0 z-0 bg-black/50" aria-hidden="true"></div>
+
     <div
       class:list={[
         CONTAINER,
@@ -140,10 +144,10 @@ const { seo, siteSettings } = await getPageSeo('about');
       ]}
     >
       <div class="hero-marketing-text flex max-w-[50%] flex-col gap-[clamp(1.2656rem,1.0647rem_+_1.0045vw,1.9688rem)] max-md:max-w-full">
-        <h1 class="font-lora text-h1 leading-[1.25] font-medium tracking-[-0.48px]">
+        <h1 class="font-lora text-h1 leading-[1.25] font-medium tracking-[-0.48px] text-white">
           {aboutHero?.headline}
         </h1>
-        <p class:list={[BODY, 'max-w-[90%] text-black max-md:max-w-full']}>
+        <p class:list={[BODY, 'max-w-[90%] text-white max-md:max-w-full']}>
           {aboutHero?.text}
         </p>
       </div>
@@ -256,7 +260,7 @@ const { seo, siteSettings } = await getPageSeo('about');
 
     <div class={SLIDERS_CONTAINER}>
       <CardsSlider arrowVariant="light">
-        {MENTOR_POSTS.map((post) => <EdtechMentorCard {...post} />)}
+        {MENTOR_POSTS.map((post) => <EdtechMentorCard {...post} surface="dark" />)}
       </CardsSlider>
     </div>
   </section>

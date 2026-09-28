@@ -348,7 +348,7 @@ const mentorContent = await getMentorContent();
           hidden
           class="[&_.card-edtech-mentor-name]:text-indigo [&_.card-edtech-mentor-role]:text-indigo"
         >
-          <div class="flex flex-wrap gap-sm">
+          <div class="flex flex-wrap gap-sm max-md:gap-y-md">
             {
               SEARCHABLE_MENTORS.map(({ card, searchText }) => (
                 /* `flex`: el wrapper es el flex item de la grilla y se estira a la altura de la fila,
@@ -356,8 +356,8 @@ const mentorContent = await getMentorContent();
                    `EdtechMentorCard` no tenía sobre qué anclar. Con esto la card se estira al
                    wrapper y los cuadrados alinean también acá. El toggle por `.hidden` del script
                    sigue mandando: preflight lo declara `!important`. */
-                <div class="mentor-search-item flex" data-search={searchText}>
-                  <EdtechMentorCard {...card} />
+                <div class="mentor-search-item flex max-md:w-full" data-search={searchText}>
+                  <EdtechMentorCard {...card} layout="grid" />
                 </div>
               ))
             }

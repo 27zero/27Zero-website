@@ -10,15 +10,19 @@
  * filled con el color del CMS. En el destacado de work de Home no hay color: el pill
  * cae al negro.
  *
+ * Tono (QA visual, sept 2026): texto y flecha claros sobre un overlay oscuro en TODAS
+ * las variantes — el mismo gradiente del hover de `EdtechMentorCard`, fijo, que en
+ * mobile pasa a un velo parejo sobre la imagen entera. Antes solo `spotlight` era clara;
+ * la default (Home y About) iba en negro sobre la imagen sin overlay.
+ *
+ * Avatar: círculo blanco con la imagen al 90%, centrada — queda un anillo claro que la
+ * despega de la foto de fondo.
+ *
  * `variant="spotlight"` (Nota 10.2) — solo el destacado de `/edtech-mentor`:
- *   - `.card-featured-content` (avatar, rol, nombre, título y flecha) +40%;
- *   - texto y flecha claros en vez de oscuros;
- *   - el gradiente del hover de `EdtechMentorCard` queda fijo, no solo en hover;
- *   - en mobile el overlay cubre la imagen entera, para que el texto contraste
- *     sobre cualquier foto.
- * Es una variante y no overrides descendentes desde la página porque toca seis
- * elementos a la vez y cada uno necesita su propio `clamp()` escalado (CLAUDE.md §5:
- * los componentes que escalan llevan variantes explícitas).
+ * `.card-featured-content` (avatar, rol, nombre, título y flecha) +40%. Es una variante
+ * y no overrides descendentes desde la página porque toca seis elementos a la vez y
+ * cada uno necesita su propio `clamp()` escalado (CLAUDE.md §5: los componentes que
+ * escalan llevan variantes explícitas).
  *
  * Props genéricas, sin acoplar al schema de Sanity (Etapa 5).
  */
@@ -77,32 +81,29 @@ const SIZES = spotlight
       arrowIcon: 18,
     };
 
-const TEXT_COLOR = spotlight ? 'text-white' : 'text-black';
+const TEXT_COLOR = 'text-white';
 
-const ARROW_COLORS = spotlight
-  ? 'border-white text-white group-hover/card:bg-white group-hover/card:text-black'
-  : 'border-black text-black group-hover/card:bg-black group-hover/card:text-white';
+const ARROW_COLORS = 'border-white text-white group-hover/card:bg-white group-hover/card:text-black';
 
 /* Mismo gradiente que el hover de `EdtechMentorCard`, fijo. En mobile pasa a un velo
    parejo sobre toda la imagen: ahí el contenido se apila y ocupa mucho más alto que la
    mitad inferior que cubre el gradiente. */
-const SPOTLIGHT_OVERLAY =
+const OVERLAY =
   "after:pointer-events-none after:absolute after:inset-0 after:z-0 after:bg-[linear-gradient(180deg,transparent_0%,rgba(0,0,0,0.75)_100%)] after:content-[''] max-md:after:bg-black/55";
 ---
 
 <a
   href={href}
   class:list={[
-    'card card--featured group/card relative flex size-full shrink-0 cursor-pointer flex-col justify-between overflow-hidden rounded-card bg-gray p-[clamp(0.9562rem,0.8045rem_+_0.7589vw,1.4875rem)] text-black no-underline',
-    spotlight && SPOTLIGHT_OVERLAY,
+    'card card--featured group/card relative flex size-full shrink-0 cursor-pointer flex-col justify-between overflow-hidden rounded-card bg-gray p-[clamp(0.9562rem,0.8045rem_+_0.7589vw,1.4875rem)] text-white no-underline max-md:gap-[1.875rem]',
+    OVERLAY,
   ]}
 >
-  {/* Sin `z-index` propio: queda debajo del overlay `::after` de la variante spotlight
-      (que va después en el orden de pintado) y del contenido (`z-[1]`). */}
+  {/* Sin `z-index` propio: queda debajo del overlay `::after` (que va después en el
+      orden de pintado) y del contenido (`z-[1]`). */}
   {image && <img {...imgAttrs(image)} class="card-featured-bg absolute inset-0 size-full object-cover" />}
 
-  {/* `z-[1]` en los dos hijos directos: quedan por encima del overlay `::after` de la
-      variante spotlight. En la default no hay overlay y no cambia nada. */}
+  {/* `z-[1]` en los dos hijos directos: quedan por encima del overlay `::after`. */}
   {
     (tag || season) && (
       <div class="card-featured-tags relative z-[1] flex flex-wrap items-start gap-xs">
@@ -116,9 +117,9 @@ const SPOTLIGHT_OVERLAY =
     <div class:list={['card-featured-meta flex items-center', SIZES.metaGap]}>
       {
         (avatar || avatarInitials) && (
-          <div class:list={['card-featured-avatar flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-purple', SIZES.avatar]}>
+          <div class:list={['card-featured-avatar flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-white', SIZES.avatar]}>
             {avatar ? (
-              <img {...imgAttrs(avatar)} class="size-full object-cover" />
+              <img {...imgAttrs(avatar)} class="size-[90%] rounded-full object-cover" />
             ) : (
               <span class:list={['font-inter font-bold text-indigo', SIZES.initials]}>
                 {avatarInitials}

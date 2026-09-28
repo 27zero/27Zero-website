@@ -250,8 +250,11 @@ const { seo, siteSettings } = await getPageSeo('agency');
   </section>
 
   <!-- MENU -->
+  {/* `id`: destino del "View All" de las internas de Practice. `scroll-mt` compensa el
+      navbar fijo, mismo valor que las anclas de `CategorySliders`. */}
   <section
-    class="section section--menu bg-black pt-[clamp(4.0162rem,3.3787rem_+_3.1875vw,6.2475rem)] pb-[clamp(6.0244rem,5.0681rem_+_4.7812vw,9.3712rem)]"
+    id="services-menu"
+    class="section section--menu scroll-mt-[clamp(4.5rem,3.7857rem_+_3.5714vw,7rem)] bg-black pt-[clamp(4.0162rem,3.3787rem_+_3.1875vw,6.2475rem)] pb-[clamp(6.0244rem,5.0681rem_+_4.7812vw,9.3712rem)]"
   >
     {/* `.menu-container` es un `.container` pero en grid, no en columna flex. */}
     <div

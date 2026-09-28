@@ -163,7 +163,7 @@ export const homeQuery = `{
   "featuredWorkCategories": ${FEATURED_WORK_CATEGORIES},
 
   "featuredMentor": *[_type == "edtechMentor" && isFeatured == true && defined(slug.current)]
-    | order(publishedAt desc)[0] {${MENTOR_CARD_FIELDS}},
+    | order(publishedAt desc)[0] {${MENTOR_CARD_FIELDS}, bannerPost},
 
   "mentorPosts": *[_type == "edtechMentor" && defined(slug.current)]
     | order(publishedAt desc)[0...6] {${MENTOR_CARD_FIELDS}},
@@ -201,7 +201,7 @@ export const aboutQuery = `{
     | order(order asc, title asc)[0...6] {${WORK_CARD_FIELDS}},
 
   "featuredMentor": *[_type == "edtechMentor" && isFeatured == true && defined(slug.current)]
-    | order(publishedAt desc)[0] {${MENTOR_CARD_FIELDS}},
+    | order(publishedAt desc)[0] {${MENTOR_CARD_FIELDS}, bannerPost},
 
   "mentorPosts": *[_type == "edtechMentor" && defined(slug.current)]
     | order(publishedAt desc)[0...6] {${MENTOR_CARD_FIELDS}},

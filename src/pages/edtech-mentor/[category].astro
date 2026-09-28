@@ -143,9 +143,9 @@ const HEADLINE_AS_H1: PortableTextComponents = {
   <section class="section section--category-grid pt-0 pb-section-y">
     <div class={CONTAINER}>
       <div
-        class="mentor-category-grid flex flex-wrap gap-gap max-md:justify-center [&_.card-edtech-mentor-name]:text-black [&_.card-edtech-mentor-role]:text-black"
+        class="mentor-category-grid flex flex-wrap gap-gap max-md:justify-center max-md:gap-y-md [&_.card-edtech-mentor-name]:text-black [&_.card-edtech-mentor-role]:text-black"
       >
-        {cards.map((card) => <EdtechMentorCard {...card} />)}
+        {cards.map((card) => <EdtechMentorCard {...card} layout="grid" />)}
       </div>
     </div>
   </section>

@@ -14,8 +14,24 @@
  *
  * El texto del hover es el TÍTULO DEL EPISODIO (`title`), no el nombre del invitado:
  * ese va en el header, en `name`.
- * En mobile no hay hover, así que gradiente, título y flecha quedan en su estado
- * "hover" por default — igual que en el vanilla.
+ *
+ * Mobile (QA visual, sept 2026 — la card se veía congestionada). Desktop no cambia:
+ *   - el título sale de la imagen y va DEBAJO, en el flujo, sin gradiente: la imagen se
+ *     ve limpia. Su color depende del fondo de la sección (`surface`);
+ *   - imagen en 4:5, con la flecha encima (bottom-right, igual que en desktop). Sin el
+ *     gradiente, la flecha blanca desaparecía sobre las thumbnails claras: en mobile
+ *     lleva relleno `bg-black/40` para leerse sobre cualquier imagen;
+ *   - sin pills (categoría/season) y sin la línea `[ROLE] - [COMPANY]`: el header queda
+ *     en avatar + nombre, con más aire hasta la imagen;
+ *   - ancho según `layout`: ~85% del viewport en sliders, el de la columna en grids;
+ *   - el contenido se ancla ARRIBA (`justify-start`), así las imágenes de un slider
+ *     alinean aunque los títulos tengan distinta cantidad de líneas.
+ *
+ * Para que el título pueda salir de la imagen sin duplicarlo, la imagen y la flecha
+ * viven en `.card-edtech-mentor-media`: en desktop es una capa `absolute inset-0` del
+ * body (mismo lugar que ocupaba la imagen) y la flecha va `absolute` en la esquina, con
+ * el mismo `p-sm` de offset que tenía como hijo del footer — el título reserva ese
+ * ancho con `padding-right`. En mobile la capa pasa al flujo con su proporción 4:5.
  *
  * Fade-up del título: la transición declara `opacity,translate`, NO `transform`.
  * Tailwind v4 emite `translate-y-*` sobre la propiedad `translate` (`translate: x y`),
@@ -28,21 +44,20 @@
  * `translateZ(0)` los separa en capas y el compositor resuelve opacity/translate sin
  * repintar. Es la única razón de esas dos clases.
  *
- * `justify-end`: el header crece hacia ARRIBA, no hacia abajo. `role` es texto libre
- * del CMS y en varias interviews ocupa dos líneas; como el header va antes que el body
- * en un `flex-col`, esa segunda línea empujaba el cuadrado hacia abajo y esa card
+ * `justify-end` (desktop): el header crece hacia ARRIBA, no hacia abajo. `role` es texto
+ * libre del CMS y en varias interviews ocupa dos líneas; como el header va antes que el
+ * body en un `flex-col`, esa segunda línea empujaba el cuadrado hacia abajo y esa card
  * quedaba desfasada respecto de las de una sola línea — en sliders, grids y modal.
  * Las cards ya se estiran a la altura de la más alta (`align-items: stretch` del track),
  * así que basta con anclar el contenido abajo: el body queda alineado con el del resto y
- * el sobrante cae arriba del header, sobre fondo transparente donde no se ve. Sin
- * truncar el `role` ni cablear una altura fija que se rompa con tres líneas.
+ * el sobrante cae arriba del header, sobre fondo transparente donde no se ve.
  *
  * Pills (feedback EdTech Mentor, Notas 5.2 y 7.3): categoría y season van como
  * `TagPill` filled con el color del CMS, uno al lado del otro, arriba a la izquierda
  * del body. `flex-wrap` por si un título largo no entra en la card más chica.
  *
- * Título (Nota 10.1): Lora (segunda ronda), 1.6rem en desktop; en mobile escala con la misma proporción que
- * la card (`--spacing-card`, 250/350px), así ocupa el mismo espacio relativo.
+ * Título (Nota 10.1): Lora (segunda ronda), 1.6rem en desktop; en mobile escala con la
+ * misma curva fluida.
  *
  * Props genéricas, sin acoplar al schema de Sanity (Etapa 5).
  */
@@ -66,14 +81,43 @@ interface Props {
   avatar?: ImageData;
   /** Alternativa al avatar: iniciales dentro del círculo. */
   avatarInitials?: string;
+  /**
+   * Fondo de la sección que contiene la card. Solo define el color del título en
+   * mobile, donde va fuera de la imagen: `light` (white, purple) → negro; `dark`
+   * (indigo, black) → blanco. Lo pasa la sección, no se infiere por página.
+   */
+  surface?: 'light' | 'dark';
+  /** Ancho en mobile: `slider` → ~85% del viewport; `grid` → el de la columna. */
+  layout?: 'slider' | 'grid';
 }
 
-const { href, title, name, role, tag, tagColor, tagTextColor, season, image, avatar, avatarInitials } = Astro.props;
+const {
+  href,
+  title,
+  name,
+  role,
+  tag,
+  tagColor,
+  tagTextColor,
+  season,
+  image,
+  avatar,
+  avatarInitials,
+  surface = 'light',
+  layout = 'slider',
+} = Astro.props;
+
+const MOBILE_TITLE_COLOR = surface === 'dark' ? 'max-md:text-white' : 'max-md:text-black';
+
+const MOBILE_WIDTH = layout === 'grid' ? 'max-md:w-full' : 'max-md:w-[85vw]';
 ---
 
 <a
   href={href}
-  class="card card--edtech-mentor group/card relative flex w-card shrink-0 cursor-pointer flex-col justify-end gap-gap rounded-card bg-transparent text-black no-underline"
+  class:list={[
+    'card card--edtech-mentor group/card relative flex w-card shrink-0 cursor-pointer flex-col justify-end gap-gap rounded-card bg-transparent text-black no-underline max-md:justify-start max-md:gap-md',
+    MOBILE_WIDTH,
+  ]}
 >
   <div
     class="card-edtech-mentor-header flex items-center gap-[clamp(0.4838rem,0.407rem_+_0.3839vw,0.7525rem)] bg-transparent p-0"
@@ -94,7 +138,7 @@ const { href, title, name, role, tag, tagColor, tagTextColor, season, image, ava
     <div class="card-edtech-mentor-meta flex flex-col gap-[clamp(0.0844rem,0.071rem_+_0.067vw,0.1313rem)]">
       {
         role && (
-          <span class="card-edtech-mentor-role font-inter text-card-role leading-[1.4] font-medium tracking-normal text-white">
+          <span class="card-edtech-mentor-role font-inter text-card-role leading-[1.4] font-medium tracking-normal text-white max-md:hidden">
             {role}
           </span>
         )
@@ -110,42 +154,48 @@ const { href, title, name, role, tag, tagColor, tagTextColor, season, image, ava
   </div>
 
   <div
-    class="card-edtech-mentor-body relative flex size-card flex-col justify-between overflow-hidden rounded-card bg-gray p-sm after:absolute after:inset-0 after:z-0 after:bg-[linear-gradient(180deg,transparent_0%,rgba(0,0,0,0.75)_100%)] after:opacity-0 after:transition-opacity after:duration-300 after:ease-in-out after:content-[''] after:transform-gpu group-hover/card:after:opacity-100 max-md:after:opacity-100"
+    class="card-edtech-mentor-body relative flex size-card flex-col justify-between overflow-hidden rounded-card bg-gray p-sm after:absolute after:inset-0 after:z-0 after:bg-[linear-gradient(180deg,transparent_0%,rgba(0,0,0,0.75)_100%)] after:opacity-0 after:transition-opacity after:duration-300 after:ease-in-out after:content-[''] after:transform-gpu group-hover/card:after:opacity-100 max-md:h-auto max-md:w-full max-md:justify-start max-md:gap-sm max-md:overflow-visible max-md:rounded-none max-md:bg-transparent max-md:p-0 max-md:after:hidden"
   >
-    {/* Fondo. Va antes que el `::after` en orden de pintado y sin z-index propio, así el
-        gradiente de hover queda por encima de la imagen y el contenido (z-1) por encima
-        de ambos. Sin `thumbnail` cargada, queda el `bg-gray` del body. */}
-    {
-      image && (
-        <img {...imgAttrs(image)} class="card-edtech-mentor-bg absolute inset-0 size-full object-cover" />
-      )
-    }
-
-    {
-      (tag || season) && (
-        <div class="card-edtech-mentor-tags relative z-[1] flex flex-wrap items-start gap-xs">
-          {tag && <TagPill label={tag} color={tagColor} textColor={tagTextColor} class="card-edtech-mentor-tag" />}
-          {season && <TagPill label={season.label} color={season.color} class="card-edtech-mentor-season" />}
-        </div>
-      )
-    }
-
+    {/* Imagen + flecha. Desktop: capa `absolute inset-0` del body, antes que el `::after`
+        en orden de pintado, así el gradiente de hover queda por encima de la imagen; la
+        flecha (`z-[1]`) queda por encima de ambos. Mobile: en el flujo, 4:5. Sin
+        `thumbnail` cargada, queda el gris. */}
     <div
-      class="card-edtech-mentor-footer relative z-[1] mt-auto flex items-end justify-between gap-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)]"
+      class="card-edtech-mentor-media absolute inset-0 max-md:relative max-md:aspect-[4/5] max-md:w-full max-md:overflow-hidden max-md:rounded-card max-md:bg-gray"
     >
-      <h3
-        class="card-edtech-mentor-title transform-gpu translate-y-xs font-lora text-[clamp(1.1429rem,1.0123rem_+_0.6531vw,1.6rem)] leading-[1.25] font-medium tracking-normal text-white opacity-0 transition-[opacity,translate] duration-300 ease-in-out group-hover/card:translate-y-0 group-hover/card:opacity-100 max-md:translate-y-0 max-md:opacity-100"
-      >
-        {title}
-      </h3>
+      {image && <img {...imgAttrs(image)} class="card-edtech-mentor-bg absolute inset-0 size-full object-cover" />}
+
       <div
-        class="card-edtech-mentor-arrow flex size-icon-btn shrink-0 items-center justify-center rounded-full border-[0.0625rem] border-black bg-transparent text-black transition-[background-color,border-color,color] duration-200 ease-in-out group-hover/card:border-white group-hover/card:text-white max-md:border-white max-md:text-white hover:border-white! hover:bg-white! hover:text-black!"
+        class="card-edtech-mentor-arrow absolute right-sm bottom-sm z-[1] flex size-icon-btn shrink-0 items-center justify-center rounded-full border-[0.0625rem] border-black bg-transparent text-black transition-[background-color,border-color,color] duration-200 ease-in-out group-hover/card:border-white group-hover/card:text-white max-md:border-white max-md:bg-black/40 max-md:text-white hover:border-white! hover:bg-white! hover:text-black!"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <line x1="7" y1="17" x2="17" y2="7"></line>
           <polyline points="7 7 17 7 17 17"></polyline>
         </svg>
       </div>
+    </div>
+
+    {
+      (tag || season) && (
+        <div class="card-edtech-mentor-tags relative z-[1] flex flex-wrap items-start gap-xs max-md:hidden">
+          {tag && <TagPill label={tag} color={tagColor} textColor={tagTextColor} class="card-edtech-mentor-tag" />}
+          {season && <TagPill label={season.label} color={season.color} class="card-edtech-mentor-season" />}
+        </div>
+      )
+    }
+
+    {/* `padding-right` = flecha + el gap que tenía con el título cuando compartían fila. */}
+    <div
+      class="card-edtech-mentor-footer relative z-[1] mt-auto flex items-end pr-[calc(var(--spacing-icon-btn)_+_clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem))] max-md:mt-0 max-md:pr-0"
+    >
+      <h3
+        class:list={[
+          'card-edtech-mentor-title transform-gpu translate-y-xs font-lora text-[clamp(1.1429rem,1.0123rem_+_0.6531vw,1.6rem)] leading-[1.25] font-medium tracking-normal text-white opacity-0 transition-[opacity,translate] duration-300 ease-in-out group-hover/card:translate-y-0 group-hover/card:opacity-100 max-md:translate-y-0 max-md:opacity-100',
+          MOBILE_TITLE_COLOR,
+        ]}
+      >
+        {title}
+      </h3>
     </div>
   </div>
 </a>

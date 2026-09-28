@@ -197,7 +197,7 @@ export function toMentorCard(
     name: mentor.guestName,
     /* Fondo de la card. Es `thumbnail` y NO `guestPhoto`: esa última es la foto de la
        persona y ya se usa como avatar del header, acá arriba. */
-    image: toImage(background, { box: options.box ?? IMAGE_BOXES.card }),
+    image: toImage(background, { box: options.box ?? IMAGE_BOXES.mentorCard }),
     avatar,
     avatarInitials: avatar ? undefined : getInitials(mentor.guestName),
   };
