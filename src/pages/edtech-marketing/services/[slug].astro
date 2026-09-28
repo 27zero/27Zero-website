@@ -26,7 +26,8 @@ import Button from '../../../components/ui/Button.astro';
 import Dropdown from '../../../components/ui/Dropdown.astro';
 import ServiceIcon from '../../../components/ui/ServiceIcon.astro';
 import { sanityClient } from '../../../lib/sanity/client';
-import { imageDimensions, toImage } from '../../../lib/sanity/image';
+import { imageDimensions, imgAttrs, toImage } from '../../../lib/sanity/image';
+import { IMAGE_BOXES } from '../../../lib/utils/imageBoxes';
 import { serviceDetailQuery } from '../../../lib/sanity/queries';
 import { getSeoSettings } from '../../../lib/sanity/settings';
 import { ogTypeFor } from '../../../lib/seo/ogType';
@@ -84,10 +85,10 @@ const seo = {
 /* Mismo slot y patrón que el hero de Practice: el `.hero-marketing-bg` gris del vanilla
    ("[HERO BACKGROUND IMAGE]") pasa a ser la imagen cuando hay asset con `alt`. */
 const HERO_IMAGE_WIDTH = 1920;
-const heroImage = toImage(service.heroImage, { width: HERO_IMAGE_WIDTH });
+const heroImage = toImage(service.heroImage, { box: IMAGE_BOXES.fullBleedHero });
 const heroImageSize = imageDimensions(service.heroImage, HERO_IMAGE_WIDTH);
 
-const proofPointImage = toImage(service.proofPointImage, { width: 1200 });
+const proofPointImage = toImage(service.proofPointImage, { box: IMAGE_BOXES.proofPoint });
 
 const features = (service.features ?? []).filter((feature) => feature.title || feature.description);
 
@@ -107,8 +108,7 @@ const H2 = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px]';
       {
         heroImage && (
           <img
-            src={heroImage.src}
-            alt={heroImage.alt}
+            {...imgAttrs(heroImage)}
             width={heroImageSize?.width}
             height={heroImageSize?.height}
             class="size-full object-cover"
@@ -193,8 +193,7 @@ const H2 = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px]';
           <div class="proof-point-media flex aspect-[5/3] items-center justify-center overflow-hidden rounded-[0.5em] bg-gray max-md:aspect-[16/9]">
             {proofPointImage && (
               <img
-                src={proofPointImage.src}
-                alt={proofPointImage.alt}
+                {...imgAttrs(proofPointImage)}
                 class="size-full object-cover"
                 loading="lazy"
               />

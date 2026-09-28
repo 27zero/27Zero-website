@@ -26,6 +26,7 @@ import FeaturedCard from '../components/ui/FeaturedCard.astro';
 import { toMentorCard } from '../lib/sanity/cards';
 import type { MentorCardProjection } from '../lib/sanity/cards';
 import { sanityClient } from '../lib/sanity/client';
+import { IMAGE_BOXES } from '../lib/utils/imageBoxes';
 import { mentorListQuery } from '../lib/sanity/queries';
 import { DEFAULT_ACCENT } from '../lib/utils/color';
 import { mentorCategoryPageSlugs, mentorCategorySlug, mentorCategoryUrl } from '../lib/utils/routes';
@@ -73,10 +74,9 @@ const { featured, categories, interviews } = await sanityClient.fetch<{
 }>(mentorListQuery);
 
 /* Nota 14: el destacado usa `bannerPost` (horizontal) y no el `thumbnail` cuadrado.
-   Ancho = el del wrapper a container completo (90rem) × 2 para pantallas densas, con
-   el mismo tope de 1600 que el hero de la interna. */
+   Se pide responsive desde la caja del wrapper a container completo. */
 const FEATURED_MENTOR: MentorCardData | null = featured
-  ? toMentorCard(featured, { image: 'bannerPost', imageWidth: 1600 })
+  ? toMentorCard(featured, { image: 'bannerPost', box: IMAGE_BOXES.featuredWide })
   : null;
 
 /* Categorías con página propia: la misma regla que genera `/edtech-mentor/[category]`,

@@ -23,6 +23,7 @@
  */
 import { Image } from 'astro:assets';
 import Button from '../ui/Button.astro';
+import { imgAttrs } from '../../lib/sanity/image';
 import { getApartSection } from '../../lib/sanity/settings';
 import creativity from '../../assets/creativity.png';
 import execution from '../../assets/execution.png';
@@ -137,9 +138,8 @@ const NAV_ZONE =
                   (CLAUDE.md §2, `image-delivery-insight` de Etapa 8). */}
               {slide.sanityImage ? (
                 <img
-                  src={slide.sanityImage.src}
-                  alt={slide.sanityImage.alt}
-                  width={SHAPE_WIDTH}
+                  {...imgAttrs(slide.sanityImage)}
+                  width={slide.sanityImage.width}
                   height={slide.sanityImage.height}
                   loading="lazy"
                   decoding="async"

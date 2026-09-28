@@ -28,7 +28,8 @@ import WorkCard from '../components/ui/WorkCard.astro';
 import { toMentorCard, toWorkCard } from '../lib/sanity/cards';
 import type { MentorCardProjection, WorkCardProjection } from '../lib/sanity/cards';
 import { sanityClient } from '../lib/sanity/client';
-import { toImage } from '../lib/sanity/image';
+import { imgAttrs, toImage } from '../lib/sanity/image';
+import { IMAGE_BOXES } from '../lib/utils/imageBoxes';
 import { aboutQuery } from '../lib/sanity/queries';
 import type { SanityImage } from '../types/sanity';
 import type { MentorCardData, WorkCardData } from '../types/ui';
@@ -50,13 +51,13 @@ const { team, works, featuredMentor, mentorPosts, proofPoint, aboutHero, aboutDn
    1200×630 para la tarjeta de Open Graph y deformaría el fondo (mismo criterio que el
    poster del hero de Home, Etapa 10). Sin imagen cargada — o sin `alt` — queda
    `undefined` y el hero cae al placeholder. */
-const HERO_IMAGE = toImage(aboutHero?.image, { width: 1920 });
+const HERO_IMAGE = toImage(aboutHero?.image, { box: IMAGE_BOXES.fullBleedHero });
 
 /* `TeamCard` exige `image` con `alt` obligatorio (CLAUDE.md §8.1), así que los
    integrantes sin foto cargada quedan fuera del grid: la card es una foto con el
    nombre encima, sin foto no hay card que renderizar. */
 const TEAM_MEMBERS = team.flatMap((member) => {
-  const image = toImage(member.photo, { width: 800 });
+  const image = toImage(member.photo, { box: IMAGE_BOXES.team });
   return image ? [{ image, name: member.name, position: member.role }] : [];
 });
 
@@ -70,14 +71,16 @@ const PROOF_POINT = {
   text:
     proofPoint?.text ??
     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since 1966, when designers at Letraset and James Mosley, the librarian at St Bride Printing",
-  image: toImage(proofPoint?.image, { width: 1000 }),
+  image: toImage(proofPoint?.image, { box: IMAGE_BOXES.proofPoint }),
 };
 
 /* Work Slider: los 6 proyectos más recientes, sin filtrar por destacado — a diferencia
    del slider de Home, esta sección lista work en general. */
-const WORKS: WorkCardData[] = works.map((work) => toWorkCard(work));
+const WORKS: WorkCardData[] = works.map((work) => toWorkCard(work, { box: IMAGE_BOXES.cardAbout }));
 
-const FEATURED_MENTOR_POST: MentorCardData | null = featuredMentor ? toMentorCard(featuredMentor) : null;
+const FEATURED_MENTOR_POST: MentorCardData | null = featuredMentor
+  ? toMentorCard(featuredMentor, { box: IMAGE_BOXES.featuredHalf })
+  : null;
 
 const MENTOR_POSTS: MentorCardData[] = mentorPosts.map((mentor) => toMentorCard(mentor));
 
@@ -118,8 +121,7 @@ const { seo, siteSettings } = await getPageSeo('about');
     {
       HERO_IMAGE ? (
         <img
-          src={HERO_IMAGE.src}
-          alt={HERO_IMAGE.alt}
+          {...imgAttrs(HERO_IMAGE)}
           class="hero-marketing-bg absolute inset-0 z-0 size-full object-cover"
         />
       ) : (
@@ -188,7 +190,7 @@ const { seo, siteSettings } = await getPageSeo('about');
       <div class="proof-point-media flex aspect-[5/3] items-center justify-center overflow-hidden rounded-card bg-gray max-md:aspect-video">
         {
           PROOF_POINT.image ? (
-            <img src={PROOF_POINT.image.src} alt={PROOF_POINT.image.alt} class="size-full object-cover" />
+            <img {...imgAttrs(PROOF_POINT.image)} class="size-full object-cover" />
           ) : (
             <span class="font-inter text-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] font-semibold tracking-[1px] text-black uppercase opacity-40">
               [MEDIA PLACEHOLDER]

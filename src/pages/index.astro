@@ -27,7 +27,8 @@ import WorkCard from '../components/ui/WorkCard.astro';
 import { featuredWorksOf, toFeaturedWorkCard, toMentorCard, toWorkCard } from '../lib/sanity/cards';
 import type { FeaturedWorkCategoryProjection, MentorCardProjection, TestimonialProjection } from '../lib/sanity/cards';
 import { sanityClient } from '../lib/sanity/client';
-import { toImage } from '../lib/sanity/image';
+import { toFixedImage } from '../lib/sanity/image';
+import { IMAGE_BOXES } from '../lib/utils/imageBoxes';
 import { homeQuery } from '../lib/sanity/queries';
 import { accentMarkComponents } from '../lib/utils/portableText';
 import type { MentorCardData, WorkCardData } from '../types/ui';
@@ -50,7 +51,9 @@ const FEATURED_WORKS: WorkCardData[] = [
 ].map((work) => toWorkCard(work));
 
 /* La `FeaturedCard` de la sección EdTech Mentor: la entrevista destacada más reciente. */
-const FEATURED_MENTOR_POST: MentorCardData | null = featuredMentor ? toMentorCard(featuredMentor) : null;
+const FEATURED_MENTOR_POST: MentorCardData | null = featuredMentor
+  ? toMentorCard(featuredMentor, { box: IMAGE_BOXES.featuredHalf })
+  : null;
 
 const MENTOR_POSTS: MentorCardData[] = mentorPosts.map((mentor) => toMentorCard(mentor));
 
@@ -60,7 +63,7 @@ const TESTIMONIALS = testimonials.map((testimonial) => ({
   quote: testimonial.quote,
   authorName: testimonial.authorName ?? '',
   authorRole: testimonial.authorRole,
-  avatarPhoto: toImage(testimonial.avatarPhoto, { width: 128, height: 128 }) ?? null,
+  avatarPhoto: toFixedImage(testimonial.avatarPhoto, { width: 40, height: 40 }) ?? null,
 }));
 
 /* `.container` del design system global: 1440px, centrado, columna, padding-x fluido.

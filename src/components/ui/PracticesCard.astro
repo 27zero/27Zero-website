@@ -31,13 +31,16 @@
  *
  * Props genéricas, sin acoplar al schema de Sanity (Etapa 5).
  */
+import { imgAttrs } from '../../lib/sanity/image';
+import type { ImageData } from '../../types/ui';
+
 interface Props {
   href: string;
   title: string;
   name?: string;
   body?: string;
   ctaLabel?: string;
-  image?: { src: string; alt: string };
+  image?: ImageData;
 }
 
 const { href, title, name, body, ctaLabel, image } = Astro.props;
@@ -70,7 +73,7 @@ const ARROW_COLORS = hasImage
     {
       image ? (
         <>
-          <img src={image.src} alt={image.alt} class="size-full object-cover" />
+          <img {...imgAttrs(image)} class="size-full object-cover" />
           <span class="practices-card-overlay absolute inset-0 bg-black/50" aria-hidden="true" />
         </>
       ) : (

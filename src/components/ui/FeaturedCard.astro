@@ -23,7 +23,8 @@
  * Props genéricas, sin acoplar al schema de Sanity (Etapa 5).
  */
 import TagPill from './TagPill.astro';
-import type { CardPill } from '../../types/ui';
+import { imgAttrs } from '../../lib/sanity/image';
+import type { CardPill, ImageData } from '../../types/ui';
 
 interface Props {
   href: string;
@@ -36,15 +37,16 @@ interface Props {
   season?: CardPill;
   name?: string;
   role?: string;
-  avatar?: { src: string; alt: string };
+  avatar?: ImageData;
   /** Alternativa al avatar: iniciales dentro del círculo. */
   avatarInitials?: string;
   /**
    * Fondo de la card. Sin ella queda `bg-gray`, que es el comportamiento previo.
-   * Va como `background-image` y no como `<img>`, así que el `alt` no se renderiza
-   * en ningún lado — mismo caso que las cards de Contact.
+   * Va como `<img>` absoluto detrás del contenido y no como `background-image`: una
+   * imagen de fondo por CSS no admite `srcset`, y el destacado de EdTech Mentor ocupa
+   * todo el ancho del container (feedback Work ronda 2, calidad de imagen).
    */
-  image?: { src: string; alt: string };
+  image?: ImageData;
   variant?: 'default' | 'spotlight';
 }
 
@@ -90,12 +92,15 @@ const SPOTLIGHT_OVERLAY =
 
 <a
   href={href}
-  style={image ? `background-image: url('${image.src}')` : undefined}
   class:list={[
-    'card card--featured group/card relative flex size-full shrink-0 cursor-pointer flex-col justify-between overflow-hidden rounded-card bg-gray bg-cover bg-center p-[clamp(0.9562rem,0.8045rem_+_0.7589vw,1.4875rem)] text-black no-underline',
+    'card card--featured group/card relative flex size-full shrink-0 cursor-pointer flex-col justify-between overflow-hidden rounded-card bg-gray p-[clamp(0.9562rem,0.8045rem_+_0.7589vw,1.4875rem)] text-black no-underline',
     spotlight && SPOTLIGHT_OVERLAY,
   ]}
 >
+  {/* Sin `z-index` propio: queda debajo del overlay `::after` de la variante spotlight
+      (que va después en el orden de pintado) y del contenido (`z-[1]`). */}
+  {image && <img {...imgAttrs(image)} class="card-featured-bg absolute inset-0 size-full object-cover" />}
+
   {/* `z-[1]` en los dos hijos directos: quedan por encima del overlay `::after` de la
       variante spotlight. En la default no hay overlay y no cambia nada. */}
   {
@@ -113,7 +118,7 @@ const SPOTLIGHT_OVERLAY =
         (avatar || avatarInitials) && (
           <div class:list={['card-featured-avatar flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-purple', SIZES.avatar]}>
             {avatar ? (
-              <img src={avatar.src} alt={avatar.alt} class="size-full object-cover" />
+              <img {...imgAttrs(avatar)} class="size-full object-cover" />
             ) : (
               <span class:list={['font-inter font-bold text-indigo', SIZES.initials]}>
                 {avatarInitials}

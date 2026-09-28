@@ -22,6 +22,7 @@ import CategorySliders from '../components/sections/CategorySliders.astro';
 import FilterPills from '../components/sections/FilterPills.astro';
 import MarqueeLogos from '../components/sections/MarqueeLogos.astro';
 import { featuredWorksOf, toWorkCard } from '../lib/sanity/cards';
+import { IMAGE_BOXES } from '../lib/utils/imageBoxes';
 import type { FeaturedWorkCategoryProjection, WorkCardProjection } from '../lib/sanity/cards';
 import { sanityClient } from '../lib/sanity/client';
 import { workListQuery } from '../lib/sanity/queries';
@@ -42,7 +43,9 @@ const { featuredCategories, categories, works, hero } = await sanityClient.fetch
    normal más abajo, con el slug como `id` (destino de su pill). Sin prefijo habría dos
    anchors con el mismo `id`. Los destacados no llevan pill, igual que "Los mejores". */
 const FEATURED_GROUPS: WorkGroup[] = featuredCategories.flatMap((category) => {
-  const items = featuredWorksOf(category).map((work) => toWorkCard(work, { eyebrow: category.title }));
+  const items = featuredWorksOf(category).map((work) =>
+    toWorkCard(work, { eyebrow: category.title, box: IMAGE_BOXES.cardTall })
+  );
 
   return items.length > 0
     ? [{ id: `featured-${category.slug}`, label: category.title, items, cardSize: 'tall' as const }]

@@ -78,22 +78,47 @@ export function isDarkColor(hex: string): boolean {
   return contrast(hex, LIGHT_TEXT) > contrast(hex, DARK_TEXT);
 }
 
-/**
- * Colores de una superficie entera (sección) cargados en el CMS: fondo + texto.
- *
- * A diferencia de `accentColors()` (pills), acá el fondo tiene un default propio de cada
- * sección — blanco en las Additional Sections de Work, por ejemplo — y el `textValue`
- * del editor se respeta aunque el fondo haya caído a ese default: el editor ve la
- * sección con ese fondo en el diseño y elige el texto para él. Sin texto válido, se
- * elige negro o blanco por contraste.
- */
-export function surfaceColors(
-  value: string | null | undefined,
-  textValue: string | null | undefined,
-  fallbackBackground: string
-): { background: string; text: string } {
-  const background = normalizeHex(value) ?? fallbackBackground;
-  const text = normalizeHex(textValue) ?? (isDarkColor(background) ? LIGHT_TEXT : DARK_TEXT);
+/* ───────────────────────────── Paleta de marca ───────────────────────────── */
 
-  return { background, text };
+/**
+ * Colores de sección elegibles en el Studio (feedback Work ronda 2, §4): el CMS guarda
+ * el NOMBRE del token (`indigo`, `purple`, `black`, `white`), no un hex. Se pintan con
+ * `var(--color-<nombre>)`, así `global.css` sigue siendo la única fuente de los valores.
+ *
+ * El hex de acá es solo un espejo de `global.css` para decidir contraste en build (el
+ * color de texto por defecto y la variante del botón): no se escribe en el HTML. Si
+ * cambia un token, se actualiza también acá.
+ */
+const PALETTE_HEX = {
+  indigo: '#440e92',
+  purple: '#b382f9',
+  black: '#101010',
+  white: '#ffffff',
+} as const;
+
+export type PaletteName = keyof typeof PALETTE_HEX;
+
+const isPaletteName = (value: string | null | undefined): value is PaletteName =>
+  Boolean(value && value in PALETTE_HEX);
+
+/**
+ * Fondo + texto de una sección con colores de la paleta. Un valor vacío o desconocido
+ * cae a `fallbackBackground`; sin texto (o con el mismo color que el fondo), negro o
+ * blanco según el contraste con el fondo.
+ * Devuelve las `var()` para el CSS y si el fondo es oscuro (para elegir la variante de
+ * los botones que van encima).
+ */
+export function paletteSurface(
+  background: string | null | undefined,
+  text: string | null | undefined,
+  fallbackBackground: PaletteName
+): { background: string; text: string; isDark: boolean } {
+  const backgroundName = isPaletteName(background) ? background : fallbackBackground;
+  const isDark = isDarkColor(PALETTE_HEX[backgroundName]);
+  const contrastName: PaletteName = isDark ? 'white' : 'black';
+  /* Un texto igual al fondo sería invisible (pasa si el editor eligió texto blanco y dejó
+     el fondo vacío, que cae a blanco): ahí rige el contraste. */
+  const textName: PaletteName = isPaletteName(text) && text !== backgroundName ? text : contrastName;
+
+  return { background: `var(--color-${backgroundName})`, text: `var(--color-${textName})`, isDark };
 }

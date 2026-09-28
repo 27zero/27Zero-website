@@ -11,11 +11,18 @@
  * El texto hereda el color del `<section>` (`currentColor`), por eso sirve igual para
  * los temas fijos de la narrativa y para los hex del CMS de las Additional Sections.
  *
- * `heightVariant` (feedback Work, Nota 7.8) fija el alto de las imágenes; vacío es
- * `medium`, el `initialValue` del schema.
+ * Imágenes:
+ *   - `heightVariant` (feedback Work, Nota 7.8) fija su alto; vacío es `medium`, el
+ *     `initialValue` del schema. `custom` (ronda 2, §3) usa `customHeight` como alto
+ *     desktop y lo escala en mobile con la misma proporción que los presets.
+ *   - Llegan crudas y se resuelven acá (ronda 2, §1): la caja de cada imagen depende a
+ *     la vez de la cantidad de columnas y del alto, y este es el único lugar donde se
+ *     conocen las dos. Con esa caja se arma el `srcset`/`sizes`.
  */
 import PortableText from '../ui/PortableText.astro';
-import type { ImageHeightVariant, PortableTextBlock } from '../../types/sanity';
+import { imgAttrs, toImage } from '../../lib/sanity/image';
+import { caseStudyBox, caseStudyImageHeight } from '../../lib/utils/imageBoxes';
+import type { ImageHeightVariant, PortableTextBlock, SanityImage } from '../../types/sanity';
 
 interface Props {
   title?: string;
@@ -23,27 +30,26 @@ interface Props {
   lead?: string;
   /** Portable Text en la narrativa; `string` plano en las Additional Sections. */
   content?: PortableTextBlock[] | string;
-  /** Ya resueltas con `toImage()`. */
-  images?: { src: string; alt: string }[];
+  /** Crudas, tal como las devuelve GROQ. Las que no tienen `alt` no se renderizan. */
+  images?: SanityImage[] | null;
   /** GROQ devuelve `null` (no `undefined`) para un campo vacío. */
   heightVariant?: ImageHeightVariant | null;
+  /** px del diseño desktop; solo cuenta con `heightVariant === 'custom'`. */
+  customHeight?: number | null;
 }
 
-const { title, lead, content, images = [], heightVariant } = Astro.props;
+const { title, lead, content, images: rawImages, heightVariant, customHeight } = Astro.props;
 
-/* `??` y no un default en la desestructuración: ese solo cubre `undefined`, y un campo
-   vacío llega de GROQ como `null`. */
-const imageHeight = heightVariant ?? 'medium';
+/* Alto (320px → 1440px): low 160 → 240, medium 240 → 360, high 320 → 512, custom
+   2/3 del valor → el valor. El `clamp()` va como custom property porque `custom` es un
+   número del CMS: no existe como utilidad de Tailwind en build. */
+const imageHeight = caseStudyImageHeight(heightVariant, customHeight);
 
-/* Valores iniciales, a revisar en QA (320px → 1440px):
-     low     160 → 240px
-     medium  240 → 360px
-     high    320 → 512px */
-const IMAGE_HEIGHTS: Record<ImageHeightVariant, string> = {
-  low: 'h-[clamp(10rem,8.5714rem_+_7.1429vw,15rem)]',
-  medium: 'h-[clamp(15rem,12.8571rem_+_10.7143vw,22.5rem)]',
-  high: 'h-[clamp(20rem,16.5714rem_+_17.1429vw,32rem)]',
-};
+const columns = Math.min(4, (rawImages ?? []).filter((image) => image?.asset?._ref && image.alt).length);
+const images = (rawImages ?? []).flatMap((image) => {
+  const resolved = toImage(image, { box: caseStudyBox(columns, imageHeight.at) });
+  return resolved ? [resolved] : [];
+});
 
 /* Columnas según cuántas imágenes hay: las variantes `grid-2col` / `grid-3col` /
    `grid-4col` del vanilla sin pedirle al editor que elija un layout. */
@@ -101,12 +107,12 @@ const hasText = Boolean(lead) || (typeof content === 'string' ? Boolean(content.
           'image-stack grid gap-[clamp(0.6019rem,0.5063rem_+_0.4777vw,0.9363rem)] max-md:grid-cols-1',
           GRID_COLS,
         ]}
+        style={`--image-height:${imageHeight.css}`}
       >
         {images.map((image) => (
           <img
-            src={image.src}
-            alt={image.alt}
-            class:list={['w-full rounded-[0.57em] object-cover', IMAGE_HEIGHTS[imageHeight]]}
+            {...imgAttrs(image)}
+            class="h-(--image-height) w-full rounded-[0.57em] object-cover"
             loading="lazy"
           />
         ))}

@@ -18,15 +18,15 @@
 /**
  * Campos de `work` que consume una `WorkCard`. Nada del detalle del case study.
  *
- * Feedback Work (Notas 1 y 2): el título de la card es `clientTagline` (con `title`
- * de respaldo, lo resuelve `toWorkCard`) y el círculo del cliente lee `client.icon`.
+ * Feedback Work (Notas 1 y 2): el círculo del cliente lee `client.icon`. Ronda 2: el
+ * título de la card es `headline` (con `title` de respaldo, lo resuelve `toWorkCard`).
  * `clientLogo`, `excerpt` e `isFeatured` se eliminaron del schema.
  */
 const WORK_CARD_FIELDS = `
   _id,
   title,
   "slug": slug.current,
-  clientTagline,
+  headline,
   order,
   thumbnail,
   "clientName": client->name,
@@ -422,6 +422,11 @@ export const edtechMarketingQuery = `{
  * `testimonials` trae TODOS los testimonios linkeados, ordenados por `order`: desde el
  * feedback de Work (Nota 7.2) "Client's feedback" es un slider, no una sola cita.
  *
+ * Ronda 2: `headline` es el título público (el `h1`; `title` queda como respaldo y
+ * nombre interno) y el Final CTA es un documento `cta` referenciado, expandido con `->`
+ * (una referencia vacía o a un documento sin publicar llega `null` y la sección no se
+ * renderiza). `customHeight` acompaña a `heightVariant` en las 4 secciones con imágenes.
+ *
  * Los tres bloques narrativos traen su `sectionLabel` / `challengeTitle` y su
  * `heightVariant`; el label puede venir vacío en documentos cargados antes de que
  * existiera el campo (el `initialValue` solo aplica a documentos nuevos), y la página
@@ -434,7 +439,7 @@ export const workDetailQuery = `
     subtitle,
     "slug": slug.current,
     seo,
-    clientTagline,
+    headline,
     briefParagraph,
     projectType,
     agencyRole,
@@ -446,11 +451,11 @@ export const workDetailQuery = `
     gallery,
     results[]{_key, number, description},
     "client": client->{_id, name, url, logo},
-    challenge{challengeTitle, challengeContent, challengeImages, heightVariant},
-    communicationChallenge{sectionLabel, content, images, heightVariant},
-    solution{sectionLabel, headline, body, solutionImages, heightVariant},
-    contentSections[]{_key, title, body, images, heightVariant, bgColor, textColor},
-    finalCta,
+    challenge{challengeTitle, challengeContent, challengeImages, heightVariant, customHeight},
+    communicationChallenge{sectionLabel, content, images, heightVariant, customHeight},
+    solution{sectionLabel, headline, body, solutionImages, heightVariant, customHeight},
+    contentSections[]{_key, title, body, images, heightVariant, customHeight, bgColor, textColor},
+    "cta": cta->{headline, bodyText, ctaText, ctaLink, bgColor, headlineColor, bodyTextColor},
     "testimonials": *[_type == "testimonial" && workProject._ref == ^._id]
       | order(order asc) {${TESTIMONIAL_FIELDS}}
   }

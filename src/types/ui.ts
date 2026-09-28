@@ -13,6 +13,22 @@ import type { PortableTextBlock } from './sanity';
 // `WorkCategory` ya es el documentType real de Sanity en `types/sanity.ts` y tenerlos
 // homónimos obligaría a aliasear en cada import.
 
+/* ──────────────────────────────── Imagen ──────────────────────────────── */
+
+/**
+ * Imagen lista para un `<img>`. `src` y `alt` siempre (el `alt` es obligatorio,
+ * CLAUDE.md §8.1); el resto lo agrega `toImage()` cuando la imagen sale de Sanity:
+ * `srcset`/`sizes` responsive y el `object-position` del hotspot del editor. Se pinta
+ * con `imgAttrs()` de `lib/sanity/image`.
+ */
+export interface ImageData {
+  src: string;
+  alt: string;
+  srcset?: string;
+  sizes?: string;
+  objectPosition?: string;
+}
+
 /* ─────────────────────────── Work / Clientes ──────────────────────────── */
 
 /** Props de `WorkCard`, ya resueltas contra Sanity. */
@@ -20,10 +36,10 @@ export interface WorkCardData {
   href: string;
   title: string;
   eyebrow?: string;
-  image?: { src: string; alt: string };
+  image?: ImageData;
   clientName?: string;
   /** `client.icon` — el círculo pequeño de la card. */
-  clientIcon?: { src: string; alt: string };
+  clientIcon?: ImageData;
   /** Alternativa al ícono: iniciales del cliente dentro del círculo. */
   clientInitials?: string;
 }
@@ -62,10 +78,10 @@ export interface MentorCardData {
   /** `mentorSeason` referenciada — segundo pill, al lado del de categoría. */
   season?: CardPill;
   /** Fondo de `.card-edtech-mentor-body`, desde `edtechMentor.thumbnail`. */
-  image?: { src: string; alt: string };
+  image?: ImageData;
   role?: string;
   name?: string;
-  avatar?: { src: string; alt: string };
+  avatar?: ImageData;
   /** Alternativa al avatar: iniciales dentro del círculo. */
   avatarInitials?: string;
 }
@@ -88,10 +104,10 @@ export interface FeaturedCardData {
   season?: CardPill;
   name?: string;
   role?: string;
-  avatar?: { src: string; alt: string };
+  avatar?: ImageData;
   avatarInitials?: string;
   /** Fondo de la card, desde `work.thumbnail`. */
-  image?: { src: string; alt: string };
+  image?: ImageData;
 }
 
 /**
@@ -150,5 +166,5 @@ export interface ResourceCardData {
   date: string;
   title: string;
   description: string;
-  image?: { src: string; alt: string };
+  image?: ImageData;
 }

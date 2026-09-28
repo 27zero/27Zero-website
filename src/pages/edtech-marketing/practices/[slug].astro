@@ -31,7 +31,8 @@ import ServiceMenu from '../../../components/sections/ServiceMenu.astro';
 import Button from '../../../components/ui/Button.astro';
 import Dropdown from '../../../components/ui/Dropdown.astro';
 import { sanityClient } from '../../../lib/sanity/client';
-import { imageDimensions, toImage } from '../../../lib/sanity/image';
+import { imageDimensions, imgAttrs, toImage } from '../../../lib/sanity/image';
+import { IMAGE_BOXES } from '../../../lib/utils/imageBoxes';
 import { practiceDetailQuery } from '../../../lib/sanity/queries';
 import { getSeoSettings } from '../../../lib/sanity/settings';
 import { ogTypeFor } from '../../../lib/seo/ogType';
@@ -99,7 +100,7 @@ const seo = {
 /* Sin `alt` no se renderiza (CLAUDE.md §8.1): el hero queda en su fondo gris. Es el
    caso de New Product Launch, con asset cargado antes de que `heroImage.alt` existiera. */
 const HERO_IMAGE_WIDTH = 1920;
-const heroImage = toImage(practice.heroImage, { width: HERO_IMAGE_WIDTH });
+const heroImage = toImage(practice.heroImage, { box: IMAGE_BOXES.fullBleedHero });
 const heroImageSize = imageDimensions(practice.heroImage, HERO_IMAGE_WIDTH);
 
 /* H1 = `heroHeadline`, el nombre corto de la práctica — NUNCA `title`, que es el
@@ -160,8 +161,7 @@ const H2 = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px]';
       {
         heroImage && (
           <img
-            src={heroImage.src}
-            alt={heroImage.alt}
+            {...imgAttrs(heroImage)}
             width={heroImageSize?.width}
             height={heroImageSize?.height}
             class="size-full object-cover"

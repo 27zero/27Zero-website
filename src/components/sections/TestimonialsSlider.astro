@@ -33,12 +33,15 @@
  *     lo pasa y no cambia.
  *   - Con un solo testimonio no se renderizan flechas ni dots: no hay a dónde navegar.
  */
+import { imgAttrs } from '../../lib/sanity/image';
+import type { ImageData } from '../../types/ui';
+
 interface Testimonial {
   quote: string;
   authorName: string;
   authorRole?: string;
   /** Sin foto, el avatar cae a las iniciales derivadas de `authorName` (placeholder del vanilla). */
-  avatarPhoto?: { src: string; alt: string } | null;
+  avatarPhoto?: ImageData | null;
 }
 
 interface Props {
@@ -132,7 +135,7 @@ const ARROW =
                   >
                     {
                       testimonial.avatarPhoto ? (
-                        <img src={testimonial.avatarPhoto.src} alt={testimonial.avatarPhoto.alt} class="size-full object-cover" />
+                        <img {...imgAttrs(testimonial.avatarPhoto)} class="size-full object-cover" />
                       ) : (
                         <span class="font-inter text-[clamp(0.4781rem,0.4022rem_+_0.3795vw,0.7438rem)] font-bold text-black">
                           {getInitials(testimonial.authorName)}

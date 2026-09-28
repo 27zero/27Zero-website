@@ -23,7 +23,8 @@ import { getSeoSettings } from '../../lib/sanity/settings';
 import type { ArticleInput } from '../../lib/seo/generateJsonLd';
 import { ogTypeFor } from '../../lib/seo/ogType';
 import { ogImageUrl, resolveSeo } from '../../lib/seo/resolveSeo';
-import { toImage } from '../../lib/sanity/image';
+import { imgAttrs, toImage } from '../../lib/sanity/image';
+import { IMAGE_BOXES } from '../../lib/utils/imageBoxes';
 import { getHeadings } from '../../lib/utils/portableText';
 import { detailTrail } from '../../lib/utils/breadcrumbs';
 import { toStaticPaths } from '../../lib/utils/routes';
@@ -91,7 +92,7 @@ const CONTAINER = 'container mx-auto w-full max-w-(--container-max-width) px-con
 /* Fondo del hero. Mismo patrón que el hero de `edtech-mentor/[slug]`: capa `<img>`
    absoluta en vez de `background-image`, para que el `alt` siga siendo obligatorio
    (CLAUDE.md §8.1). Sin `heroBanner` cargado queda el gris del diseño. */
-const heroBackground = toImage(resource.heroBanner, { width: 1600 });
+const heroBackground = toImage(resource.heroBanner, { box: IMAGE_BOXES.fullBleedHero });
 
 const ARTICLE_CLASSES = {
   normal: 'font-inter text-body-article leading-[1.6] font-normal text-black',
@@ -118,7 +119,7 @@ const ARTICLE_CLASSES = {
     <div
       class="hero-resources-cms-bg absolute inset-0 z-0 after:absolute after:inset-0 after:bg-black/45 after:content-['']"
     >
-      {heroBackground && <img src={heroBackground.src} alt={heroBackground.alt} class="size-full object-cover object-center" />}
+      {heroBackground && <img {...imgAttrs(heroBackground)} class="size-full object-cover object-center" />}
     </div>
 
     <div

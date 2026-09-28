@@ -5,7 +5,7 @@
  * elimina): es el mapeo que igual habría que escribir en cada página, porque hay tres
  * cosas que GROQ no puede resolver y TypeScript sí necesita resueltas —
  *
- *   1. la URL de la imagen, que depende de `urlFor()` y del ancho de cada contexto;
+ *   1. la imagen responsive, que depende de `urlFor()` y de la caja de cada contexto;
  *   2. el `href` de la interna, que se arma con los builders de `utils/routes`;
  *   3. el fallback a iniciales cuando no hay foto ni logo cargado.
  *
@@ -20,8 +20,9 @@
 import type { SanityImage } from '../../types/sanity';
 import type { FeaturedCardData, MentorCardData, ResourceCardData, WorkCardData } from '../../types/ui';
 import { formatDate, getInitials } from '../utils/format';
+import { IMAGE_BOXES } from '../utils/imageBoxes';
 import { mentorUrl, resourceUrl, workUrl } from '../utils/routes';
-import { toImage } from './image';
+import { toFixedImage, toImage, type ImageBox } from './image';
 
 /* ────────────────────────── Tipos de proyección ───────────────────────── */
 
@@ -30,7 +31,8 @@ export interface WorkCardProjection {
   _id: string;
   title: string;
   slug: string;
-  clientTagline?: string;
+  /** Título público (ronda 2). Requerido en el schema, pero hay documentos sin cargar. */
+  headline?: string;
   order?: number;
   thumbnail?: SanityImage;
   clientName?: string;
@@ -97,38 +99,23 @@ export interface ResourceProjection {
   cardThumbnail?: SanityImage;
 }
 
-/* ──────────────────────────── Anchos de imagen ─────────────────────────── */
+/* ──────────────────────────── Tamaños de imagen ────────────────────────── */
 
 /**
- * Ancho al que se le pide cada imagen al Image CDN de Sanity, por contexto de render.
+ * Las imágenes de fondo de las cards salen responsive (`srcset` + `sizes`) desde la caja
+ * de cada contexto (`IMAGE_BOXES`): el mismo `work` se ve en una card cuadrada en Home,
+ * alta en las categorías destacadas y de 30em en About, y cada página pasa la suya.
  *
- * Los valores NO son estimados: salen de medir el ancho CSS real de cada `<img>` en el
- * build servido, en desktop (1440px) y en mobile (390px), y tomar el mayor × 2 para
- * cubrir pantallas de densidad doble. Antes había un `700` fijo para todo (Etapa 8), que
- * daba de casualidad el valor correcto para las cards y 6x de más para el logo.
+ * Los círculos (ícono del cliente, avatar del invitado) son de tamaño fijo y van
+ * recortados al cuadrado (`toFixedImage`, 1x/2x/3x):
  *
- * Cada mapper acepta un override, porque el mismo documento se renderiza a tamaños
- * distintos según la página que lo pida (es lo que `toResourceCard` ya hacía con
- * `imageWidth` desde Etapa 6).
- *
- * | contexto              | render CSS máx. | ancho pedido |
- * |-----------------------|-----------------|--------------|
- * | card de work          | 350px           | 700          |
- * | card de mentor        | 350px           | 700          |
- * | ícono de cliente      | 28px            | 64           |
- * | avatar de invitado    | 50px            | 128          |
+ * | contexto              | render CSS máx. |
+ * |-----------------------|-----------------|
+ * | ícono de cliente      | 30px (círculo)  |
+ * | avatar de invitado    | 50px            |
  */
-const CARD_IMAGE_WIDTH = 700;
-
-/** 28px de render — `160` servía una imagen casi 6x más grande de lo necesario. */
-const CLIENT_LOGO_WIDTH = 64;
-
-/**
- * Se queda en 128 y no baja a 100 (50px × 2) a propósito: es la única imagen del set que
- * cae dentro del rango de las pantallas 3x, donde 100 se vería blando. A este tamaño la
- * diferencia de bytes es despreciable y Lighthouse no la marca.
- */
-const AVATAR_WIDTH = 128;
+const CLIENT_ICON_SIZE = 30;
+const AVATAR_SIZE = 50;
 
 /* ──────────────────────────────── Mappers ─────────────────────────────── */
 
@@ -142,15 +129,16 @@ const AVATAR_WIDTH = 128;
  */
 export function toWorkCard(
   work: WorkCardProjection,
-  options: { eyebrow?: string; imageWidth?: number } = {}
+  options: { eyebrow?: string; box?: ImageBox } = {}
 ): WorkCardData {
-  const clientIcon = toImage(work.clientIcon, { width: CLIENT_LOGO_WIDTH, height: CLIENT_LOGO_WIDTH });
+  /* El ícono va al 70% del círculo (`WorkCard`), sin recorte: se pide con su proporción. */
+  const clientIcon = toImage(work.clientIcon, { box: () => ({ width: CLIENT_ICON_SIZE }) });
 
   return {
     href: workUrl(work.slug),
     title: workCardTitle(work),
     eyebrow: options.eyebrow ?? work.categoryTitle,
-    image: toImage(work.thumbnail, { width: options.imageWidth ?? CARD_IMAGE_WIDTH }),
+    image: toImage(work.thumbnail, { box: options.box ?? IMAGE_BOXES.card }),
     clientName: work.clientName,
     clientIcon,
     /* Solo si no hay ícono: la card muestra uno u otro, nunca los dos. */
@@ -159,12 +147,12 @@ export function toWorkCard(
 }
 
 /**
- * Título de la card de un `work` (feedback Work, Nota 2): el tagline del cliente. Cae
- * al título del proyecto cuando el tagline está vacío — hoy 2 de los 4 `work` no lo
- * tienen, y una card sin título no se entiende.
+ * Título de la card de un `work` (feedback Work ronda 2, §2): `headline`. Cae al `title`
+ * interno mientras haya documentos sin `headline` cargado — una card sin título no se
+ * entiende. Se exporta porque la interna aplica el mismo criterio a su `h1`.
  */
-function workCardTitle(work: WorkCardProjection): string {
-  return work.clientTagline?.trim() || work.title;
+export function workCardTitle(work: { headline?: string | null; title?: string | null }): string {
+  return work.headline?.trim() || work.title?.trim() || '';
 }
 
 /**
@@ -188,9 +176,9 @@ export function featuredWorksOf(category: FeaturedWorkCategoryProjection): WorkC
  */
 export function toMentorCard(
   mentor: MentorCardProjection,
-  options: { imageWidth?: number; image?: 'thumbnail' | 'bannerPost' } = {}
+  options: { box?: ImageBox; image?: 'thumbnail' | 'bannerPost' } = {}
 ): MentorCardData {
-  const avatar = toImage(mentor.guestPhoto, { width: AVATAR_WIDTH, height: AVATAR_WIDTH });
+  const avatar = toFixedImage(mentor.guestPhoto, { width: AVATAR_SIZE, height: AVATAR_SIZE });
 
   /* `bannerPost` es la imagen horizontal del destacado del índice (Nota 14). Si una
      entrevista no la tiene, la card cae a su `thumbnail` antes que quedar en gris. */
@@ -209,7 +197,7 @@ export function toMentorCard(
     name: mentor.guestName,
     /* Fondo de la card. Es `thumbnail` y NO `guestPhoto`: esa última es la foto de la
        persona y ya se usa como avatar del header, acá arriba. */
-    image: toImage(background, { width: options.imageWidth ?? CARD_IMAGE_WIDTH }),
+    image: toImage(background, { box: options.box ?? IMAGE_BOXES.card }),
     avatar,
     avatarInitials: avatar ? undefined : getInitials(mentor.guestName),
   };
@@ -234,11 +222,11 @@ function formatGuestRole(role?: string, company?: string): string | undefined {
  * su logo como `avatar`, con las mismas iniciales de fallback. `role` queda afuera —
  * `work` no tiene nada equivalente al rol del invitado de una entrevista.
  *
- * Feedback Work: mismo título (`clientTagline`) y mismo ícono (`client.icon`) que
+ * Feedback Work: mismo título (`headline`) y mismo ícono (`client.icon`) que
  * `WorkCard`, para que un proyecto se vea igual en las dos cards.
  */
 export function toFeaturedWorkCard(work: WorkCardProjection): FeaturedCardData {
-  const avatar = toImage(work.clientIcon, { width: CLIENT_LOGO_WIDTH, height: CLIENT_LOGO_WIDTH });
+  const avatar = toFixedImage(work.clientIcon, { width: AVATAR_SIZE, height: AVATAR_SIZE });
 
   return {
     href: workUrl(work.slug),
@@ -248,7 +236,7 @@ export function toFeaturedWorkCard(work: WorkCardProjection): FeaturedCardData {
     avatar,
     /* Solo si no hay logo: la card muestra uno u otro, nunca los dos. */
     avatarInitials: avatar ? undefined : getInitials(work.clientName),
-    image: toImage(work.thumbnail, { width: CARD_IMAGE_WIDTH }),
+    image: toImage(work.thumbnail, { box: IMAGE_BOXES.featuredHalf }),
   };
 }
 
@@ -262,13 +250,13 @@ export function toFeaturedWorkCard(work: WorkCardProjection): FeaturedCardData {
  */
 export function toResourceCard(
   resource: ResourceProjection,
-  options: { imageWidth: number }
+  options: { box: ImageBox }
 ): ResourceCardData {
   return {
     href: resourceUrl(resource.slug),
     date: formatDate(resource.publishedAt),
     title: resource.title ?? '',
     description: resource.shortDescription ?? resource.description ?? '',
-    image: toImage(resource.cardThumbnail, { width: options.imageWidth }),
+    image: toImage(resource.cardThumbnail, { box: options.box }),
   };
 }

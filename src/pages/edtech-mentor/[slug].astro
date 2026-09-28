@@ -29,7 +29,8 @@ import EdtechMentorCard from '../../components/ui/EdtechMentorCard.astro';
 import PortableText from '../../components/ui/PortableText.astro';
 import { toMentorCard, type MentorCardProjection } from '../../lib/sanity/cards';
 import { sanityClient } from '../../lib/sanity/client';
-import { toImage } from '../../lib/sanity/image';
+import { imgAttrs, toFixedImage, toImage } from '../../lib/sanity/image';
+import { IMAGE_BOXES } from '../../lib/utils/imageBoxes';
 import { mentorDetailQuery } from '../../lib/sanity/queries';
 import { getSeoSettings } from '../../lib/sanity/settings';
 import type { ArticleInput } from '../../lib/seo/generateJsonLd';
@@ -111,16 +112,16 @@ const seo = {
    entrevistas de hoy. */
 /* `guestPhoto` ya NO se usa en el hero (la foto del invitado no está en el diseño):
    sobrevive solo como avatar del chat de Rapid Fire. */
-const chatAvatar = toImage(mentor.guestPhoto, { width: 100, height: 100 });
+const chatAvatar = toFixedImage(mentor.guestPhoto, { width: 50, height: 50 });
 const initials = getInitials(mentor.guestName);
 
 /* Fondo del hero. Mismo patrón que el hero de `edtech-marketing/practices/[slug]`:
    capa `<img>` absoluta en vez de `background-image`, para que el `alt` siga siendo
    obligatorio (CLAUDE.md §8.1). Sin `bannerPost` cargado queda el gris del diseño. */
-const heroBackground = toImage(mentor.bannerPost, { width: 1600 });
+const heroBackground = toImage(mentor.bannerPost, { box: IMAGE_BOXES.fullBleedHero });
 
-const introImage = toImage(mentor.mainImage, { width: 900 });
-const rapidFireImage = toImage(mentor.rapidFire?.image, { width: 700 });
+const introImage = toImage(mentor.mainImage, { box: IMAGE_BOXES.mentorIntro });
+const rapidFireImage = toImage(mentor.rapidFire?.image, { box: IMAGE_BOXES.mentorRapidFire });
 
 /* `introText` es la bajada del fieldset `interviewIntro`; `shortDescription` es la de la
    card del listado. El bloque Featured del vanilla muestra un solo párrafo al lado de la
@@ -183,7 +184,9 @@ const ARTICLE_COMPONENTS = {
     class="section section--hero-cms relative overflow-hidden bg-[#D9D9D9] mt-page-offset pt-[25rem] pb-[4rem]"
   >
     <div class="hero-cms-bg absolute inset-0 z-0">
-      {heroBackground && <img src={heroBackground.src} alt={heroBackground.alt} class="size-full object-cover object-top" />}
+      {/* `style={undefined}` pisa el `object-position` del hotspot que agrega `imgAttrs`: el
+          encuadre de este banner se fijó arriba a propósito y no cambia por imagen. */}
+      {heroBackground && <img {...imgAttrs(heroBackground)} style={undefined} class="size-full object-cover object-top" />}
     </div>
   </section>
 
@@ -204,8 +207,7 @@ const ARTICLE_COMPONENTS = {
       >
         {introImage && (
           <img
-            src={introImage.src}
-            alt={introImage.alt}
+            {...imgAttrs(introImage)}
             class="h-full min-h-[28em] w-full rounded-[0.57em] object-cover max-md:min-h-[16em]"
             loading="lazy"
           />
@@ -341,8 +343,7 @@ const ARTICLE_COMPONENTS = {
             )}
             {rapidFireImage && (
               <img
-                src={rapidFireImage.src}
-                alt={rapidFireImage.alt}
+                {...imgAttrs(rapidFireImage)}
                 class="w-full flex-1 rounded-[0.57em] object-cover max-md:h-[16em] max-md:flex-none"
                 loading="lazy"
               />
@@ -371,7 +372,7 @@ const ARTICLE_COMPONENTS = {
                       ]}
                     >
                       {chatAvatar ? (
-                        <img src={chatAvatar.src} alt="" class="size-full object-cover" loading="lazy" />
+                        <img {...imgAttrs(chatAvatar)} alt="" class="size-full object-cover" loading="lazy" />
                       ) : (
                         <span class="font-inter text-[0.7em] font-semibold tracking-[0.0625rem] text-black/35 uppercase">
                           {initials}

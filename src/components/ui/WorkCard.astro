@@ -19,15 +19,18 @@
  * Las imágenes se reciben como `{ src, alt }` para que el `alt` sea obligatorio a nivel
  * de tipo (CLAUDE.md §8.1). Sin `thumbnail`, la imagen cae al gris del diseño.
  */
+import { imgAttrs } from '../../lib/sanity/image';
+import type { ImageData } from '../../types/ui';
+
 interface Props {
   href: string;
-  /** `clientTagline` (o el título del proyecto si no hay tagline) — ver `toWorkCard`. */
+  /** `headline` (o el `title` interno si todavía no está cargado) — ver `toWorkCard`. */
   title: string;
   eyebrow?: string;
-  image?: { src: string; alt: string };
+  image?: ImageData;
   clientName?: string;
   /** `client.icon`, dentro del círculo. */
-  clientIcon?: { src: string; alt: string };
+  clientIcon?: ImageData;
   /** Alternativa al ícono: iniciales del cliente dentro del círculo. */
   clientInitials?: string;
   size?: 'base' | 'tall';
@@ -54,7 +57,7 @@ const IMAGE_HEIGHT = {
       IMAGE_HEIGHT[size],
     ]}
   >
-    {image && <img src={image.src} alt={image.alt} class="block size-full object-cover" />}
+    {image && <img {...imgAttrs(image)} class="block size-full object-cover" />}
 
     <div
       class="card-work-arrow absolute right-[clamp(0.9619rem,0.8092rem_+_0.7634vw,1.4962rem)] bottom-[clamp(0.9619rem,0.8092rem_+_0.7634vw,1.4962rem)] flex size-icon-btn shrink-0 items-center justify-center rounded-full border-[0.0875rem] border-white bg-transparent text-white transition-all duration-200 ease-in-out group-hover/card:bg-white group-hover/card:text-black"
@@ -83,7 +86,7 @@ const IMAGE_HEIGHT = {
           {(clientIcon || clientInitials) && (
             <div class="card-work-client-logo flex size-[clamp(1.4962rem,1.9832rem_-_0.5411vw,1.875rem)] shrink-0 items-center justify-center overflow-hidden rounded-full border-[0.0625rem] border-black/20 bg-white">
               {clientIcon ? (
-                <img src={clientIcon.src} alt={clientIcon.alt} class="h-auto w-[70%] object-contain" />
+                <img {...imgAttrs(clientIcon)} class="h-auto w-[70%] object-contain" />
               ) : (
                 <span class="font-inter text-[clamp(0.3937rem,0.3312rem_+_0.3125vw,0.6125rem)] font-bold text-black">
                   {clientInitials}

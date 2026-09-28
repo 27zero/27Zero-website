@@ -19,7 +19,8 @@ import type { PortableTextBlock, SanityImage, Seo, Settings } from '../../types/
 import { ogImageUrl, resolveSeo, type ResolvedSeo } from '../seo/resolveSeo';
 import type { WorkCardProjection } from './cards';
 import { sanityClient } from './client';
-import { imageDimensions, toImage } from './image';
+import { IMAGE_BOXES } from '../utils/imageBoxes';
+import { imageDimensions, toImage, toImageUrl, type ResolvedImage } from './image';
 import { siteSettingsSeoQuery } from './queries';
 
 /** Una oficina, para el nodo `ProfessionalService` del JSON-LD. */
@@ -101,7 +102,7 @@ export interface ApartSlideContent {
    * pedido: el `<img>` remoto no pasa por `<Image>`, así que sin ellas el navegador
    * no puede reservar el espacio y la sección salta al cargar.
    */
-  image?: { src: string; alt: string; width?: number; height?: number };
+  image?: ResolvedImage;
   title?: string;
   text?: string;
 }
@@ -119,31 +120,18 @@ export interface ApartSectionContent {
 }
 
 /**
- * Ancho al que se le pide cada shape al Image CDN. Es el mismo `SHAPE_WIDTH` que
- * `ShapesSlider.astro` le pasa a sus imágenes locales de respaldo: el slot mide
- * 19,25rem en desktop y hasta ~70vw en mobile, así que 640 cubre 2x en ambos.
+ * Tamaños de imagen (feedback Work ronda 2, §1): cada imagen se pide desde la caja
+ * donde se renderiza (`IMAGE_BOXES`).
+ *
+ *   - Shapes de "Apart": `<img>` responsive (`srcset` + `sizes`), con `width`/`height`
+ *     intrínsecos escalados al ancho de referencia `APART_SHAPE_WIDTH` para reservar el
+ *     espacio sin layout shift.
+ *   - Fondo de las cards de Contact y poster del video de Home: van por CSS / atributo
+ *     `poster`, sin `srcset`, así que se piden a 2x de su caja en desktop
+ *     (`toImageUrl`). NO se resuelven con `ogImageUrl()`, que recorta a 1200×630 para la
+ *     tarjeta de Open Graph y deformaría el fondo.
  */
 const APART_SHAPE_WIDTH = 640;
-
-/**
- * Ancho al que se le pide el fondo de cada card de Contact al Image CDN.
- *
- * El grid es de 2 columnas dentro del container de 90rem con `px-container-x`, así
- * que cada card mide ~620px de CSS en desktop; 1280 la cubre a 2x. NO se resuelve con
- * `ogImageUrl()`, que recorta a 1200×630 para la tarjeta de Open Graph — sobre una
- * card más alta que ancha ese recorte se ve mal encuadrado y escalado.
- */
-const CONTACT_CARD_BG_WIDTH = 1280;
-
-/**
- * Ancho al que se le pide el poster del hero al Image CDN.
- *
- * Es un fondo full-bleed, no una card: se sirve al ancho del viewport de desktop
- * (1440) redondeado hacia arriba para cubrir pantallas más anchas. NO se resuelve con
- * `ogImageUrl()`, que recorta a 1200×630 — ese tamaño es el de la tarjeta de Open
- * Graph y deformaría el fondo.
- */
-const HERO_POSTER_WIDTH = 1920;
 
 /**
  * Contenido editable de Home (Etapa 10).
@@ -312,13 +300,13 @@ async function load(): Promise<{
         title: settings.bookCard?.title,
         subtitle: settings.bookCard?.subtitle,
         link: settings.bookCard?.link,
-        bgImageUrl: toImage(settings.bookCard?.bgImage, { width: CONTACT_CARD_BG_WIDTH })?.src,
+        bgImageUrl: toImageUrl(settings.bookCard?.bgImage, { box: IMAGE_BOXES.contactCard }),
       },
       subscribeCard: {
         title: settings.subscribeCard?.title,
         subtitle: settings.subscribeCard?.subtitle,
         link: settings.subscribeCard?.link,
-        bgImageUrl: toImage(settings.subscribeCard?.bgImage, { width: CONTACT_CARD_BG_WIDTH })?.src,
+        bgImageUrl: toImageUrl(settings.subscribeCard?.bgImage, { box: IMAGE_BOXES.contactCard }),
       },
     } satisfies ContactContent,
     homeContent: {
@@ -332,7 +320,7 @@ async function load(): Promise<{
            poster sin alt no se renderiza. Es el enforcement de CLAUDE.md §8.1 ("alt
            obligatorio, no queda a criterio del editor"), no un caso a cubrir con
            fallback. */
-        posterUrl: toImage(settings.homeHero?.poster, { width: HERO_POSTER_WIDTH })?.src,
+        posterUrl: toImageUrl(settings.homeHero?.poster, { box: IMAGE_BOXES.fullBleedHero }),
         posterAlt: settings.homeHero?.poster?.alt,
       },
       work: {
@@ -375,13 +363,13 @@ async function load(): Promise<{
 function toApartSlide(
   slide: NonNullable<Settings['apartSection']>['slideOne']
 ): ApartSlideContent {
-  const image = toImage(slide?.image, { width: APART_SHAPE_WIDTH });
+  const image = toImage(slide?.image, { box: IMAGE_BOXES.apartShape });
   const dimensions = imageDimensions(slide?.image, APART_SHAPE_WIDTH);
 
   return {
-    /* Si el ref no matchea el patrón esperado, `dimensions` es `undefined` y el
-       spread no agrega nada: el `<img>` sale sin `height`, como antes. */
-    image: image ? { ...image, ...dimensions } : undefined,
+    /* `width`/`height` escalados al ancho de referencia, para que el `<img>` reserve su
+       proporción antes de cargar (el CSS fija el ancho real). */
+    image: image && dimensions ? { ...image, ...dimensions } : image,
     title: slide?.title,
     text: slide?.text,
   };

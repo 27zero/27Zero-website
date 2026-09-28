@@ -20,6 +20,7 @@ import { getPageSeo } from '../lib/sanity/settings';
 import ResourceCard from '../components/ui/ResourceCard.astro';
 import ResourceCardFeatured from '../components/ui/ResourceCardFeatured.astro';
 import { toResourceCard } from '../lib/sanity/cards';
+import { IMAGE_BOXES } from '../lib/utils/imageBoxes';
 import type { ResourceProjection } from '../lib/sanity/cards';
 import { sanityClient } from '../lib/sanity/client';
 import { resourceListQuery } from '../lib/sanity/queries';
@@ -38,9 +39,9 @@ const { resources, hero } = await sanityClient.fetch<{
    grid una de tres — pedirle al CDN el mismo tamaño para ambas desperdiciaría bytes. */
 const [featured, ...rest] = resources;
 
-const FEATURED_RESOURCE = featured ? toResourceCard(featured, { imageWidth: 1000 }) : null;
+const FEATURED_RESOURCE = featured ? toResourceCard(featured, { box: IMAGE_BOXES.resourceFeatured }) : null;
 
-const RESOURCES = rest.map((resource) => toResourceCard(resource, { imageWidth: 700 }));
+const RESOURCES = rest.map((resource) => toResourceCard(resource, { box: IMAGE_BOXES.resourceCard }));
 
 const CONTAINER = 'container mx-auto flex w-full max-w-(--container-max-width) flex-col px-container-x';
 

@@ -20,7 +20,8 @@ import Button from '../components/ui/Button.astro';
 import PracticeIcon from '../components/ui/PracticeIcon.astro';
 import PracticesCard from '../components/ui/PracticesCard.astro';
 import { sanityClient } from '../lib/sanity/client';
-import { toImage } from '../lib/sanity/image';
+import { imgAttrs, toImage } from '../lib/sanity/image';
+import { IMAGE_BOXES } from '../lib/utils/imageBoxes';
 import { edtechMarketingQuery } from '../lib/sanity/queries';
 import { externalLinkAttrs, practiceUrl, serviceUrl } from '../lib/utils/routes';
 import type { PracticeIconId, SanityImage, ServiceCategoryId, ServiceIconId } from '../types/sanity';
@@ -68,7 +69,7 @@ const PRACTICES = practices.map((practice) => ({
   ctaLabel: practice.cardCtaLabel,
   /* `toImage()` devuelve `undefined` si falta el asset o el `alt` (CLAUDE.md §8.1) y ahí
      la card cae a su placeholder `[image]`. */
-  image: toImage(practice.cardImage, { width: 700 }),
+  image: toImage(practice.cardImage, { box: IMAGE_BOXES.practiceCard }),
 }));
 
 /* Los 3 íconos de `.practices-card` son fijos y POSICIONALES: rotan `waves` → `spiral`
@@ -136,7 +137,7 @@ const PLACEHOLDER_LABEL =
    1200×630 para la tarjeta de Open Graph y deformaría el fondo (mismo criterio que el
    poster del hero de Home y el de About, Etapa 10). Sin imagen cargada — o sin `alt` —
    queda `undefined` y el hero cae al placeholder. */
-const HERO_IMAGE = toImage(settings?.agencyHero?.image, { width: 1920 });
+const HERO_IMAGE = toImage(settings?.agencyHero?.image, { box: IMAGE_BOXES.fullBleedHero });
 
 /* SEO de esta página: `settings.agencySeo` en Sanity, con fallback global.
    `getPageSeo()` memoiza el singleton — una sola query para todo el build. */
@@ -151,8 +152,7 @@ const { seo, siteSettings } = await getPageSeo('agency');
     {
       HERO_IMAGE ? (
         <img
-          src={HERO_IMAGE.src}
-          alt={HERO_IMAGE.alt}
+          {...imgAttrs(HERO_IMAGE)}
           class="hero-marketing-bg absolute inset-0 z-0 size-full object-cover"
         />
       ) : (

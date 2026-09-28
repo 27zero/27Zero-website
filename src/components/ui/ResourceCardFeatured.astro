@@ -16,13 +16,15 @@
  * emitir un `<img>` inaccesible.
  */
 import Button from './Button.astro';
+import { imgAttrs } from '../../lib/sanity/image';
+import type { ImageData } from '../../types/ui';
 
 interface Props {
   href: string;
   date: string;
   title: string;
   description: string;
-  image?: { src: string; alt: string };
+  image?: ImageData;
 }
 
 const { href, date, title, description, image } = Astro.props;
@@ -34,7 +36,7 @@ const { href, date, title, description, image } = Astro.props;
   <div
     class="card-resource-featured-image min-h-[clamp(12.5rem,10.5714rem_+_9.6429vw,19.25rem)] overflow-hidden rounded-card bg-[#E3E3E3] max-md:w-full"
   >
-    {image && <img src={image.src} alt={image.alt} loading="lazy" class="size-full object-cover" />}
+    {image && <img {...imgAttrs(image)} loading="lazy" class="size-full object-cover" />}
   </div>
 
   <div

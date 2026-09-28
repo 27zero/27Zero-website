@@ -14,8 +14,11 @@
  * una escala lineal, así que va como valor fijo + override en `max-md:`, no como
  * `clamp()` (CLAUDE.md §5, regla de desvío 4).
  */
+import { imgAttrs } from '../../lib/sanity/image';
+import type { ImageData } from '../../types/ui';
+
 interface Props {
-  image: { src: string; alt: string };
+  image: ImageData;
   name: string;
   position: string;
 }
@@ -24,7 +27,7 @@ const { image, name, position } = Astro.props;
 ---
 
 <div class="team-card relative aspect-square w-full overflow-hidden">
-  <img src={image.src} alt={image.alt} class="absolute inset-0 size-full object-cover" />
+  <img {...imgAttrs(image)} class="absolute inset-0 size-full object-cover" />
 
   <div
     class="team-card-info absolute top-0 right-0 flex max-w-[13.125rem] flex-col items-end gap-[clamp(0.2025rem,0.1704rem_+_0.1607vw,0.315rem)] px-[clamp(0.8438rem,0.7098rem_+_0.6696vw,1.3125rem)] pt-[clamp(2.4919rem,2.0963rem_+_1.9777vw,3.8762rem)] pb-[clamp(0.8438rem,0.7098rem_+_0.6696vw,1.3125rem)] text-right max-md:max-w-[75%]"
