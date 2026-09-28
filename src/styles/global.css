@@ -106,10 +106,10 @@
      también el navbar, las cards y el shapes slider. */
   --spacing-gap: clamp(1.125rem, 0.9464rem + 0.8929vw, 1.75rem);
   /* Margen superior de la primera sección de cada página (debajo del navbar fijo).
-     Fijo, no fluido: 4.5rem desktop → 3rem mobile es un salto, no una escala lineal,
+     Fijo, no fluido: 4.8rem desktop → 2.8rem mobile es un salto, no una escala lineal,
      así que va por breakpoint (CLAUDE.md §5). El valor mobile se redefine al final del
      archivo; la utilidad `mt-page-offset` ya cambia sola, sin `max-md:` en cada página. */
-  --spacing-page-offset: 4.5rem;
+  --spacing-page-offset: 4.8rem;
 
   /* ============================================================
      Breakpoints
@@ -156,6 +156,6 @@
    `@layer`, le gana a la declaración de `@theme`. */
 :root {
   @variant max-md {
-    --spacing-page-offset: 3rem;
+    --spacing-page-offset: 2.8rem;
   }
 }
