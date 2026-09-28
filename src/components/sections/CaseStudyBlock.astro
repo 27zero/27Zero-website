@@ -12,9 +12,12 @@
  * los temas fijos de la narrativa y para los hex del CMS de las Additional Sections.
  *
  * Imágenes:
- *   - `heightVariant` (feedback Work, Nota 7.8) fija su alto; vacío es `medium`, el
- *     `initialValue` del schema. `custom` (ronda 2, §3) usa `customHeight` como alto
- *     desktop y lo escala en mobile con la misma proporción que los presets.
+ *   - En desktop, `heightVariant` (feedback Work, Nota 7.8) fija su alto con
+ *     `object-cover`; vacío es `medium`, el `initialValue` del schema. `custom` (ronda
+ *     2, §3) usa `customHeight`.
+ *   - En mobile van en 1 columna con `height: auto` y sin recorte: se ven completas en
+ *     su proporción original, sin importar `heightVariant` (las paletas verticales de
+ *     Doctums quedaban cortadas en una caja de 345×420).
  *   - Llegan crudas y se resuelven acá (ronda 2, §1): la caja de cada imagen depende a
  *     la vez de la cantidad de columnas y del alto, y este es el único lugar donde se
  *     conocen las dos. Con esa caja se arma el `srcset`/`sizes`.
@@ -112,7 +115,7 @@ const hasText = Boolean(lead) || (typeof content === 'string' ? Boolean(content.
         {images.map((image) => (
           <img
             {...imgAttrs(image)}
-            class="h-(--image-height) w-full rounded-[0.57em] object-cover"
+            class="h-(--image-height) w-full rounded-[0.57em] object-cover max-md:h-auto max-md:object-contain"
             loading="lazy"
           />
         ))}

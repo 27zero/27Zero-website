@@ -45,12 +45,25 @@ const column = (columns: number) => (viewport: number) => {
 /* ──────────────────────────── Case Study ─────────────────────────────── */
 
 /**
- * Imágenes de una sección del Case Study (`CaseStudyBlock`) y de la galería de Results:
- * grilla de 1 a 4 columnas, alto fijo con `object-cover`.
+ * Imagen en una grilla de 1 a 4 columnas con alto fijo y `object-cover` en todos los
+ * breakpoints (galería de Results).
+ */
+const fixedHeightGridBox =
+  (columns: number, height: (viewport: number) => number): ImageBox =>
+  (viewport) => ({ width: column(columns)(viewport), height: height(viewport) });
+
+/**
+ * Imágenes de una sección del Case Study (`CaseStudyBlock`). En desktop, grilla de 1 a 4
+ * columnas con el alto de `heightVariant` y `object-cover`. En mobile, 1 columna con
+ * `height: auto`: la imagen se ve completa en su proporción, así que solo cuenta el
+ * ancho — sin `height` en la caja, `sizes` no suma el ancho extra que agregaba el recorte.
  */
 export const caseStudyBox =
   (columns: number, height: (viewport: number) => number): ImageBox =>
-  (viewport) => ({ width: column(columns)(viewport), height: height(viewport) });
+  (viewport) =>
+    viewport <= MOBILE_MAX
+      ? { width: containerWidth(viewport) }
+      : { width: column(columns)(viewport), height: height(viewport) };
 
 /* ──────────────────────────────── Cajas ──────────────────────────────── */
 
@@ -58,7 +71,7 @@ export const IMAGE_BOXES = {
   /** Hero de la interna de Work: container completo, clamp(21.375rem → 33.25rem). */
   workHero: ((viewport) => ({ width: containerWidth(viewport), height: fluid(342, 532)(viewport) })) as ImageBox,
   /** Galería de Results: clamp(12.375rem → 19.25rem). */
-  workGallery: (columns: number) => caseStudyBox(columns, fluid(198, 308)),
+  workGallery: (columns: number) => fixedHeightGridBox(columns, fluid(198, 308)),
   /** Logo del cliente en la interna: 70px de alto máximo, ancho según su proporción. */
   clientLogo: (() => ({ width: 0, height: 70 })) as ImageBox,
 
