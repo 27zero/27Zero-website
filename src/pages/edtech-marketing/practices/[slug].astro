@@ -31,15 +31,14 @@ import ServiceMenu from '../../../components/sections/ServiceMenu.astro';
 import Button from '../../../components/ui/Button.astro';
 import Dropdown from '../../../components/ui/Dropdown.astro';
 import { sanityClient } from '../../../lib/sanity/client';
-import { imageDimensions, imgAttrs, toImage } from '../../../lib/sanity/image';
-import { IMAGE_BOXES } from '../../../lib/utils/imageBoxes';
 import { practiceDetailQuery } from '../../../lib/sanity/queries';
 import { getSeoSettings } from '../../../lib/sanity/settings';
 import { ogTypeFor } from '../../../lib/seo/ogType';
 import { resolveSeo } from '../../../lib/seo/resolveSeo';
 import { detailTrail } from '../../../lib/utils/breadcrumbs';
+import { surface } from '../../../lib/utils/palette';
 import { externalLinkAttrs, serviceUrl, toStaticPaths } from '../../../lib/utils/routes';
-import type { SanityImage, Seo, ServiceIconId, ServiceRef } from '../../../types/sanity';
+import type { BgColor, Seo, ServiceIconId, ServiceRef, TextColor } from '../../../types/sanity';
 import type { ServiceGroup } from '../../../types/ui';
 
 export interface PracticeDetail {
@@ -51,7 +50,8 @@ export interface PracticeDetail {
   shortDescription?: string;
   heroHeadline?: string;
   heroText?: string;
-  heroImage?: SanityImage;
+  bgColor?: BgColor | null;
+  textColor?: TextColor | null;
   introTitle?: string;
   introDescription?: string;
   capabilities?: string[];
@@ -97,11 +97,9 @@ const seo = {
   description: practice.seo?.description ?? practice.shortDescription,
 };
 
-/* Sin `alt` no se renderiza (CLAUDE.md §8.1): el hero queda en su fondo gris. Es el
-   caso de New Product Launch, con asset cargado antes de que `heroImage.alt` existiera. */
-const HERO_IMAGE_WIDTH = 1920;
-const heroImage = toImage(practice.heroImage, { box: IMAGE_BOXES.fullBleedHero });
-const heroImageSize = imageDimensions(practice.heroImage, HERO_IMAGE_WIDTH);
+/* Hero de color (ronda 3): los MISMOS `bgColor` / `textColor` que la card de la práctica,
+   con fallback dark / light. Reemplazan a la vieja `heroImage` y su overlay. */
+const heroSurface = surface(practice.bgColor, practice.textColor);
 
 /* H1 = `heroHeadline`, el nombre corto de la práctica — NUNCA `title`, que es el
    titular de la card. Si el editor lo deja vacío cae a `practiceName`, requerido por
@@ -155,36 +153,23 @@ const H2 = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px]';
 <Page seo={seo} siteSettings={siteSettings} breadcrumb={breadcrumb} ogType={ogTypeFor('edtechMarketingPractice')} navVariant="white">
   <!-- HERO -->
   <section
-    class="section section--hero-marketing relative mt-page-offset overflow-hidden pt-[clamp(6rem,8.3304rem_-_2.5893vw,7.8125rem)] pb-[clamp(7.8125rem,11.8304rem_-_4.4643vw,10.9375rem)]"
+    class:list={[
+      'section section--hero-marketing relative mt-page-offset overflow-hidden pt-[clamp(6rem,8.3304rem_-_2.5893vw,7.8125rem)] pb-[clamp(7.8125rem,11.8304rem_-_4.4643vw,10.9375rem)]',
+      heroSurface.bg,
+    ]}
   >
-    <div class="hero-marketing-bg absolute inset-0 z-0 flex items-center justify-center bg-gray">
-      {
-        heroImage && (
-          <img
-            {...imgAttrs(heroImage)}
-            width={heroImageSize?.width}
-            height={heroImageSize?.height}
-            class="size-full object-cover"
-          />
-        )
-      }
-    </div>
-
-    {/* Velo oscuro sobre la imagen (mismo `bg-black/50` que el hero de Home): el copy
-        del hero es blanco. Va siempre, también sobre el placeholder gris, para que el
-        texto blanco nunca quede sobre fondo claro. */}
-    <div class="hero-marketing-overlay absolute inset-0 z-0 bg-black/50" aria-hidden="true"></div>
-
     <div
       class:list={[CONTAINER, 'hero-marketing-container relative z-[1] gap-[clamp(1.2038rem,1.0127rem_+_0.9554vw,1.8725rem)]']}
     >
       <div class="hero-marketing-text flex max-w-[75%] flex-col gap-xs max-md:max-w-full">
-        <h1 class="font-lora text-h1 leading-[1.25] font-medium tracking-[-0.48px] text-white">{heroHeadline}</h1>
-        {heroText && <p class:list={[BODY, 'max-w-[90%] text-white']}>{heroText}</p>}
+        <h1 class:list={['font-lora text-h1 leading-[1.25] font-medium tracking-[-0.48px]', heroSurface.text]}>
+          {heroHeadline}
+        </h1>
+        {heroText && <p class:list={[BODY, 'max-w-[90%]', heroSurface.text]}>{heroText}</p>}
       </div>
 
       <div class="hero-home-cta mr-auto flex flex-col items-center gap-xs">
-        <Button href="/contact" variant="whiteOnDark">Book a strategy session</Button>
+        <Button href="/contact" variant={heroSurface.button}>Book a strategy session</Button>
       </div>
     </div>
   </section>

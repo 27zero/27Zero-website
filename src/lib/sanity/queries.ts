@@ -207,7 +207,7 @@ export const aboutQuery = `{
     | order(publishedAt desc)[0...6] {${MENTOR_CARD_FIELDS}},
 
   "proofPoint": *[_type == "settings"][0].aboutProofPoint {title, text, image},
-  "aboutHero": *[_type == "settings"][0].aboutHero {headline, text, image},
+  "aboutHero": *[_type == "settings"][0].aboutHero {headline, text, image, bgColor, textColor},
   "aboutDna": *[_type == "settings"][0].aboutDna,
   "aboutTeam": *[_type == "settings"][0].aboutTeam
 }`;
@@ -373,14 +373,15 @@ export const mentorCategoryPagesQuery = `{
  * `practiceName` el label corto que va antes de `shortDescription`, y `cardCtaLabel` el
  * texto del link (vacío → "Explore the practice", lo resuelve `PracticesCard`).
  *
- * `cardImage` es el fondo de la `.practices-card`. Va cruda, como el resto de las
- * imágenes, para que la página la resuelva con `toImage()`; sin imagen (o sin `alt`) la
- * card cae al placeholder `[image]` del vanilla.
+ * Ronda 3: la card ya no tiene imagen. `bgColor` / `textColor` pintan el fondo y el
+ * contenido (vacíos → dark / light, lo resuelve `utils/palette`).
+ *
+ * `agencyHero` va entero: trae `image` (modo imagen) y `bgColor` / `textColor` (modo color).
  */
 export const edtechMarketingQuery = `{
   "practices": *[_type == "edtechMarketingPractice"]
     | order(order asc, title asc) {
-      _id, title, practiceName, "slug": slug.current, shortDescription, cardCtaLabel, cardImage
+      _id, title, practiceName, "slug": slug.current, shortDescription, cardCtaLabel, bgColor, textColor
     },
 
   "services": *[_type == "edtechMarketingService" && defined(slug.current)]
@@ -505,9 +506,10 @@ export const mentorDetailQuery = `
 /**
  * `resource` — interna de un artículo.
  *
- * Trae `heroBanner` (imagen del hero de la interna) y también `cardThumbnail`, que es la del
- * listado. La tabla de contenidos no es un campo: se deriva de los `h2` de `body` en la
- * página (`getHeadings()` de `utils/portableText`).
+ * El hero es de color (`heroBgColor` / `heroTextColor`, ronda 3). `heroBanner` ya no se
+ * renderiza, pero se sigue trayendo: con `cardThumbnail` alimenta la imagen del Article
+ * (`ogImageUrl(heroBanner, cardThumbnail)`). La tabla de contenidos no es un campo: se
+ * deriva de los `h2` de `body` en la página (`getHeadings()` de `utils/portableText`).
  */
 export const resourceDetailQuery = `
   *[_type == "resource"] {
@@ -520,6 +522,8 @@ export const resourceDetailQuery = `
     author->{_id, name, role, linkedin},
     publishedAt,
     heroBanner,
+    heroBgColor,
+    heroTextColor,
     cardThumbnail,
     body
   }
@@ -551,7 +555,8 @@ export const practiceDetailQuery = `
     shortDescription,
     heroHeadline,
     heroText,
-    heroImage,
+    bgColor,
+    textColor,
     introTitle,
     introDescription,
     capabilities,
@@ -578,7 +583,8 @@ export const serviceDetailQuery = `
     category,
     iconId,
     description,
-    heroImage,
+    heroBgColor,
+    heroTextColor,
     introTitle,
     introDescription,
     featuresTitle,

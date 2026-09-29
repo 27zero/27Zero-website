@@ -28,10 +28,11 @@ import WorkCard from '../components/ui/WorkCard.astro';
 import { toMentorCard, toWorkCard } from '../lib/sanity/cards';
 import type { MentorCardProjection, WorkCardProjection } from '../lib/sanity/cards';
 import { sanityClient } from '../lib/sanity/client';
-import { imgAttrs, toImage } from '../lib/sanity/image';
+import { imageDimensions, imgAttrs, toImage } from '../lib/sanity/image';
 import { IMAGE_BOXES } from '../lib/utils/imageBoxes';
+import { surface } from '../lib/utils/palette';
 import { aboutQuery } from '../lib/sanity/queries';
-import type { SanityImage } from '../types/sanity';
+import type { BgColor, SanityImage, TextColor } from '../types/sanity';
 import type { MentorCardData, WorkCardData } from '../types/ui';
 
 /* Una sola query para las 4 secciones que consumen CMS (CLAUDE.md §10). */
@@ -42,16 +43,31 @@ const { team, works, featuredMentor, mentorPosts, proofPoint, aboutHero, aboutDn
     featuredMentor: MentorCardProjection | null;
     mentorPosts: MentorCardProjection[];
     proofPoint: { title?: string; text?: string; image?: SanityImage } | null;
-    aboutHero: { headline?: string; text?: string; image?: SanityImage } | null;
+    aboutHero: {
+      headline?: string;
+      text?: string;
+      image?: SanityImage;
+      bgColor?: BgColor | null;
+      textColor?: TextColor | null;
+    } | null;
     aboutDna: { headline?: string; text?: string } | null;
     aboutTeam: { headline?: string; text?: string } | null;
   }>(aboutQuery);
 
-/* Fondo full-bleed del hero. `toImage()` y no `ogImageUrl()`: ese último recorta a
-   1200×630 para la tarjeta de Open Graph y deformaría el fondo (mismo criterio que el
-   poster del hero de Home, Etapa 10). Sin imagen cargada — o sin `alt` — queda
-   `undefined` y el hero cae al placeholder. */
+/* Hero — dos modos excluyentes (ronda 3), mismo criterio que el de EdTech Marketing:
+   - Imagen: `aboutHero.image` con asset y `alt` es lo único visible. H1 y bajada quedan
+     en `sr-only` (no `display:none`); como eso los saca del flujo, un duplicado
+     `invisible` + `aria-hidden` reserva el alto que el texto le da hoy al hero. Este hero
+     no tiene CTAs.
+   - Color: sin imagen —o sin `alt`, que `toImage()` descarta (CLAUDE.md §8.1)— el hero
+     es el de siempre sobre `bgColor` / `textColor` (fallback dark / light).
+   `toImage()` y no `ogImageUrl()`: ese último recorta a 1200×630 para Open Graph. */
+const HERO_IMAGE_WIDTH = 1920;
 const HERO_IMAGE = toImage(aboutHero?.image, { box: IMAGE_BOXES.fullBleedHero });
+const HERO_IMAGE_SIZE = imageDimensions(aboutHero?.image, HERO_IMAGE_WIDTH);
+const HERO_SURFACE = surface(aboutHero?.bgColor, aboutHero?.textColor);
+const HERO_H1 = 'font-lora text-h1 leading-[1.25] font-medium tracking-[-0.48px]';
+const HERO_TEXT = 'max-w-[90%] max-md:max-w-full';
 
 /* `TeamCard` exige `image` con `alt` obligatorio (CLAUDE.md §8.1), así que los
    integrantes sin foto cargada quedan fuera del grid: la card es una foto con el
@@ -116,40 +132,50 @@ const { seo, siteSettings } = await getPageSeo('about');
 <Page seo={seo} siteSettings={siteSettings} navVariant="white">
   <!-- HERO -->
   <section
-    class="section section--hero-marketing relative mt-page-offset overflow-hidden pt-[clamp(5.625rem,8.4375rem_-_3.125vw,7.8125rem)] pb-[clamp(5.625rem,12.4554rem_-_7.5893vw,10.9375rem)]"
+    class:list={[
+      'section section--hero-marketing relative mt-page-offset overflow-hidden py-[11rem]',
+      !HERO_IMAGE && HERO_SURFACE.bg,
+    ]}
   >
     {
-      HERO_IMAGE ? (
+      HERO_IMAGE && (
         <img
           {...imgAttrs(HERO_IMAGE)}
+          width={HERO_IMAGE_SIZE?.width}
+          height={HERO_IMAGE_SIZE?.height}
+          loading="eager"
+          fetchpriority="high"
           class="hero-marketing-bg absolute inset-0 z-0 size-full object-cover"
         />
-      ) : (
-        <div class="hero-marketing-bg absolute inset-0 z-0 flex items-center justify-center bg-gray">
-          <span class="font-inter text-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] font-semibold tracking-[1px] text-black uppercase opacity-40">
-            [HERO BACKGROUND IMAGE]
-          </span>
-        </div>
       )
     }
-
-    {/* Velo oscuro (mismo `bg-black/50` que Home y EdTech Marketing): el copy es blanco y
-        se espera una imagen de fondo real. Va siempre, también sobre el placeholder. */}
-    <div class="hero-marketing-overlay absolute inset-0 z-0 bg-black/50" aria-hidden="true"></div>
 
     <div
       class:list={[
         CONTAINER,
-        'hero-marketing-container relative z-[1] gap-[clamp(1.8056rem,1.519rem_+_1.433vw,2.8087rem)]',
+        'hero-marketing-container relative z-[1] justify-center gap-[clamp(1.8056rem,1.519rem_+_1.433vw,2.8087rem)]',
       ]}
     >
-      <div class="hero-marketing-text flex max-w-[50%] flex-col gap-[clamp(1.2656rem,1.0647rem_+_1.0045vw,1.9688rem)] max-md:max-w-full">
-        <h1 class="font-lora text-h1 leading-[1.25] font-medium tracking-[-0.48px] text-white">
-          {aboutHero?.headline}
-        </h1>
-        <p class:list={[BODY, 'max-w-[90%] text-white max-md:max-w-full']}>
-          {aboutHero?.text}
-        </p>
+      <div class="hero-marketing-text flex max-w-[60%] flex-col gap-[clamp(1.2656rem,1.0647rem_+_1.0045vw,1.9688rem)] max-md:max-w-full">
+        {
+          HERO_IMAGE ? (
+            <>
+              <h1 class="sr-only">{aboutHero?.headline}</h1>
+              <p class="sr-only">{aboutHero?.text}</p>
+              <div class:list={[HERO_H1, 'invisible']} aria-hidden="true">
+                {aboutHero?.headline}
+              </div>
+              <div class:list={[BODY, HERO_TEXT, 'invisible']} aria-hidden="true">
+                {aboutHero?.text}
+              </div>
+            </>
+          ) : (
+            <>
+              <h1 class:list={[HERO_H1, HERO_SURFACE.text]}>{aboutHero?.headline}</h1>
+              <p class:list={[BODY, HERO_TEXT, HERO_SURFACE.text]}>{aboutHero?.text}</p>
+            </>
+          )
+        }
       </div>
     </div>
   </section>

@@ -5,9 +5,10 @@
  * repo vanilla. Clases propias documentadas en `design-system-edtech-marketing.md`.
  *
  * El hero comparte clases (`.section--hero-marketing`) con el de About, que en el
- * vanilla se describe como derivado de este — pero los valores NO son iguales
- * (padding, gap del container y el bloque `.hero-home-cta`, que About no tiene), así
- * que cada página declara los suyos y no se extrae un componente compartido.
+ * vanilla se describe como derivado de este — pero los valores NO son iguales (gap del
+ * container, ancho del texto y el bloque `.hero-home-cta`, que About no tiene), así que
+ * cada página declara los suyos y no se extrae un componente compartido. El padding sí
+ * coincide desde el QA de la ronda 3: `11rem` fijo arriba y abajo en los dos.
  *
  * Valores fluidos con la curva del resto del proyecto: mobile = `em × 9` @320px,
  * desktop = `em × 14` @1440px, salvo donde el vanilla fija un valor mobile propio en
@@ -20,11 +21,19 @@ import Button from '../components/ui/Button.astro';
 import PracticeIcon from '../components/ui/PracticeIcon.astro';
 import PracticesCard from '../components/ui/PracticesCard.astro';
 import { sanityClient } from '../lib/sanity/client';
-import { imgAttrs, toImage } from '../lib/sanity/image';
+import { imageDimensions, imgAttrs, toImage } from '../lib/sanity/image';
 import { IMAGE_BOXES } from '../lib/utils/imageBoxes';
 import { edtechMarketingQuery } from '../lib/sanity/queries';
+import { surface } from '../lib/utils/palette';
 import { externalLinkAttrs, practiceUrl, serviceUrl } from '../lib/utils/routes';
-import type { PracticeIconId, SanityImage, ServiceCategoryId, ServiceIconId } from '../types/sanity';
+import type {
+  BgColor,
+  PracticeIconId,
+  SanityImage,
+  ServiceCategoryId,
+  ServiceIconId,
+  TextColor,
+} from '../types/sanity';
 import { SERVICE_CATEGORY_LABELS, SERVICE_CATEGORY_ORDER } from '../types/sanity';
 import type { ServiceGroup } from '../types/ui';
 
@@ -36,7 +45,8 @@ const { practices, services, settings } = await sanityClient.fetch<{
     slug: string;
     shortDescription?: string;
     cardCtaLabel?: string;
-    cardImage?: SanityImage;
+    bgColor?: BgColor | null;
+    textColor?: TextColor | null;
   }[];
   services: { _id: string; title: string; slug: string; category: ServiceCategoryId; iconId?: ServiceIconId }[];
   settings: {
@@ -46,6 +56,8 @@ const { practices, services, settings } = await sanityClient.fetch<{
       headline?: string;
       text?: string;
       image?: SanityImage;
+      bgColor?: BgColor | null;
+      textColor?: TextColor | null;
       ctaLink?: string;
       ctaCaption?: string;
     };
@@ -67,9 +79,9 @@ const PRACTICES = practices.map((practice) => ({
   name: practice.practiceName,
   body: practice.shortDescription ?? undefined,
   ctaLabel: practice.cardCtaLabel,
-  /* `toImage()` devuelve `undefined` si falta el asset o el `alt` (CLAUDE.md §8.1) y ahí
-     la card cae a su placeholder `[image]`. */
-  image: toImage(practice.cardImage, { box: IMAGE_BOXES.practiceCard }),
+  /* Crudos: los resuelve `PracticesCard` con fallback dark / light (ronda 3). */
+  bgColor: practice.bgColor,
+  textColor: practice.textColor,
 }));
 
 /* Los 3 íconos de `.practices-card` son fijos y POSICIONALES: rotan `waves` → `spiral`
@@ -128,16 +140,21 @@ const CONTAINER = 'container mx-auto flex w-full max-w-(--container-max-width) f
 
 const BODY = 'text-body font-inter text-body leading-[1.6] font-medium tracking-normal';
 
-/* Placeholder de wireframe (fondo gris + label en mayúsculas al 40%), mismo tratamiento
-   que en Home y About. */
-const PLACEHOLDER_LABEL =
-  'font-inter text-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] font-semibold tracking-[1px] text-black uppercase opacity-40';
+const HERO_H1 = 'font-lora text-h1 leading-[1.25] font-medium tracking-[-0.48px]';
 
-/* Fondo full-bleed del hero. `toImage()` y no `ogImageUrl()`: ese último recorta a
-   1200×630 para la tarjeta de Open Graph y deformaría el fondo (mismo criterio que el
-   poster del hero de Home y el de About, Etapa 10). Sin imagen cargada — o sin `alt` —
-   queda `undefined` y el hero cae al placeholder. */
+/* Hero — dos modos excluyentes (ronda 3), la imagen tiene prioridad:
+   - Imagen: `agencyHero.image` con asset y `alt` es lo único visible. H1 y bajada quedan
+     en `sr-only` (no `display:none`) y los CTAs no se renderizan: un link invisible pero
+     enfocable con Tab es un error de accesibilidad. Como el `sr-only` saca el texto del
+     flujo, un duplicado `invisible` + `aria-hidden` reserva el alto que el texto le da
+     hoy al hero (sin los CTAs), fuera del árbol de accesibilidad.
+   - Color: sin imagen —o sin `alt`, que `toImage()` descarta (CLAUDE.md §8.1)— el hero
+     es el de siempre sobre `bgColor` / `textColor` (fallback dark / light).
+   `toImage()` y no `ogImageUrl()`: ese último recorta a 1200×630 para Open Graph. */
+const HERO_IMAGE_WIDTH = 1920;
 const HERO_IMAGE = toImage(settings?.agencyHero?.image, { box: IMAGE_BOXES.fullBleedHero });
+const HERO_IMAGE_SIZE = imageDimensions(settings?.agencyHero?.image, HERO_IMAGE_WIDTH);
+const HERO_SURFACE = surface(settings?.agencyHero?.bgColor, settings?.agencyHero?.textColor);
 
 /* SEO de esta página: `settings.agencySeo` en Sanity, con fallback global.
    `getPageSeo()` memoiza el singleton — una sola query para todo el build. */
@@ -147,63 +164,79 @@ const { seo, siteSettings } = await getPageSeo('agency');
 <Page seo={seo} siteSettings={siteSettings} navVariant="white">
   <!-- HERO -->
   <section
-    class="section section--hero-marketing relative mt-page-offset overflow-hidden pt-[clamp(3.7538rem,8.9729rem_-_5.7991vw,7.8131rem)] pb-[clamp(7.4988rem,11.9168rem_-_4.9089vw,10.935rem)]"
+    class:list={[
+      'section section--hero-marketing relative mt-page-offset overflow-hidden py-[11rem]',
+      !HERO_IMAGE && HERO_SURFACE.bg,
+    ]}
   >
     {
-      HERO_IMAGE ? (
+      HERO_IMAGE && (
         <img
           {...imgAttrs(HERO_IMAGE)}
+          width={HERO_IMAGE_SIZE?.width}
+          height={HERO_IMAGE_SIZE?.height}
+          loading="eager"
+          fetchpriority="high"
           class="hero-marketing-bg absolute inset-0 z-0 size-full object-cover"
         />
-      ) : (
-        <div class="hero-marketing-bg absolute inset-0 z-0 flex items-center justify-center bg-gray">
-          <span class={PLACEHOLDER_LABEL}>[HERO BACKGROUND IMAGE]</span>
-        </div>
       )
     }
-
-    {/* Velo oscuro sobre la imagen (mismo `bg-black/50` que el hero de Home): el copy
-        del hero es blanco. Va siempre, también sobre el placeholder gris, para que el
-        texto blanco nunca quede sobre fondo claro. */}
-    <div class="hero-marketing-overlay absolute inset-0 z-0 bg-black/50" aria-hidden="true"></div>
 
     <div
       class:list={[
         CONTAINER,
-        'hero-marketing-container relative z-[1] gap-[clamp(1.2038rem,1.0127rem_+_0.9554vw,1.8725rem)]',
+        'hero-marketing-container relative z-[1] justify-center gap-[clamp(1.2038rem,1.0127rem_+_0.9554vw,1.8725rem)]',
       ]}
     >
       <div class="hero-marketing-text flex max-w-[50%] flex-col gap-xs max-md:max-w-full">
-        <h1 class="font-lora text-h1 leading-[1.25] font-medium tracking-[-0.48px] text-white">
-          {settings?.agencyHero?.headline}
-        </h1>
-        <p class:list={[BODY, 'max-w-[90%] text-white']}>
-          {settings?.agencyHero?.text}
-        </p>
+        {
+          HERO_IMAGE ? (
+            <>
+              <h1 class="sr-only">{settings?.agencyHero?.headline}</h1>
+              <p class="sr-only">{settings?.agencyHero?.text}</p>
+              <div class:list={[HERO_H1, 'invisible']} aria-hidden="true">
+                {settings?.agencyHero?.headline}
+              </div>
+              <div class:list={[BODY, 'invisible max-w-[90%]']} aria-hidden="true">
+                {settings?.agencyHero?.text}
+              </div>
+            </>
+          ) : (
+            <>
+              <h1 class:list={[HERO_H1, HERO_SURFACE.text]}>{settings?.agencyHero?.headline}</h1>
+              <p class:list={[BODY, 'max-w-[90%]', HERO_SURFACE.text]}>{settings?.agencyHero?.text}</p>
+            </>
+          )
+        }
       </div>
 
       {/* Botón y caption son independientes: la caption no depende de que haya link
-          cargado, igual que en el hero de Home. */}
-      <div class="hero-home-cta mr-auto flex flex-col items-center gap-xs">
-        {
-          settings?.agencyHero?.ctaLink && (
-            <Button
-              href={settings.agencyHero.ctaLink}
-              {...externalLinkAttrs(settings.agencyHero.ctaLink)}
-              variant="whiteOnDark"
-            >
-              Book a strategy session
-            </Button>
-          )
-        }
-        {
-          settings?.agencyHero?.ctaCaption && (
-            <p class="text-caption font-inter text-body-sm leading-[1.6] font-normal tracking-normal text-white">
-              {settings.agencyHero.ctaCaption}
-            </p>
-          )
-        }
-      </div>
+          cargado, igual que en el hero de Home. En modo imagen no se renderizan. */}
+      {
+        !HERO_IMAGE && (
+          <div class="hero-home-cta mr-auto flex flex-col items-center gap-xs">
+            {settings?.agencyHero?.ctaLink && (
+              <Button
+                href={settings.agencyHero.ctaLink}
+                {...externalLinkAttrs(settings.agencyHero.ctaLink)}
+                variant={HERO_SURFACE.button}
+              >
+                Book a strategy session
+              </Button>
+            )}
+            {settings?.agencyHero?.ctaCaption && (
+              <p
+                class:list={[
+                  'text-caption font-inter text-body-sm leading-[1.6] font-normal tracking-normal',
+                  HERO_SURFACE.text,
+                ]}
+              >
+                {settings.agencyHero.ctaCaption}
+              </p>
+            )}
+          </div>
+        )
+      }
     </div>
   </section>
 
@@ -239,7 +272,8 @@ const { seo, siteSettings } = await getPageSeo('agency');
               name={practice.name}
               body={practice.body}
               ctaLabel={practice.ctaLabel}
-              image={practice.image}
+              bgColor={practice.bgColor}
+              textColor={practice.textColor}
             >
               <PracticeIcon slot="icon" iconId={PRACTICE_ICONS[index % PRACTICE_ICONS.length]} />
             </PracticesCard>

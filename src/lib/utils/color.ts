@@ -15,6 +15,7 @@
  *     en esos casos se elige por contraste WCAG entre el negro y el blanco del design
  *     system.
  */
+import type { PaletteColor } from '../../types/sanity';
 
 /** `--color-black` de `global.css`. Fallback de todo acento vacío o inválido. */
 export const DEFAULT_ACCENT = '#101010';
@@ -82,24 +83,30 @@ export function isDarkColor(hex: string): boolean {
 
 /**
  * Colores de sección elegibles en el Studio (feedback Work ronda 2, §4): el CMS guarda
- * el NOMBRE del token (`indigo`, `purple`, `black`, `white`), no un hex. Se pintan con
- * `var(--color-<nombre>)`, así `global.css` sigue siendo la única fuente de los valores.
+ * un NOMBRE (`indigo`, `purple`, `dark`, `white`), no un hex. Se pintan con la `var()`
+ * del token de `global.css`, así ese archivo sigue siendo la única fuente de los valores.
  *
- * El hex de acá es solo un espejo de `global.css` para decidir contraste en build (el
- * color de texto por defecto y la variante del botón): no se escribe en el HTML. Si
- * cambia un token, se actualiza también acá.
+ * El mapeo nombre → token es explícito porque no coinciden: desde la ronda 3 el #101010
+ * se llama `dark` en Sanity y sigue siendo `--color-black` en `global.css`. Nunca se arma
+ * la `var()` con el nombre de Sanity.
+ *
+ * El hex es solo un espejo de `global.css` para decidir contraste en build (el color de
+ * texto por defecto y la variante del botón): no se escribe en el HTML. Si cambia un
+ * token, se actualiza también acá.
+ *
+ * No confundir con `utils/palette` (heroes y card de Practice): es otra lista de valores.
  */
-const PALETTE_HEX = {
-  indigo: '#440e92',
-  purple: '#b382f9',
-  black: '#101010',
-  white: '#ffffff',
-} as const;
+const PALETTE = {
+  indigo: { cssVar: 'var(--color-indigo)', hex: '#440e92' },
+  purple: { cssVar: 'var(--color-purple)', hex: '#b382f9' },
+  dark: { cssVar: 'var(--color-black)', hex: '#101010' },
+  white: { cssVar: 'var(--color-white)', hex: '#ffffff' },
+} as const satisfies Record<PaletteColor, { cssVar: string; hex: string }>;
 
-export type PaletteName = keyof typeof PALETTE_HEX;
+export type PaletteName = PaletteColor;
 
 const isPaletteName = (value: string | null | undefined): value is PaletteName =>
-  Boolean(value && value in PALETTE_HEX);
+  Boolean(value && value in PALETTE);
 
 /**
  * Fondo + texto de una sección con colores de la paleta. Un valor vacío o desconocido
@@ -114,11 +121,11 @@ export function paletteSurface(
   fallbackBackground: PaletteName
 ): { background: string; text: string; isDark: boolean } {
   const backgroundName = isPaletteName(background) ? background : fallbackBackground;
-  const isDark = isDarkColor(PALETTE_HEX[backgroundName]);
-  const contrastName: PaletteName = isDark ? 'white' : 'black';
+  const isDark = isDarkColor(PALETTE[backgroundName].hex);
+  const contrastName: PaletteName = isDark ? 'white' : 'dark';
   /* Un texto igual al fondo sería invisible (pasa si el editor eligió texto blanco y dejó
      el fondo vacío, que cae a blanco): ahí rige el contraste. */
   const textName: PaletteName = isPaletteName(text) && text !== backgroundName ? text : contrastName;
 
-  return { background: `var(--color-${backgroundName})`, text: `var(--color-${textName})`, isDark };
+  return { background: PALETTE[backgroundName].cssVar, text: PALETTE[textName].cssVar, isDark };
 }

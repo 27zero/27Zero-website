@@ -65,6 +65,11 @@
   --color-black:  #101010;
   --color-gray:   #F5F5F5;
   --color-white:  #FFFFFF;
+  /* Ronda 3: fondos elegibles de heroes y cards (`lib/utils/palette.ts`). Ojo con el
+     nombre: el `black` de Sanity es este #000; el `dark` de Sanity es `--color-black`. */
+  --color-pure-black: #000;
+  --color-blue:   #40C7DA;
+  --color-yellow: #FAE937;
 
   /* Tipografías (familias) */
   --font-inter: 'Inter', sans-serif;

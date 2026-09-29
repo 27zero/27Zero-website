@@ -12,7 +12,7 @@
  * prácticamente vacío antes:
  *
  *   `description`  → bajada del hero
- *   `heroImage`    → fondo del hero (feedback Practices, sept 2026)
+ *   `heroBgColor` / `heroTextColor` → fondo y contenido del hero (ronda 3; antes `heroImage`)
  *   `intro`        → sección Credibility
  *   `features`     → acordeón "From a single conversation to a content engine"
  *   `proofPoint`   → sección Proof Point
@@ -26,15 +26,16 @@ import Button from '../../../components/ui/Button.astro';
 import Dropdown from '../../../components/ui/Dropdown.astro';
 import ServiceIcon from '../../../components/ui/ServiceIcon.astro';
 import { sanityClient } from '../../../lib/sanity/client';
-import { imageDimensions, imgAttrs, toImage } from '../../../lib/sanity/image';
+import { imgAttrs, toImage } from '../../../lib/sanity/image';
 import { IMAGE_BOXES } from '../../../lib/utils/imageBoxes';
 import { serviceDetailQuery } from '../../../lib/sanity/queries';
 import { getSeoSettings } from '../../../lib/sanity/settings';
 import { ogTypeFor } from '../../../lib/seo/ogType';
 import { resolveSeo } from '../../../lib/seo/resolveSeo';
 import { detailTrail } from '../../../lib/utils/breadcrumbs';
+import { surface } from '../../../lib/utils/palette';
 import { externalLinkAttrs, toStaticPaths } from '../../../lib/utils/routes';
-import type { SanityImage, Seo, ServiceCategoryId, ServiceIconId } from '../../../types/sanity';
+import type { BgColor, SanityImage, Seo, ServiceCategoryId, ServiceIconId, TextColor } from '../../../types/sanity';
 
 export interface ServiceDetail {
   _id: string;
@@ -44,7 +45,8 @@ export interface ServiceDetail {
   category?: ServiceCategoryId;
   iconId?: ServiceIconId;
   description?: string;
-  heroImage?: SanityImage;
+  heroBgColor?: BgColor | null;
+  heroTextColor?: TextColor | null;
   introTitle?: string;
   introDescription?: string;
   featuresTitle?: string;
@@ -82,11 +84,10 @@ const seo = {
   description: service.seo?.description ?? service.description,
 };
 
-/* Mismo slot y patrón que el hero de Practice: el `.hero-marketing-bg` gris del vanilla
-   ("[HERO BACKGROUND IMAGE]") pasa a ser la imagen cuando hay asset con `alt`. */
-const HERO_IMAGE_WIDTH = 1920;
-const heroImage = toImage(service.heroImage, { box: IMAGE_BOXES.fullBleedHero });
-const heroImageSize = imageDimensions(service.heroImage, HERO_IMAGE_WIDTH);
+/* Hero de color (ronda 3), mismo criterio que el de Practice: `heroBgColor` de fondo y
+   `heroTextColor` para todo el contenido —ícono y botón incluidos—, con fallback
+   dark / light. Reemplazan a la vieja `heroImage` y su overlay. */
+const heroSurface = surface(service.heroBgColor, service.heroTextColor);
 
 const proofPointImage = toImage(service.proofPointImage, { box: IMAGE_BOXES.proofPoint });
 
@@ -102,43 +103,35 @@ const H2 = 'font-lora text-h2 leading-[1.25] font-medium tracking-[-0.42px]';
 <Page seo={seo} siteSettings={siteSettings} breadcrumb={breadcrumb} ogType={ogTypeFor('edtechMarketingService')} navVariant="white">
   <!-- HERO -->
   <section
-    class="section section--hero-marketing relative mt-page-offset overflow-hidden pt-[clamp(6rem,8.3304rem_-_2.5893vw,7.8125rem)] pb-[clamp(7.8125rem,11.8304rem_-_4.4643vw,10.9375rem)]"
+    class:list={[
+      'section section--hero-marketing relative mt-page-offset overflow-hidden pt-[clamp(6rem,8.3304rem_-_2.5893vw,7.8125rem)] pb-[clamp(7.8125rem,11.8304rem_-_4.4643vw,10.9375rem)]',
+      heroSurface.bg,
+    ]}
   >
-    <div class="hero-marketing-bg absolute inset-0 z-0 flex items-center justify-center bg-gray">
-      {
-        heroImage && (
-          <img
-            {...imgAttrs(heroImage)}
-            width={heroImageSize?.width}
-            height={heroImageSize?.height}
-            class="size-full object-cover"
-          />
-        )
-      }
-    </div>
-
-    {/* Velo oscuro sobre la imagen (mismo `bg-black/50` que el hero de Home): el copy
-        del hero es blanco. Va siempre, también sobre el placeholder gris, para que el
-        texto blanco nunca quede sobre fondo claro. */}
-    <div class="hero-marketing-overlay absolute inset-0 z-0 bg-black/50" aria-hidden="true"></div>
-
     <div
       class:list={[CONTAINER, 'hero-marketing-container relative z-[1] gap-[clamp(1.2038rem,1.0127rem_+_0.9554vw,1.8725rem)]']}
     >
       <div class="hero-marketing-text flex max-w-[50%] flex-col gap-xs max-md:max-w-full">
         {
           service.iconId && (
-            <div class="hero-marketing-icon mb-xs size-[clamp(3.2119rem,2.7021rem_+_2.5491vw,4.9962rem)] text-white [&_svg]:size-full">
+            <div
+              class:list={[
+                'hero-marketing-icon mb-xs size-[clamp(3.2119rem,2.7021rem_+_2.5491vw,4.9962rem)] [&_svg]:size-full',
+                heroSurface.text,
+              ]}
+            >
               <ServiceIcon iconId={service.iconId} />
             </div>
           )
         }
-        <h1 class="font-lora text-h1 leading-[1.25] font-medium tracking-[-0.48px] text-white">{service.title}</h1>
-        {service.description && <p class:list={[BODY, 'max-w-[90%] text-white']}>{service.description}</p>}
+        <h1 class:list={['font-lora text-h1 leading-[1.25] font-medium tracking-[-0.48px]', heroSurface.text]}>
+          {service.title}
+        </h1>
+        {service.description && <p class:list={[BODY, 'max-w-[90%]', heroSurface.text]}>{service.description}</p>}
       </div>
 
       <div class="hero-home-cta mr-auto flex flex-col items-center gap-xs">
-        <Button href="/contact" variant="whiteOnDark">Book a strategy session</Button>
+        <Button href="/contact" variant={heroSurface.button}>Book a strategy session</Button>
       </div>
     </div>
   </section>

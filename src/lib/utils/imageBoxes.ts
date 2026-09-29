@@ -125,12 +125,6 @@ export const IMAGE_BOXES = {
     return { width, height: width };
   }) as ImageBox,
 
-  /** `PracticesCard`: 3 columnas del container; en mobile, carrusel de 18.75 × 23.75rem. */
-  practiceCard: ((viewport) =>
-    viewport <= MOBILE_MAX
-      ? { width: 300, height: 380 }
-      : { width: (containerWidth(viewport) - 60) / 3, height: fluid(380, 560)(viewport) }) as ImageBox,
-
   /** `ResourceCard`: 3 columnas del container (gap-x de hasta 0.8125rem), 18.75rem de alto. */
   resourceCard: ((viewport) => ({
     width: viewport <= MOBILE_MAX ? containerWidth(viewport) : (containerWidth(viewport) - 26) / 3,

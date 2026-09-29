@@ -3,14 +3,12 @@
  * Practices Card — 27zero
  * Portado 1:1 de `/components/practices-card` del repo vanilla. Sin JS: hover CSS puro.
  *
- * El fondo (`.practices-card-bg`) es la `cardImage` del documento; sin imagen cargada
- * cae al placeholder `[image]` del vanilla, que es el estado en que se entregó el spec.
- *
- * Dos tonos según haya imagen, resueltos acá y no por prop: la imagen ES la condición.
- *   - Sin imagen: contenido negro sobre el gris del placeholder (el diseño del vanilla).
- *   - Con imagen: overlay `--color-black` al 50% entre la imagen y el contenido, y todo
- *     el contenido en `--color-white` — texto, CTA, flecha e ícono. Sin el overlay, el
- *     texto oscuro no tiene contraste garantizado sobre una foto real.
+ * Fondo y tono (ronda 3 de feedback): la card ya no tiene imagen ni overlay. El fondo
+ * es `bgColor` y TODO el contenido —texto, CTA, flecha e ícono— sigue a `textColor`,
+ * los dos crudos de Sanity y resueltos por `surface()` (`utils/palette`), con fallback
+ * dark / light. No se valida contraste: la combinación es decisión del editor.
+ *   - Texto `light`: contenido blanco (el tono que antes daba la imagen).
+ *   - Texto `dark`: contenido negro (el tono del placeholder del vanilla).
  *
  * El ícono es intercambiable (así está documentado en design-system-components.md):
  * va por `<slot name="icon">`, con el ícono de 3 rombos del vanilla como fallback. Los
@@ -31,8 +29,7 @@
  *
  * Props genéricas, sin acoplar al schema de Sanity (Etapa 5).
  */
-import { imgAttrs } from '../../lib/sanity/image';
-import type { ImageData } from '../../types/ui';
+import { surface } from '../../lib/utils/palette';
 
 interface Props {
   href: string;
@@ -40,22 +37,24 @@ interface Props {
   name?: string;
   body?: string;
   ctaLabel?: string;
-  image?: ImageData;
+  /** Valor crudo de `bgColor`. Vacío o desconocido → dark. */
+  bgColor?: string | null;
+  /** Valor crudo de `textColor`. Vacío o desconocido → light. */
+  textColor?: string | null;
 }
 
-const { href, title, name, body, ctaLabel, image } = Astro.props;
+const { href, title, name, body, ctaLabel, bgColor, textColor } = Astro.props;
 
-const hasImage = Boolean(image);
-
-const TEXT_COLOR = hasImage ? 'text-white' : 'text-black';
+const { bg: BG_COLOR, text: TEXT_COLOR, tone } = surface(bgColor, textColor);
+const isLightText = tone === 'light';
 
 const TEXT_SM = 'font-inter text-body-sm leading-[1.6] tracking-normal';
 
-const ICON_COLOR = hasImage ? '[&_path]:fill-white' : '';
+const ICON_COLOR = isLightText ? '[&_path]:fill-white' : '';
 
 /* Borde y flecha del color del texto; en hover/foco se rellena y la flecha toma el
    color opuesto. */
-const ARROW_COLORS = hasImage
+const ARROW_COLORS = isLightText
   ? 'border-white text-white group-hover/card:bg-white group-hover/card:text-black group-focus-visible/card:bg-white group-focus-visible/card:text-black'
   : 'border-black text-black group-hover/card:bg-black group-hover/card:text-white group-focus-visible/card:bg-black group-focus-visible/card:text-white';
 ---
@@ -63,27 +62,11 @@ const ARROW_COLORS = hasImage
 <a
   href={href}
   class:list={[
-    'practices-card group/card relative flex w-full cursor-pointer flex-col justify-between gap-[4.5rem] overflow-hidden rounded-card bg-gray px-[clamp(1.0463rem,0.8802rem_+_0.8304vw,1.6275rem)] py-[clamp(1.6087rem,1.3534rem_+_1.2768vw,2.5025rem)] no-underline',
+    'practices-card group/card relative flex w-full cursor-pointer flex-col justify-between gap-[4.5rem] overflow-hidden rounded-card px-[clamp(1.0463rem,0.8802rem_+_0.8304vw,1.6275rem)] py-[clamp(1.6087rem,1.3534rem_+_1.2768vw,2.5025rem)] no-underline',
+    BG_COLOR,
     TEXT_COLOR,
   ]}
 >
-  {/* Fondo de la card: `cardImage` del CMS con su overlay y, sin ella, el placeholder
-      de wireframe del vanilla (`.practices-card-bg span`, "[image]" sobre gris al 40%). */}
-  <div class="practices-card-bg absolute inset-0 z-0 flex items-center justify-center bg-gray">
-    {
-      image ? (
-        <>
-          <img {...imgAttrs(image)} class="size-full object-cover" />
-          <span class="practices-card-overlay absolute inset-0 bg-black/50" aria-hidden="true" />
-        </>
-      ) : (
-        <span class="font-inter text-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] font-semibold tracking-[1px] text-black uppercase opacity-40">
-          [image]
-        </span>
-      )
-    }
-  </div>
-
   <div
     class="practices-card-block practices-card-block--intro relative z-[1] flex flex-col gap-[clamp(2.4131rem,2.0301rem_+_1.9152vw,3.7538rem)]"
   >

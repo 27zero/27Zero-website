@@ -31,8 +31,8 @@ export interface SanitySlug {
  * declara.
  *
  * `alt` queda opcional aunque el schema lo marque requerido: la validación del Studio
- * no impide publicar un asset viejo sin él (ej. `heroImage` de New Product Launch,
- * cargado antes de que el campo existiera). `toImage()` no renderiza una imagen sin
+ * no impide publicar un asset viejo sin él (pasó con la ex `heroImage` de la práctica
+ * New Product Launch, cargada antes de que el campo existiera). `toImage()` no renderiza una imagen sin
  * `alt` (CLAUDE.md §8.1).
  */
 export interface SanityImage {
@@ -260,10 +260,21 @@ export interface Client extends SanityDocument {
 
 /**
  * Paleta cerrada de fondos y textos de sección (`schemaTypes/lib/paletteColor.ts` en el
- * Studio). Se guarda el nombre del token, nunca el hex: mapea a `var(--color-<valor>)`
- * de `global.css`.
+ * Studio). Se guarda un nombre, nunca el hex; el mapeo a tokens de `global.css` es
+ * explícito en `paletteSurface()` (`utils/color`). Ronda 3: `black` → `dark` (#101010,
+ * que en `global.css` es `--color-black`).
  */
-export type PaletteColor = 'indigo' | 'purple' | 'black' | 'white';
+export type PaletteColor = 'indigo' | 'purple' | 'dark' | 'white';
+
+/**
+ * Fondos de heroes y de la card de Practice (`schemaTypes/lib/palette.ts`, ronda 3).
+ * Otra lista que `PaletteColor`: tiene `light` (no `white`) y suma `black` (#000),
+ * `blue` y `yellow`. El mapeo a clases vive en `utils/palette`. Vacío → `dark`.
+ */
+export type BgColor = 'dark' | 'light' | 'black' | 'purple' | 'indigo' | 'blue' | 'yellow';
+
+/** Color del contenido sobre un `BgColor`. Vacío → `light`. */
+export type TextColor = 'light' | 'dark';
 
 /**
  * Altura de las imágenes de una sección del Case Study. Los valores rem/vh de
@@ -418,8 +429,13 @@ export interface Resource extends SanityDocument {
   author: SanityReference | Author;
   /** Imagen de la card en el listado (ex `featuredImage`, renombrada en Etapa 5). */
   cardThumbnail?: SanityImage;
-  /** Imagen del hero de la interna — NO se usa en el listado. */
+  /**
+   * Imagen migrada de Webflow. Desde la ronda 3 NO se renderiza (el hero es de color),
+   * pero el campo sigue en el schema con datos: solo alimenta la imagen del Article.
+   */
   heroBanner?: SanityImage;
+  heroBgColor?: BgColor;
+  heroTextColor?: TextColor;
   body?: PortableTextBlock[];
   /** Bloque de cierre debajo del body. Mismo Portable Text que `body`. */
   contentCta?: PortableTextBlock[];
@@ -512,8 +528,10 @@ export interface EdtechMarketingPractice extends SanityDocument {
   shortDescription: string;
   /** Texto del link de la card. Vacío → "Explore the practice". */
   cardCtaLabel?: string;
-  /** Fondo de la card de la práctica en el índice de EdTech Marketing (800×600). */
-  cardImage?: SanityImage;
+  /** Fondo de la card Y del hero de la interna (ronda 3: reemplaza a `cardImage`/`heroImage`). */
+  bgColor?: BgColor;
+  /** Texto, flecha, ícono y botón de la card y del hero. */
+  textColor?: TextColor;
   order?: number;
   /**
    * Menú "What's on the menu?" de la interna, curado a mano: el orden del array ES el
@@ -531,7 +549,6 @@ export interface EdtechMarketingPractice extends SanityDocument {
   /** H1 real de la interna — el nombre corto, no el `title` de la card. */
   heroHeadline?: string;
   heroText?: string;
-  heroImage?: SanityImage;
 
   // Fieldset `clients`
   clientSectionTitle?: string;
@@ -563,8 +580,9 @@ export interface EdtechMarketingService extends SanityDocument {
   category: ServiceCategoryId;
   iconId?: ServiceIconId;
   description?: string;
-  /** Fondo del hero de la interna (Conflicto 6 del feedback Practices). */
-  heroImage?: SanityImage;
+  /** Hero de la interna (ronda 3: reemplaza a `heroImage`). */
+  heroBgColor?: BgColor;
+  heroTextColor?: TextColor;
 
   // Fieldset `intro`
   introTitle?: string;
@@ -691,7 +709,8 @@ export interface Settings extends SanityDocument {
 
   // About
   aboutSeo?: Seo;
-  aboutHero?: { headline?: string; text?: string; image?: SanityImage };
+  /** Con `image` (y `alt`) el hero es solo imagen; sin ella, color. Mismo shape que `agencyHero`. */
+  aboutHero?: { headline?: string; text?: string; image?: SanityImage; bgColor?: BgColor; textColor?: TextColor };
   aboutDna?: { headline?: string; text?: string };
   aboutProofPoint?: { title?: string; text?: string; image?: SanityImage };
   aboutTeam?: { headline?: string; text?: string };
@@ -746,7 +765,10 @@ export interface Settings extends SanityDocument {
   agencyHero?: {
     headline?: string;
     text?: string;
+    /** Con asset y `alt` el hero es solo imagen: `bgColor`/`textColor` no aplican. */
     image?: SanityImage;
+    bgColor?: BgColor;
+    textColor?: TextColor;
     /** Si está vacío, el botón del hero no se renderiza. */
     ctaLink?: string;
     ctaCaption?: string;
