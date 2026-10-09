@@ -44,6 +44,11 @@ export interface ArticleInput {
    * escribió las señales de autoridad del contenido.
    */
   aboutPersonName?: string;
+  /**
+   * Texto plano del artículo, ya convertido con `toPlainText()` de
+   * `utils/portableText`. Opcional en schema.org; si llega vacío, `compact()` lo omite.
+   */
+  articleBody?: string;
 }
 
 export interface JsonLdInput {
@@ -139,6 +144,7 @@ export function generateJsonLd({
         headline: article.headline,
         datePublished: article.datePublished,
         image: article.image,
+        articleBody: article.articleBody,
         author: article.authorName
           ? authorIsOrganization
             ? { '@id': organizationId }

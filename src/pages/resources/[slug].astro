@@ -23,7 +23,7 @@ import { getSeoSettings } from '../../lib/sanity/settings';
 import type { ArticleInput } from '../../lib/seo/generateJsonLd';
 import { ogTypeFor } from '../../lib/seo/ogType';
 import { ogImageUrl, resolveSeo } from '../../lib/seo/resolveSeo';
-import { getHeadings } from '../../lib/utils/portableText';
+import { getHeadings, toPlainText } from '../../lib/utils/portableText';
 import { detailTrail } from '../../lib/utils/breadcrumbs';
 import { surface } from '../../lib/utils/palette';
 import { toStaticPaths } from '../../lib/utils/routes';
@@ -72,6 +72,9 @@ const article: ArticleInput = {
      habiendo una disponible. */
   image: ogImageUrl(resource.heroBanner, resource.cardThumbnail),
   authorName: resource.author?.name,
+  /* Mismo orden que se ve en la página: `description` va como primer párrafo del
+     artículo y después el `body`. */
+  articleBody: [resource.description?.trim(), toPlainText(resource.body)].filter(Boolean).join('\n\n'),
 };
 
 /* Fuente única del breadcrumb: alimenta el `BreadcrumbList` del JSON-LD y,

@@ -51,6 +51,23 @@ export function getHeadings(value: unknown, styles: string[] = ['h2']): { id: st
     .filter((heading) => heading.id !== '' && heading.label !== '');
 }
 
+/**
+ * Texto plano de todo un Portable Text, para el `articleBody` del JSON-LD.
+ *
+ * Solo bloques de texto (`_type: 'block'`): imágenes y otros tipos custom no tienen
+ * texto que aportar. Párrafos separados por línea en blanco. Como `blockText()`, es
+ * para datos, nunca para renderizar.
+ */
+export function toPlainText(value: unknown): string {
+  if (!Array.isArray(value)) return '';
+  return value
+    .filter((block: TextBlock) => block?._type === 'block')
+    .map(blockText)
+    .map((text) => text.trim())
+    .filter(Boolean)
+    .join('\n\n');
+}
+
 /** `true` si el campo trae al menos un bloque. Evita renderizar secciones vacías. */
 export function hasContent(value: unknown): boolean {
   return Array.isArray(value) && value.length > 0;
