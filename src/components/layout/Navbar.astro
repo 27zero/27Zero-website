@@ -12,6 +12,7 @@
  * global de 768px — ver design-system-components.md § Navbar > Mobile.
  */
 import Button from '../ui/Button.astro';
+import { SHOW_NAV_WORK_DROPDOWN } from '../../lib/utils/displayFlags';
 
 interface Props {
   /** Variante inicial al tope de la página. Con scroll siempre pasa a indigo. */
@@ -25,7 +26,10 @@ const { variant = 'white' } = Astro.props;
    `group/nav`. Acá solo quedan clases de layout y el tamaño fijo del modal. */
 const BTN_NAV_MOBILE = 'self-start shrink-0';
 
+/* Sin el dropdown de Work (feedback 2026-10-09), "Work" entra como un link más, primero
+   de la lista: desktop y menú mobile lo pintan con el mismo estilo que el resto. */
 const NAV_LINKS = [
+  ...(SHOW_NAV_WORK_DROPDOWN ? [] : [{ href: '/work', label: 'Work' }]),
   { href: '/edtech-marketing', label: 'Edtech Marketing' },
   { href: '/edtech-mentor', label: 'The EdTech Mentor' },
   { href: '/resources', label: 'Resources' },
@@ -62,41 +66,45 @@ const LINK_BASE =
     </a>
 
     <nav class="nav-links flex items-center gap-gap max-nav:hidden">
-      <div class="nav-dropdown group/dd relative">
-        <button
-          class="nav-dropdown-toggle m-0 flex cursor-pointer items-center gap-[clamp(0.1969rem,0.1656rem_+_0.1562vw,0.3062rem)] border-0 bg-transparent p-0 font-inter text-button leading-[1.25] font-medium text-current transition-opacity duration-200 hover:opacity-70"
-          aria-expanded="false"
-        >
-          Work
-          <svg
-            class="nav-dropdown-chevron size-[clamp(0.4219rem,0.3549rem_+_0.3348vw,0.6563rem)] shrink-0 transition-transform duration-200 ease-in-out group-[.is-open]/dd:rotate-180"
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            aria-hidden="true"
-          >
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
-        </button>
-        <div
-          class="nav-dropdown-content pointer-events-none absolute top-full left-0 z-10 mt-[clamp(0.4781rem,0.4022rem_+_0.3795vw,0.7438rem)] flex min-w-[clamp(5.625rem,4.7321rem_+_4.4643vw,8.75rem)] -translate-y-[clamp(0.1969rem,0.1656rem_+_0.1562vw,0.3062rem)] flex-col gap-xs rounded-[clamp(0.3375rem,0.2839rem_+_0.2679vw,0.525rem)] border border-[#0000001a] bg-white p-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] opacity-0 shadow-[0_0.4375rem_1.3125rem_rgba(16,16,16,0.08)] transition-[opacity,translate] duration-200 ease-in-out group-[.is-open]/dd:pointer-events-auto group-[.is-open]/dd:translate-y-0 group-[.is-open]/dd:opacity-100"
-        >
-          <a
-            href="/work"
-            class="nav-dropdown-link p-[clamp(0.1969rem,0.1656rem_+_0.1562vw,0.3062rem)] text-[clamp(0.5906rem,0.4969rem_+_0.4688vw,0.9188rem)] font-medium text-black no-underline transition-opacity duration-200 hover:opacity-70"
-            >by projects</a
-          >
-          <div class="nav-dropdown-divider h-px bg-[#0000001a]"></div>
-          <a
-            href="/clientes"
-            class="nav-dropdown-link p-[clamp(0.1969rem,0.1656rem_+_0.1562vw,0.3062rem)] text-[clamp(0.5906rem,0.4969rem_+_0.4688vw,0.9188rem)] font-medium text-black no-underline transition-opacity duration-200 hover:opacity-70"
-            >by clients</a
-          >
-        </div>
-      </div>
+      {
+        SHOW_NAV_WORK_DROPDOWN && (
+          <div class="nav-dropdown group/dd relative">
+            <button
+              class="nav-dropdown-toggle m-0 flex cursor-pointer items-center gap-[clamp(0.1969rem,0.1656rem_+_0.1562vw,0.3062rem)] border-0 bg-transparent p-0 font-inter text-button leading-[1.25] font-medium text-current transition-opacity duration-200 hover:opacity-70"
+              aria-expanded="false"
+            >
+              Work
+              <svg
+                class="nav-dropdown-chevron size-[clamp(0.4219rem,0.3549rem_+_0.3348vw,0.6563rem)] shrink-0 transition-transform duration-200 ease-in-out group-[.is-open]/dd:rotate-180"
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            <div
+              class="nav-dropdown-content pointer-events-none absolute top-full left-0 z-10 mt-[clamp(0.4781rem,0.4022rem_+_0.3795vw,0.7438rem)] flex min-w-[clamp(5.625rem,4.7321rem_+_4.4643vw,8.75rem)] -translate-y-[clamp(0.1969rem,0.1656rem_+_0.1562vw,0.3062rem)] flex-col gap-xs rounded-[clamp(0.3375rem,0.2839rem_+_0.2679vw,0.525rem)] border border-[#0000001a] bg-white p-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] opacity-0 shadow-[0_0.4375rem_1.3125rem_rgba(16,16,16,0.08)] transition-[opacity,translate] duration-200 ease-in-out group-[.is-open]/dd:pointer-events-auto group-[.is-open]/dd:translate-y-0 group-[.is-open]/dd:opacity-100"
+            >
+              <a
+                href="/work"
+                class="nav-dropdown-link p-[clamp(0.1969rem,0.1656rem_+_0.1562vw,0.3062rem)] text-[clamp(0.5906rem,0.4969rem_+_0.4688vw,0.9188rem)] font-medium text-black no-underline transition-opacity duration-200 hover:opacity-70"
+                >by projects</a
+              >
+              <div class="nav-dropdown-divider h-px bg-[#0000001a]"></div>
+              <a
+                href="/clientes"
+                class="nav-dropdown-link p-[clamp(0.1969rem,0.1656rem_+_0.1562vw,0.3062rem)] text-[clamp(0.5906rem,0.4969rem_+_0.4688vw,0.9188rem)] font-medium text-black no-underline transition-opacity duration-200 hover:opacity-70"
+                >by clients</a
+              >
+            </div>
+          </div>
+        )
+      }
 
       {NAV_LINKS.map((link) => <a href={link.href} class={LINK_BASE}>{link.label}</a>)}
     </nav>
@@ -156,48 +164,54 @@ const LINK_BASE =
     </div>
 
     <nav class="nav-mobile-links flex flex-col">
-      <div class="nav-mobile-group group/mgrp border-t-0 pt-0 pb-5">
-        <button
-          class="nav-mobile-group-toggle m-0 flex w-full cursor-pointer items-center gap-xs border-0 bg-transparent p-0 text-left font-inter text-[1.5rem] leading-[1.6] font-medium text-black transition-opacity duration-200 hover:opacity-70"
-          aria-expanded="false"
-        >
-          Work
-          <svg
-            class="nav-mobile-group-chevron size-[clamp(0.3094rem,0.2603rem_+_0.2455vw,0.4813rem)] shrink-0 transition-transform duration-200 ease-in-out group-[.is-open]/mgrp:rotate-180"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            aria-hidden="true"
-          >
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
-        </button>
-        <div class="nav-mobile-group-content h-0 overflow-hidden transition-[height] duration-300 ease-in-out">
-          <div
-            class="nav-mobile-group-inner flex flex-col gap-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] pt-[clamp(0.7031rem,0.5915rem_+_0.558vw,1.0938rem)]"
-          >
-            <a
-              href="/work"
-              class="nav-mobile-sublink block pl-xs text-[0.875rem] font-normal text-black no-underline transition-opacity duration-200 hover:opacity-70"
-              >by projects</a
+      {
+        SHOW_NAV_WORK_DROPDOWN && (
+          <div class="nav-mobile-group group/mgrp border-t-0 pt-0 pb-5">
+            <button
+              class="nav-mobile-group-toggle m-0 flex w-full cursor-pointer items-center gap-xs border-0 bg-transparent p-0 text-left font-inter text-[1.5rem] leading-[1.6] font-medium text-black transition-opacity duration-200 hover:opacity-70"
+              aria-expanded="false"
             >
-            <a
-              href="/clientes"
-              class="nav-mobile-sublink block pl-xs text-[0.875rem] font-normal text-black no-underline transition-opacity duration-200 hover:opacity-70"
-              >by Clients</a
-            >
+              Work
+              <svg
+                class="nav-mobile-group-chevron size-[clamp(0.3094rem,0.2603rem_+_0.2455vw,0.4813rem)] shrink-0 transition-transform duration-200 ease-in-out group-[.is-open]/mgrp:rotate-180"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            <div class="nav-mobile-group-content h-0 overflow-hidden transition-[height] duration-300 ease-in-out">
+              <div
+                class="nav-mobile-group-inner flex flex-col gap-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] pt-[clamp(0.7031rem,0.5915rem_+_0.558vw,1.0938rem)]"
+              >
+                <a
+                  href="/work"
+                  class="nav-mobile-sublink block pl-xs text-[0.875rem] font-normal text-black no-underline transition-opacity duration-200 hover:opacity-70"
+                  >by projects</a
+                >
+                <a
+                  href="/clientes"
+                  class="nav-mobile-sublink block pl-xs text-[0.875rem] font-normal text-black no-underline transition-opacity duration-200 hover:opacity-70"
+                  >by Clients</a
+                >
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        )
+      }
 
+      {/* `first:` replica el primer ítem del modal (sin borde ni padding arriba) cuando
+          "Work" es un link y no el acordeón. Con el acordeón, ningún link es el primero. */}
       {
         NAV_LINKS.map((link) => (
           <a
             href={link.href}
-            class="nav-mobile-link block border-t border-[#0000001a] py-5 font-inter text-[1.5rem] leading-[1.6] font-medium text-black no-underline transition-opacity duration-200 hover:opacity-70"
+            class="nav-mobile-link block border-t border-[#0000001a] py-5 first:border-t-0 first:pt-0 font-inter text-[1.5rem] leading-[1.6] font-medium text-black no-underline transition-opacity duration-200 hover:opacity-70"
           >
             {link.label}
           </a>
