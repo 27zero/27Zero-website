@@ -226,6 +226,8 @@ const LINK_BASE =
 </header>
 
 <script>
+  import { SHOW_NAV_WORK_DROPDOWN } from '../../lib/utils/displayFlags';
+
   // ============================
   // Navbar — 27zero
   // Cambia a nav--scrolled al pasar 50px de scroll.
@@ -289,36 +291,40 @@ const LINK_BASE =
 
   // ===== "Work" como acordeón inline dentro del modal mobile =====
   // Mismo approach que el componente Dropdown: height 0 -> scrollHeight -> auto.
-  const mobileGroup = document.querySelector<HTMLElement>('.nav-mobile-group');
+  // Detrás de SHOW_NAV_WORK_DROPDOWN: con el flag en false el bundler elimina el bloque
+  // entero, así que el JS del dropdown oculto no llega al cliente.
+  if (SHOW_NAV_WORK_DROPDOWN) {
+    const mobileGroup = document.querySelector<HTMLElement>('.nav-mobile-group');
 
-  if (mobileGroup) {
-    const mobileGroupToggle = mobileGroup.querySelector<HTMLElement>('.nav-mobile-group-toggle');
-    const mobileGroupContent = mobileGroup.querySelector<HTMLElement>('.nav-mobile-group-content');
+    if (mobileGroup) {
+      const mobileGroupToggle = mobileGroup.querySelector<HTMLElement>('.nav-mobile-group-toggle');
+      const mobileGroupContent = mobileGroup.querySelector<HTMLElement>('.nav-mobile-group-content');
 
-    if (mobileGroupToggle && mobileGroupContent) {
-      mobileGroupToggle.addEventListener('click', () => {
-        const isOpen = mobileGroup.classList.contains('is-open');
+      if (mobileGroupToggle && mobileGroupContent) {
+        mobileGroupToggle.addEventListener('click', () => {
+          const isOpen = mobileGroup.classList.contains('is-open');
 
-        if (!isOpen) {
-          mobileGroup.classList.add('is-open');
-          mobileGroupToggle.setAttribute('aria-expanded', 'true');
-          mobileGroupContent.style.height = mobileGroupContent.scrollHeight + 'px';
+          if (!isOpen) {
+            mobileGroup.classList.add('is-open');
+            mobileGroupToggle.setAttribute('aria-expanded', 'true');
+            mobileGroupContent.style.height = mobileGroupContent.scrollHeight + 'px';
 
-          mobileGroupContent.addEventListener('transitionend', function onOpen(e) {
-            if (e.propertyName !== 'height') return;
-            if (mobileGroup.classList.contains('is-open')) {
-              mobileGroupContent.style.height = 'auto';
-            }
-            mobileGroupContent.removeEventListener('transitionend', onOpen);
-          });
-        } else {
-          mobileGroupContent.style.height = mobileGroupContent.scrollHeight + 'px';
-          mobileGroupContent.offsetHeight; // fuerza reflow
-          mobileGroup.classList.remove('is-open');
-          mobileGroupToggle.setAttribute('aria-expanded', 'false');
-          mobileGroupContent.style.height = '0px';
-        }
-      });
+            mobileGroupContent.addEventListener('transitionend', function onOpen(e) {
+              if (e.propertyName !== 'height') return;
+              if (mobileGroup.classList.contains('is-open')) {
+                mobileGroupContent.style.height = 'auto';
+              }
+              mobileGroupContent.removeEventListener('transitionend', onOpen);
+            });
+          } else {
+            mobileGroupContent.style.height = mobileGroupContent.scrollHeight + 'px';
+            mobileGroupContent.offsetHeight; // fuerza reflow
+            mobileGroup.classList.remove('is-open');
+            mobileGroupToggle.setAttribute('aria-expanded', 'false');
+            mobileGroupContent.style.height = '0px';
+          }
+        });
+      }
     }
   }
 
@@ -326,24 +332,28 @@ const LINK_BASE =
   // Dropdown "Work" (desktop) — click para abrir/cerrar, click afuera cierra.
   // ============================
 
-  const navDropdown = document.querySelector<HTMLElement>('.nav-dropdown');
+  // Detrás de SHOW_NAV_WORK_DROPDOWN: con el flag en false el bundler elimina el bloque
+  // entero, así que el JS del dropdown oculto no llega al cliente.
+  if (SHOW_NAV_WORK_DROPDOWN) {
+    const navDropdown = document.querySelector<HTMLElement>('.nav-dropdown');
 
-  if (navDropdown) {
-    const dropdownToggle = navDropdown.querySelector<HTMLElement>('.nav-dropdown-toggle');
+    if (navDropdown) {
+      const dropdownToggle = navDropdown.querySelector<HTMLElement>('.nav-dropdown-toggle');
 
-    if (dropdownToggle) {
-      dropdownToggle.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const isOpen = navDropdown.classList.toggle('is-open');
-        dropdownToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-      });
+      if (dropdownToggle) {
+        dropdownToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isOpen = navDropdown.classList.toggle('is-open');
+          dropdownToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
 
-      document.addEventListener('click', (e) => {
-        if (navDropdown.classList.contains('is-open') && !navDropdown.contains(e.target as Node)) {
-          navDropdown.classList.remove('is-open');
-          dropdownToggle.setAttribute('aria-expanded', 'false');
-        }
-      });
+        document.addEventListener('click', (e) => {
+          if (navDropdown.classList.contains('is-open') && !navDropdown.contains(e.target as Node)) {
+            navDropdown.classList.remove('is-open');
+            dropdownToggle.setAttribute('aria-expanded', 'false');
+          }
+        });
+      }
     }
   }
 </script>
