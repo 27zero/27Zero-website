@@ -58,12 +58,12 @@ export function getHeadings(value: unknown, styles: string[] = ['h2']): { id: st
  * texto que aportar. Párrafos separados por línea en blanco. Como `blockText()`, es
  * para datos, nunca para renderizar.
  */
+/** Texto plano de todo un Portable Text, para `articleBody` del JSON-LD. */
 export function toPlainText(value: unknown): string {
   if (!Array.isArray(value)) return '';
   return value
     .filter((block: TextBlock) => block?._type === 'block')
     .map(blockText)
-    .map((text) => text.trim())
     .filter(Boolean)
     .join('\n\n');
 }
