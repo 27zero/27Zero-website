@@ -148,7 +148,7 @@
 
   /* Tipografía de cards */
   --text-card-eyebrow:  clamp(0.5625rem, 0.4907rem + 0.3589vw, 0.8138rem); /* 0.93em → 9/13px  */
-  --text-card-title:    clamp(1.0625rem, 1.0086rem + 0.2696vw, 1.2512rem); /* 1.43em → 17/20px */
+  --text-card-title:    clamp(0.9375rem, 0.9018rem + 0.1786vw, 1.0625rem); /* 15/17px (feedback 2026-10-09: antes 17/20px) */
   --text-card-client:   clamp(0.75rem, 0.7318rem + 0.0911vw, 0.8138rem);   /* 0.93em → 12/13px */
   --text-card-headline: clamp(0.8125rem, 0.7946rem + 0.0893vw, 0.875rem);  /* 1em    → 13/14px */
   --text-card-name:     clamp(1.0062rem, 1.1589rem - 0.1696vw, 1.125rem);  /* 1.15em → 18/16px (mobile mayor) */
