@@ -24,10 +24,9 @@ import EdtechMentorCard from '../components/ui/EdtechMentorCard.astro';
 import FeaturedCard from '../components/ui/FeaturedCard.astro';
 import PortableText from '../components/ui/PortableText.astro';
 import WorkCard from '../components/ui/WorkCard.astro';
-import { featuredWorksOf, toFeaturedWorkCard, toMentorCard, toWorkCard } from '../lib/sanity/cards';
+import { featuredWorksOf, testimonialAvatar, toFeaturedWorkCard, toMentorCard, toWorkCard } from '../lib/sanity/cards';
 import type { FeaturedWorkCategoryProjection, MentorCardProjection, TestimonialProjection } from '../lib/sanity/cards';
 import { sanityClient } from '../lib/sanity/client';
-import { toFixedImage } from '../lib/sanity/image';
 import { IMAGE_BOXES } from '../lib/utils/imageBoxes';
 import { homeQuery } from '../lib/sanity/queries';
 import { SHOW_HOME_SHAPES_SLIDER } from '../lib/utils/displayFlags';
@@ -57,13 +56,13 @@ const FEATURED_MENTOR_POST: MentorCardData | null = featuredMentor
 
 const MENTOR_POSTS: MentorCardData[] = mentorPosts.map((mentor) => toMentorCard(mentor));
 
-/* `avatarPhoto` se pasa como `{ src, alt }` o `null`: sin foto, `TestimonialsSlider`
-   deriva las iniciales del nombre, igual que el placeholder del vanilla. */
+/* `avatarPhoto` se pasa como `{ src, alt }` o `null` (`testimonialAvatar`): sin foto,
+   `TestimonialsSlider` deriva las iniciales del nombre, igual que el placeholder del vanilla. */
 const TESTIMONIALS = testimonials.map((testimonial) => ({
   quote: testimonial.quote,
   authorName: testimonial.authorName ?? '',
   authorRole: testimonial.authorRole,
-  avatarPhoto: toFixedImage(testimonial.avatarPhoto, { width: 40, height: 40 }) ?? null,
+  avatarPhoto: testimonialAvatar(testimonial),
 }));
 
 /* `.container` del design system global: 1440px, centrado, columna, padding-x fluido.

@@ -27,9 +27,9 @@ import Page from '../../layouts/Page.astro';
 import CaseStudyBlock from '../../components/sections/CaseStudyBlock.astro';
 import FinalCta from '../../components/sections/FinalCta.astro';
 import TestimonialsSlider from '../../components/sections/TestimonialsSlider.astro';
-import { practiceNames, workCardTitle, type TestimonialProjection } from '../../lib/sanity/cards';
+import { practiceNames, testimonialAvatar, workCardTitle, type TestimonialProjection } from '../../lib/sanity/cards';
 import { sanityClient } from '../../lib/sanity/client';
-import { imgAttrs, toFixedImage, toImage } from '../../lib/sanity/image';
+import { imgAttrs, toImage } from '../../lib/sanity/image';
 import { workDetailQuery } from '../../lib/sanity/queries';
 import { getSeoSettings } from '../../lib/sanity/settings';
 import { ogTypeFor } from '../../lib/seo/ogType';
@@ -259,7 +259,7 @@ const testimonials = (work.testimonials ?? [])
     quote: testimonial.quote,
     authorName: testimonial.authorName!,
     authorRole: testimonial.authorRole,
-    avatarPhoto: toFixedImage(testimonial.avatarPhoto, { width: 40, height: 40 }),
+    avatarPhoto: testimonialAvatar(testimonial),
   }));
 
 /* ───────────────────────────── Imágenes ─────────────────────────────── */

@@ -18,7 +18,7 @@
  * saca un campo de un fragmento, se actualiza el tipo acá, mismo ciclo.
  */
 import type { SanityImage } from '../../types/sanity';
-import type { FeaturedCardData, MentorCardData, ResourceCardData, WorkCardData } from '../../types/ui';
+import type { FeaturedCardData, ImageData, MentorCardData, ResourceCardData, WorkCardData } from '../../types/ui';
 import { formatDate, getInitials } from '../utils/format';
 import { IMAGE_BOXES } from '../utils/imageBoxes';
 import { mentorUrl, resourceUrl, workUrl } from '../utils/routes';
@@ -120,6 +120,8 @@ export interface ResourceProjection {
  */
 const CLIENT_ICON_SIZE = 30;
 const AVATAR_SIZE = 50;
+/** Avatar de `TestimonialsSlider`: el círculo renderiza hasta 40px. */
+const TESTIMONIAL_AVATAR_SIZE = 40;
 
 /* ──────────────────────────────── Mappers ─────────────────────────────── */
 
@@ -252,6 +254,29 @@ export function toFeaturedWorkCard(work: WorkCardProjection): FeaturedCardData {
     avatarInitials: avatar ? undefined : getInitials(work.clientName),
     image: toImage(work.thumbnail, { box: IMAGE_BOXES.featuredHalf }),
   };
+}
+
+/**
+ * `testimonial.avatarPhoto` → avatar de `TestimonialsSlider`, para todas sus instancias
+ * (Home y la interna de Work).
+ *
+ * El schema de `avatarPhoto` no declara campo `alt` (feedback 2026-10-09, ronda 2): el
+ * editor no tiene dónde cargarlo y `toImage()` descarta toda imagen sin `alt` (CLAUDE.md
+ * §8.1), así que la foto nunca se veía. Mismo criterio que el logo del cliente en la
+ * interna de Work: el `alt` cargado manda; si no hay, se deriva del nombre de la persona,
+ * que es lo que muestra la foto. Sin foto → `null`, y el slider muestra las iniciales.
+ */
+export function testimonialAvatar(testimonial: TestimonialProjection): ImageData | null {
+  const photo = testimonial.avatarPhoto;
+  if (!photo) return null;
+
+  const alt = photo.alt?.trim() || testimonial.authorName?.trim();
+  return (
+    toFixedImage(alt ? { ...photo, alt } : photo, {
+      width: TESTIMONIAL_AVATAR_SIZE,
+      height: TESTIMONIAL_AVATAR_SIZE,
+    }) ?? null
+  );
 }
 
 /**
