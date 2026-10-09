@@ -22,8 +22,8 @@
  * título de la card es `headline` (con `title` de respaldo, lo resuelve `toWorkCard`).
  * `clientLogo`, `excerpt` e `isFeatured` se eliminaron del schema.
  *
- * Feedback 2026-10-09: el título de la card pasa a ser `subtitle` (con `headline` de
- * respaldo) y el eyebrow, las practices del proyecto (`projectType[]->practiceName`,
+ * Feedback 2026-10-09: el título de la card pasa a ser solo `subtitle` (vacío → sin
+ * título; `headline` se sigue trayendo para la featured card de Home) y el eyebrow, las practices del proyecto (`projectType[]->practiceName`,
  * nunca `title`). La categoría se sigue trayendo: es el `data-category` del filtro de
  * Work, aunque la card ya no la muestre.
  */

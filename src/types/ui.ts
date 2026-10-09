@@ -34,7 +34,8 @@ export interface ImageData {
 /** Props de `WorkCard`, ya resueltas contra Sanity. */
 export interface WorkCardData {
   href: string;
-  title: string;
+  /** `work.subtitle`. Vacío → la card no muestra título. */
+  title?: string;
   eyebrow?: string;
   /** Slug de la `workCategory`: `data-category` de la card, lo lee el filtro de Work. */
   category?: string;

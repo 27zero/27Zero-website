@@ -24,8 +24,8 @@ import type { ImageData } from '../../types/ui';
 
 interface Props {
   href: string;
-  /** `subtitle`, con `headline` de respaldo — ver `toWorkCard`. */
-  title: string;
+  /** `subtitle`, sin respaldo: vacío → no se renderiza el `h3` — ver `toWorkCard`. */
+  title?: string;
   /** Practices del proyecto separadas por ", ". */
   eyebrow?: string;
   /** Slug de la categoría: `data-category`, lo lee el filtro de pills de Work. */
@@ -81,9 +81,13 @@ const IMAGE_HEIGHT = {
         </span>
       )
     }
-    <h3 class="card-work-title m-0 font-inter text-card-title leading-[1.4] font-medium tracking-normal text-black">
-      {title}
-    </h3>
+    {
+      title && (
+        <h3 class="card-work-title m-0 font-inter text-card-title leading-[1.4] font-medium tracking-normal text-black">
+          {title}
+        </h3>
+      )
+    }
     {
       (clientIcon || clientInitials || clientName) && (
         <div class="card-work-client flex items-center gap-xs">

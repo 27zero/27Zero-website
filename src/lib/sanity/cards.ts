@@ -33,7 +33,7 @@ export interface WorkCardProjection {
   slug: string;
   /** Título público (ronda 2). Requerido en el schema, pero hay documentos sin cargar. */
   headline?: string;
-  /** Título de la card desde el feedback 2026-10-09; vacío → `headline`. */
+  /** Título de la card desde el feedback 2026-10-09; vacío → la card va sin título. */
   subtitle?: string | null;
   /** `projectType[]->practiceName`. Referencias sin publicar llegan `null`. */
   practices?: (string | null)[] | null;
@@ -129,8 +129,8 @@ const TESTIMONIAL_AVATAR_SIZE = 40;
  * `work` → props de `WorkCard`.
  *
  * Feedback 2026-10-09, igual en todas las páginas (Home, About, Work, Clientes):
- *   - `title` es `subtitle`, con `headline` (y después `title`) de respaldo mientras el
- *     editor no lo cargue en todos los proyectos.
+ *   - `title` es solo `subtitle`, sin respaldo: vacío → la card no muestra título (no
+ *     cae a `headline`, que es el título de la interna y de la featured card).
  *   - `eyebrow` son las practices separadas por ", ". Antes era la categoría (o el
  *     cliente en Clientes) y se elegía por página; ahora es dato del documento. Sin
  *     practices, la card no muestra eyebrow.
@@ -142,7 +142,7 @@ export function toWorkCard(work: WorkCardProjection, options: { box?: ImageBox }
 
   return {
     href: workUrl(work.slug),
-    title: work.subtitle?.trim() || workCardTitle(work),
+    title: work.subtitle?.trim() || undefined,
     eyebrow: practiceNames(work.practices).join(', ') || undefined,
     category: work.categorySlug,
     image: toImage(work.thumbnail, { box: options.box ?? IMAGE_BOXES.card }),
