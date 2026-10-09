@@ -32,6 +32,11 @@
  *     en horizontal. Nativo y no un listbox propio: accesible y usable con teclado y
  *     lector de pantalla sin JS extra, y en mobile abre el picker del sistema.
  *
+ * `filterGridId` (feedback 2026-10-09, Work sin sliders): con el `id` de una grilla, los
+ * pills dejan de scrollear y filtran sus cards por `data-category` — "All" las muestra
+ * todas. Sin la prop (Clientes, EdTech Mentor, Work con sliders) el comportamiento es
+ * el de siempre.
+ *
  * Sin librería: la lógica va en el `<script>` de este `.astro`, no en una island
  * (CLAUDE.md §7) — no hay estado de React de por medio.
  *
@@ -68,12 +73,15 @@ interface Props {
   mobileSelect?: boolean;
   /** Clase de `padding-bottom` de la sección. Default: la del vanilla de Work/Clientes. */
   paddingBottom?: string;
+  /** `id` de la grilla a filtrar por `data-category`. Sin él, los pills scrollean. */
+  filterGridId?: string;
 }
 
 const {
   categories,
   leadPill,
   actionPill,
+  filterGridId,
   indent = true,
   mobileSelect = false,
   paddingBottom = 'pb-[clamp(4.0162rem,3.3787rem_+_3.1875vw,6.2475rem)]',
@@ -129,6 +137,7 @@ const CONTAINER_PADDING = indent
           : 'max-md:flex-nowrap max-md:overflow-x-auto max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden',
       ]}
       id="pillsWrap"
+      data-filter-grid={filterGridId}
     >
       {
         leadPill ? (
@@ -223,6 +232,11 @@ const CONTAINER_PADDING = indent
   });
 
   if (pillsWrap) {
+    // Modo filtro: con `data-filter-grid`, los pills muestran/ocultan las cards de esa
+    // grilla por `data-category` en vez de scrollear a un anchor.
+    const filterGridId = pillsWrap.dataset.filterGrid;
+    const filterGrid = filterGridId ? document.getElementById(filterGridId) : null;
+
     pillsWrap.addEventListener('click', (e) => {
       const pill = (e.target as HTMLElement).closest<HTMLElement>('.pill[data-filter]');
       if (!pill) return;
@@ -231,6 +245,14 @@ const CONTAINER_PADDING = indent
       pill.classList.add('pill--active');
 
       const filterId = pill.dataset.filter;
+
+      if (filterGrid) {
+        filterGrid.querySelectorAll<HTMLElement>('[data-category]').forEach((card) => {
+          card.hidden = filterId !== 'all' && card.dataset.category !== filterId;
+        });
+        return;
+      }
+
       if (!filterId || filterId === 'all') return;
 
       const target = document.getElementById(filterId);

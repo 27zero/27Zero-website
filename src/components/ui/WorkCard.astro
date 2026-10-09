@@ -24,9 +24,12 @@ import type { ImageData } from '../../types/ui';
 
 interface Props {
   href: string;
-  /** `headline` (o el `title` interno si todavía no está cargado) — ver `toWorkCard`. */
+  /** `subtitle`, con `headline` de respaldo — ver `toWorkCard`. */
   title: string;
+  /** Practices del proyecto separadas por ", ". */
   eyebrow?: string;
+  /** Slug de la categoría: `data-category`, lo lee el filtro de pills de Work. */
+  category?: string;
   image?: ImageData;
   clientName?: string;
   /** `client.icon`, dentro del círculo. */
@@ -36,7 +39,7 @@ interface Props {
   size?: 'base' | 'tall';
 }
 
-const { href, title, eyebrow, image, clientName, clientIcon, clientInitials, size = 'base' } = Astro.props;
+const { href, title, eyebrow, category, image, clientName, clientIcon, clientInitials, size = 'base' } = Astro.props;
 
 /* `base` es el cuadrado de siempre (`--spacing-card`). `tall` llega a 30rem en
    desktop; en mobile arranca en 20rem, el mismo alto que ya tenía "Los mejores" en
@@ -49,6 +52,7 @@ const IMAGE_HEIGHT = {
 
 <a
   href={href}
+  data-category={category}
   class="card card--work group/card flex w-card shrink-0 cursor-pointer flex-col gap-[clamp(0.8438rem,0.7098rem_+_0.6696vw,1.3125rem)] text-black no-underline"
 >
   <div

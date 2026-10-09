@@ -33,6 +33,10 @@ export interface WorkCardProjection {
   slug: string;
   /** Título público (ronda 2). Requerido en el schema, pero hay documentos sin cargar. */
   headline?: string;
+  /** Título de la card desde el feedback 2026-10-09; vacío → `headline`. */
+  subtitle?: string | null;
+  /** `projectType[]->practiceName`. Referencias sin publicar llegan `null`. */
+  practices?: (string | null)[] | null;
   order?: number;
   thumbnail?: SanityImage;
   clientName?: string;
@@ -122,22 +126,23 @@ const AVATAR_SIZE = 50;
 /**
  * `work` → props de `WorkCard`.
  *
- * `eyebrow` es la categoría en Work/Home y el cliente en Clientes, así que se recibe
- * en `options`: es criterio de la página, no del documento. En el vanilla iba entre
- * corchetes (`[Client Name]`) porque era placeholder — con contenido real el texto va
- * limpio, y el `capitalize` lo resuelve el CSS de la card.
+ * Feedback 2026-10-09, igual en todas las páginas (Home, About, Work, Clientes):
+ *   - `title` es `subtitle`, con `headline` (y después `title`) de respaldo mientras el
+ *     editor no lo cargue en todos los proyectos.
+ *   - `eyebrow` son las practices separadas por ", ". Antes era la categoría (o el
+ *     cliente en Clientes) y se elegía por página; ahora es dato del documento. Sin
+ *     practices, la card no muestra eyebrow.
+ *   - `category` (slug) no se muestra: es el `data-category` del filtro de Work.
  */
-export function toWorkCard(
-  work: WorkCardProjection,
-  options: { eyebrow?: string; box?: ImageBox } = {}
-): WorkCardData {
+export function toWorkCard(work: WorkCardProjection, options: { box?: ImageBox } = {}): WorkCardData {
   /* El ícono va al 70% del círculo (`WorkCard`), sin recorte: se pide con su proporción. */
   const clientIcon = toImage(work.clientIcon, { box: () => ({ width: CLIENT_ICON_SIZE }) });
 
   return {
     href: workUrl(work.slug),
-    title: workCardTitle(work),
-    eyebrow: options.eyebrow ?? work.categoryTitle,
+    title: work.subtitle?.trim() || workCardTitle(work),
+    eyebrow: practiceNames(work.practices).join(', ') || undefined,
+    category: work.categorySlug,
     image: toImage(work.thumbnail, { box: options.box ?? IMAGE_BOXES.card }),
     clientName: work.clientName,
     clientIcon,

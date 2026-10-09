@@ -36,6 +36,8 @@ export interface WorkCardData {
   href: string;
   title: string;
   eyebrow?: string;
+  /** Slug de la `workCategory`: `data-category` de la card, lo lee el filtro de Work. */
+  category?: string;
   image?: ImageData;
   clientName?: string;
   /** `client.icon` — el círculo pequeño de la card. */

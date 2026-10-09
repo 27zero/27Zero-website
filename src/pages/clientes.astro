@@ -42,8 +42,8 @@ const { clients, works, hero } = await sanityClient.fetch<{
 }>(workByClientQuery);
 
 /* Mismo `documentType` y mismos componentes que Work — cambia el criterio de
-   agrupación (cliente en vez de categoría de servicio) y, con él, el eyebrow de cada
-   card: acá lleva el nombre del cliente, no el de la categoría.
+   agrupación (cliente en vez de categoría de servicio). El eyebrow de la card ya no
+   depende de la página: son las practices del proyecto en todas (feedback 2026-10-09).
 
    El `id` del grupo se deriva del nombre porque `client` no tiene campo `slug` en el
    schema; es el `id` del `.category-anchor` y el `data-filter` de su pill.
@@ -55,7 +55,7 @@ const WORK_BY_CLIENT: WorkGroup[] = clients.map((client) => ({
   label: client.name,
   items: works
     .filter((work) => work.clientName === client.name)
-    .map((work) => toWorkCard(work, { eyebrow: client.name })),
+    .map((work) => toWorkCard(work)),
 }));
 
 /* A diferencia de Work, acá TODOS los grupos llevan pill: no existe el bloque

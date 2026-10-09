@@ -45,15 +45,8 @@ const column = (columns: number) => (viewport: number) => {
 /* ──────────────────────────── Case Study ─────────────────────────────── */
 
 /**
- * Imagen en una grilla de 1 a 4 columnas con alto fijo y `object-cover` en todos los
- * breakpoints (galería de Results).
- */
-const fixedHeightGridBox =
-  (columns: number, height: (viewport: number) => number): ImageBox =>
-  (viewport) => ({ width: column(columns)(viewport), height: height(viewport) });
-
-/**
- * Imágenes de una sección del Case Study (`CaseStudyBlock`). En desktop, grilla de 1 a 4
+ * Imágenes de una sección del Case Study (`CaseStudyBlock`) y de la galería de Results
+ * (feedback 2026-10-09: mismo mecanismo de alto). En desktop, grilla de 1 a 4
  * columnas con el alto de `heightVariant` y `object-cover`. En mobile, 1 columna con
  * `height: auto`: la imagen se ve completa en su proporción, así que solo cuenta el
  * ancho — sin `height` en la caja, `sizes` no suma el ancho extra que agregaba el recorte.
@@ -70,8 +63,6 @@ export const caseStudyBox =
 export const IMAGE_BOXES = {
   /** Hero de la interna de Work: container completo, clamp(21.375rem → 33.25rem). */
   workHero: ((viewport) => ({ width: containerWidth(viewport), height: fluid(342, 532)(viewport) })) as ImageBox,
-  /** Galería de Results: clamp(12.375rem → 19.25rem). */
-  workGallery: (columns: number) => fixedHeightGridBox(columns, fluid(198, 308)),
   /** Logo del cliente en la interna: 70px de alto máximo, ancho según su proporción. */
   clientLogo: (() => ({ width: 0, height: 70 })) as ImageBox,
 
@@ -88,6 +79,12 @@ export const IMAGE_BOXES = {
   }) as ImageBox,
   /** `WorkCard size="tall"` (categorías destacadas de Work). */
   cardTall: ((viewport) => ({ width: card(viewport), height: fluid(320, 480)(viewport) })) as ImageBox,
+  /** `WorkCard` en la grilla de Work (patrón de `resources-grid`): cuadrada, 3 columnas;
+      en mobile, container completo. */
+  cardGrid: ((viewport) => {
+    const width = viewport <= MOBILE_MAX ? containerWidth(viewport) : (containerWidth(viewport) - 26) / 3;
+    return { width, height: width };
+  }) as ImageBox,
   /** `WorkCard` en el slider de About: alto 30em, clamp(16.875rem → 26.25rem). */
   cardAbout: ((viewport) => ({ width: card(viewport), height: fluid(270, 420)(viewport) })) as ImageBox,
 

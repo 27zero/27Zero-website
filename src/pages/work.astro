@@ -26,7 +26,9 @@ import { IMAGE_BOXES } from '../lib/utils/imageBoxes';
 import type { FeaturedWorkCategoryProjection, WorkCardProjection } from '../lib/sanity/cards';
 import { sanityClient } from '../lib/sanity/client';
 import { workListQuery } from '../lib/sanity/queries';
-import type { WorkGroup } from '../types/ui';
+import { SHOW_WORK_SLIDERS } from '../lib/utils/displayFlags';
+import WorkCard from '../components/ui/WorkCard.astro';
+import type { WorkCardData, WorkGroup } from '../types/ui';
 
 const { featuredCategories, categories, works, hero } = await sanityClient.fetch<{
   featuredCategories: FeaturedWorkCategoryProjection[];
@@ -43,22 +45,18 @@ const { featuredCategories, categories, works, hero } = await sanityClient.fetch
    normal más abajo, con el slug como `id` (destino de su pill). Sin prefijo habría dos
    anchors con el mismo `id`. Los destacados no llevan pill, igual que "Los mejores". */
 const FEATURED_GROUPS: WorkGroup[] = featuredCategories.flatMap((category) => {
-  const items = featuredWorksOf(category).map((work) =>
-    toWorkCard(work, { eyebrow: category.title, box: IMAGE_BOXES.cardTall })
-  );
+  const items = featuredWorksOf(category).map((work) => toWorkCard(work, { box: IMAGE_BOXES.cardTall }));
 
   return items.length > 0
     ? [{ id: `featured-${category.slug}`, label: category.title, items, cardSize: 'tall' as const }]
     : [];
 });
 
-/* Un grupo por categoría, con el título de la categoría como eyebrow de sus cards.
-   Las categorías sin ningún `work` no se renderizan: dejarlas daría un slider vacío y
-   un pill que scrollea a un anchor sin contenido. El orden es el `order` del Studio. */
+/* Un grupo por categoría. Las categorías sin ningún `work` no se renderizan: dejarlas
+   daría un slider vacío y un pill que scrollea a un anchor sin contenido. El orden es
+   el `order` del Studio. */
 const CATEGORY_GROUPS: WorkGroup[] = categories.flatMap((category) => {
-  const items = works
-    .filter((work) => work.categorySlug === category.slug)
-    .map((work) => toWorkCard(work, { eyebrow: category.title }));
+  const items = works.filter((work) => work.categorySlug === category.slug).map((work) => toWorkCard(work));
 
   return items.length > 0 ? [{ id: category.slug, label: category.title, items }] : [];
 });
@@ -69,6 +67,20 @@ const WORK_BY_CATEGORY: WorkGroup[] = [...FEATURED_GROUPS, ...CATEGORY_GROUPS];
    "Los mejores" en el vanilla (el "All" lo antepone `FilterPills`). Derivarlos de los
    mismos grupos garantiza que todo pill apunte a un anchor existente. */
 const WORK_FILTER_CATEGORIES = CATEGORY_GROUPS.map(({ id, label }) => ({ id, label }));
+
+/* Grilla que reemplaza a los sliders mientras `SHOW_WORK_SLIDERS` es `false` (feedback
+   2026-10-09): todos los works, una vez cada uno, ordenados por el `order` de su
+   categoría y después por el suyo y el título — `works` ya viene en `order asc, title
+   asc` y el `sort` es estable, así que alcanza con ordenar por la posición de la
+   categoría. Los pills la filtran por `data-category` (`FilterPills` → `filterGridId`). */
+const WORK_GRID_ID = 'workGrid';
+const categoryRank = new Map(categories.map((category, index) => [category.slug, index]));
+const WORK_GRID: WorkCardData[] = [...works]
+  .sort(
+    (a, b) =>
+      (categoryRank.get(a.categorySlug ?? '') ?? Infinity) - (categoryRank.get(b.categorySlug ?? '') ?? Infinity)
+  )
+  .map((work) => toWorkCard(work, { box: IMAGE_BOXES.cardGrid }));
 
 /* `.container` con el `padding-left` propio del hero/pills de Work (13em desktop,
    2em mobile — el doble de la indentación del container base en desktop). Va como
@@ -104,13 +116,31 @@ const { seo, siteSettings } = await getPageSeo('work');
   </section>
 
   <!-- FILTER PILLS -->
-  <FilterPills categories={WORK_FILTER_CATEGORIES} />
+  <FilterPills categories={WORK_FILTER_CATEGORIES} filterGridId={SHOW_WORK_SLIDERS ? undefined : WORK_GRID_ID} />
 
   <!-- MARQUEE LOGOS -->
   <section class="section section--marquee pt-0 pb-[clamp(4.0162rem,3.3787rem_+_3.1875vw,6.2475rem)]">
     <MarqueeLogos />
   </section>
 
-  <!-- CATEGORY SLIDERS -->
-  <CategorySliders categories={WORK_BY_CATEGORY} />
+  <!-- CATEGORY SLIDERS o WORK GRID (SHOW_WORK_SLIDERS) -->
+  {/* La grilla sigue el patrón de `resources-grid` (3 columnas; 1 en mobile). La card
+      llena su columna con la imagen cuadrada vía overrides desde el padre, como
+      `ServiceCategoryBlock`, para no tocar su tamaño en los sliders. */}
+  {
+    SHOW_WORK_SLIDERS ? (
+      <CategorySliders categories={WORK_BY_CATEGORY} />
+    ) : (
+      <section class="section section--work-grid pt-0 pb-[clamp(5.8275rem,4.9025rem_+_4.625vw,9.065rem)]">
+        <div class="container mx-auto flex w-full max-w-(--container-max-width) flex-col px-container-x">
+          <div
+            id={WORK_GRID_ID}
+            class="work-grid grid grid-cols-3 gap-x-[clamp(0.5223rem,0.4394rem_+_0.4146vw,0.8125rem)] gap-y-[clamp(3.6161rem,3.0421rem_+_2.8699vw,5.625rem)] max-md:grid-cols-1 max-md:gap-[1.125rem] [&_.card--work]:w-full [&_.card-work-bg]:aspect-square [&_.card-work-bg]:h-auto"
+          >
+            {WORK_GRID.map((work) => <WorkCard {...work} />)}
+          </div>
+        </div>
+      </section>
+    )
+  }
 </Page>

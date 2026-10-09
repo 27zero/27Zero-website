@@ -21,12 +21,19 @@
  * Feedback Work (Notas 1 y 2): el círculo del cliente lee `client.icon`. Ronda 2: el
  * título de la card es `headline` (con `title` de respaldo, lo resuelve `toWorkCard`).
  * `clientLogo`, `excerpt` e `isFeatured` se eliminaron del schema.
+ *
+ * Feedback 2026-10-09: el título de la card pasa a ser `subtitle` (con `headline` de
+ * respaldo) y el eyebrow, las practices del proyecto (`projectType[]->practiceName`,
+ * nunca `title`). La categoría se sigue trayendo: es el `data-category` del filtro de
+ * Work, aunque la card ya no la muestre.
  */
 const WORK_CARD_FIELDS = `
   _id,
   title,
   "slug": slug.current,
   headline,
+  subtitle,
+  "practices": projectType[]->practiceName,
   order,
   thumbnail,
   "clientName": client->name,
@@ -457,6 +464,8 @@ export const workDetailQuery = `
     heroImage,
     heroVideo,
     gallery,
+    galleryHeightVariant,
+    galleryCustomHeight,
     results[]{_key, number, description},
     "client": client->{_id, name, url, logo},
     challenge{challengeTitle, challengeContent, challengeImages, heightVariant, customHeight},

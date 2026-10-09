@@ -36,7 +36,7 @@ import { ogTypeFor } from '../../lib/seo/ogType';
 import { resolveSeo } from '../../lib/seo/resolveSeo';
 import { paletteSurface } from '../../lib/utils/color';
 import { truncateAtWord } from '../../lib/utils/format';
-import { IMAGE_BOXES } from '../../lib/utils/imageBoxes';
+import { caseStudyBox, caseStudyImageHeight, IMAGE_BOXES } from '../../lib/utils/imageBoxes';
 import { hasContent } from '../../lib/utils/portableText';
 import { detailTrail } from '../../lib/utils/breadcrumbs';
 import { toStaticPaths } from '../../lib/utils/routes';
@@ -64,6 +64,9 @@ export interface WorkDetail {
   heroImage?: SanityImage;
   heroVideo?: string;
   gallery?: CaptionedImage[];
+  /** GROQ devuelve `null` (no `undefined`) para un campo vacío. */
+  galleryHeightVariant?: ImageHeightVariant | null;
+  galleryCustomHeight?: number | null;
   results?: { _key: string; number?: string; description?: string }[];
   client?: { _id: string; name?: string; url?: string; logo?: SanityImage };
   challenge?: Work['challenge'];
@@ -145,10 +148,16 @@ function isRenderable(image: SanityImage | null | undefined): boolean {
 
 /* Nota 10: la galería de Results muestra el `caption` de cada imagen debajo de ella.
    La caja depende de cuántas columnas ocupa la grilla, así que se cuentan antes las
-   imágenes que se van a renderizar (con asset y `alt`). */
+   imágenes que se van a renderizar (con asset y `alt`).
+
+   Alto (feedback 2026-10-09): `galleryHeightVariant` / `galleryCustomHeight` con el mismo
+   mecanismo que las secciones del Case Study (`CaseStudyBlock`) — mismo cálculo, misma
+   caja y mismas clases: alto fijo con `object-cover` en desktop, 1 columna sin recorte
+   en mobile. Vacío → `medium`, el `initialValue` del schema. */
+const galleryHeight = caseStudyImageHeight(work.galleryHeightVariant, work.galleryCustomHeight);
 const galleryColumns = Math.min(4, (work.gallery ?? []).filter(isRenderable).length);
 const galleryImages = (work.gallery ?? []).flatMap((image) => {
-  const resolved = toImage(image, { box: IMAGE_BOXES.workGallery(galleryColumns) });
+  const resolved = toImage(image, { box: caseStudyBox(galleryColumns, galleryHeight.at) });
   return resolved ? [{ ...resolved, caption: image.caption?.trim() }] : [];
 });
 
@@ -402,12 +411,15 @@ const EYEBROW = 'block font-inter text-[clamp(0.5rem,0.4286rem_+_0.3571vw,0.75re
           )}
 
           {galleryImages.length > 0 && (
-            <div class:list={['grid', gridCols(galleryImages.length), IMAGE_GAP, 'max-md:grid-cols-1']}>
+            <div
+              class:list={['grid', gridCols(galleryImages.length), IMAGE_GAP, 'max-md:grid-cols-1']}
+              style={`--image-height:${galleryHeight.css}`}
+            >
               {galleryImages.map((image) => (
                 <figure class="flex flex-col gap-xs">
                   <img
                     {...imgAttrs(image)}
-                    class:list={[IMAGE_RADIUS, 'h-[clamp(12.375rem,10.4107rem_+_9.8214vw,19.25rem)]']}
+                    class:list={[IMAGE_RADIUS, 'h-(--image-height) max-md:h-auto max-md:object-contain']}
                     loading="lazy"
                   />
                   {image.caption && (
