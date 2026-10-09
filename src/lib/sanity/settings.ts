@@ -276,7 +276,6 @@ async function load(): Promise<{
       linkedinUrl: settings.linkedinUrl,
       offices: [
         {country: 'US' as const, label: 'United States', ...settings.officeUSNew},
-        {country: 'CO' as const, label: 'Colombia', ...settings.officeCONew},
       ].filter((office) => office.address || office.phone),
     },
     pages: {
