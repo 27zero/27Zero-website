@@ -32,6 +32,7 @@ import { imageDimensions, imgAttrs, toImage } from '../lib/sanity/image';
 import { IMAGE_BOXES } from '../lib/utils/imageBoxes';
 import { surface } from '../lib/utils/palette';
 import { aboutQuery } from '../lib/sanity/queries';
+import { SHOW_ABOUT_PROOF_POINT } from '../lib/utils/displayFlags';
 import type { BgColor, SanityImage, TextColor } from '../types/sanity';
 import type { MentorCardData, WorkCardData } from '../types/ui';
 
@@ -213,35 +214,46 @@ const { seo, siteSettings } = await getPageSeo('about');
   <!-- PROOF POINT -->
   {/* PENDIENTE (planning-maquetado-about.md #1): copy lorem ipsum del cliente,
       mismo tratamiento que ShapesSlider — se maqueta con el placeholder marcado. */}
-  <section
-    class="section section--proof-point bg-white pt-[clamp(3.75rem,3.6607rem_+_0.4464vw,4.0625rem)] pb-[clamp(3.75rem,2.5rem_+_6.25vw,8.125rem)]"
-  >
-    <div class:list={[CONTAINER, 'proof-point-container grid grid-cols-[2fr_1.5fr] gap-[2.8125rem] max-md:grid-cols-1']}>
-      <div class="proof-point-media flex aspect-[5/3] items-center justify-center overflow-hidden rounded-card bg-gray max-md:aspect-video">
-        {
-          PROOF_POINT.image ? (
-            <img {...imgAttrs(PROOF_POINT.image)} class="size-full object-cover" />
-          ) : (
-            <span class="font-inter text-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] font-semibold tracking-[1px] text-black uppercase opacity-40">
-              [MEDIA PLACEHOLDER]
-            </span>
-          )
-        }
-      </div>
+  {
+    SHOW_ABOUT_PROOF_POINT && (
+      <section
+        class="section section--proof-point bg-white pt-[clamp(3.75rem,3.6607rem_+_0.4464vw,4.0625rem)] pb-[clamp(3.75rem,2.5rem_+_6.25vw,8.125rem)]"
+      >
+        <div class:list={[CONTAINER, 'proof-point-container grid grid-cols-[2fr_1.5fr] gap-[2.8125rem] max-md:grid-cols-1']}>
+          <div class="proof-point-media flex aspect-[5/3] items-center justify-center overflow-hidden rounded-card bg-gray max-md:aspect-video">
+            {
+              PROOF_POINT.image ? (
+                <img {...imgAttrs(PROOF_POINT.image)} class="size-full object-cover" />
+              ) : (
+                <span class="font-inter text-[clamp(0.5625rem,0.4732rem_+_0.4464vw,0.875rem)] font-semibold tracking-[1px] text-black uppercase opacity-40">
+                  [MEDIA PLACEHOLDER]
+                </span>
+              )
+            }
+          </div>
 
-      <div class="proof-point-text flex h-full flex-col justify-end gap-[clamp(0.9619rem,0.8092rem_+_0.7634vw,1.4962rem)]">
-        <h3
-          class="proof-point-title font-lora text-[clamp(1.5rem,1.2861rem_+_1.0696vw,2.2487rem)] leading-[1.25] font-medium tracking-[-0.36px] text-black"
-        >
-          {PROOF_POINT.title}
-        </h3>
-        <p class:list={[BODY, 'text-black']}>{PROOF_POINT.text}</p>
-      </div>
-    </div>
-  </section>
+          <div class="proof-point-text flex h-full flex-col justify-end gap-[clamp(0.9619rem,0.8092rem_+_0.7634vw,1.4962rem)]">
+            <h3
+              class="proof-point-title font-lora text-[clamp(1.5rem,1.2861rem_+_1.0696vw,2.2487rem)] leading-[1.25] font-medium tracking-[-0.36px] text-black"
+            >
+              {PROOF_POINT.title}
+            </h3>
+            <p class:list={[BODY, 'text-black']}>{PROOF_POINT.text}</p>
+          </div>
+        </div>
+      </section>
+    )
+  }
 
   <!-- WORK SLIDER -->
-  <section class="section section--work-slider py-0">
+  {/* Sin el Proof Point arriba, el slider arranca justo después del fondo indigo de Team:
+      toma el mismo `padding-top` con el que abría el Proof Point. */}
+  <section
+    class:list={[
+      'section section--work-slider',
+      SHOW_ABOUT_PROOF_POINT ? 'py-0' : 'pt-[clamp(3.75rem,3.6607rem_+_0.4464vw,4.0625rem)] pb-0',
+    ]}
+  >
     {/* Override scoped, page-specific: el vanilla fija `.section--work-slider
         .card--work` a 30em (vs. los 25em por defecto de `WorkCard`) solo acá — no se
         agregó como prop de tamaño al componente porque ninguna otra página lo pide
