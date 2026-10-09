@@ -156,6 +156,15 @@ export function workCardTitle(work: { headline?: string | null; title?: string |
 }
 
 /**
+ * `projectType[]->practiceName` → nombres limpios. Una referencia a una práctica sin
+ * publicar (o borrada) llega `null`, y un `practiceName` vacío no es mostrable: los dos
+ * se descartan. Cada contexto elige su separador (", " en la card, ". " en la interna).
+ */
+export function practiceNames(practices?: (string | null)[] | null): string[] {
+  return (practices ?? []).map((name) => name?.trim()).filter((name): name is string => Boolean(name));
+}
+
+/**
  * Categoría destacada → los `work` de su slider, sin nulos (referencias a documentos
  * sin publicar) ni documentos sin slug, que no tienen a dónde linkear.
  */

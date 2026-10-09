@@ -432,6 +432,11 @@ export const edtechMarketingQuery = `{
  * `heightVariant`; el label puede venir vacío en documentos cargados antes de que
  * existiera el campo (el `initialValue` solo aplica a documentos nuevos), y la página
  * cae al nombre estándar de la sección.
+ *
+ * `practices` (feedback 2026-10-09): `projectType` pasó a ser un array de referencias a
+ * `edtechMarketingPractice`. Se proyecta `practiceName` — el nombre corto —, nunca
+ * `title`, que es el titular largo de la card de Practice. Una referencia a una
+ * práctica sin publicar llega `null`; la filtra `practiceNames()`.
  */
 export const workDetailQuery = `
   *[_type == "work"] {
@@ -442,7 +447,7 @@ export const workDetailQuery = `
     seo,
     headline,
     briefParagraph,
-    projectType,
+    "practices": projectType[]->practiceName,
     agencyRole,
     year,
     location,

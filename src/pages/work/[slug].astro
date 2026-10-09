@@ -27,7 +27,7 @@ import Page from '../../layouts/Page.astro';
 import CaseStudyBlock from '../../components/sections/CaseStudyBlock.astro';
 import FinalCta from '../../components/sections/FinalCta.astro';
 import TestimonialsSlider from '../../components/sections/TestimonialsSlider.astro';
-import { workCardTitle, type TestimonialProjection } from '../../lib/sanity/cards';
+import { practiceNames, workCardTitle, type TestimonialProjection } from '../../lib/sanity/cards';
 import { sanityClient } from '../../lib/sanity/client';
 import { imgAttrs, toFixedImage, toImage } from '../../lib/sanity/image';
 import { workDetailQuery } from '../../lib/sanity/queries';
@@ -55,7 +55,8 @@ export interface WorkDetail {
   /** Título público (`h1`). Requerido en el schema; hay documentos sin cargar todavía. */
   headline?: string;
   briefParagraph?: string;
-  projectType?: string;
+  /** `projectType[]->practiceName`. Referencias sin publicar llegan `null`. */
+  practices?: (string | null)[] | null;
   agencyRole?: string;
   year?: number;
   location?: string;
@@ -124,9 +125,10 @@ const clientLogo =
     : undefined;
 
 /* Notas 6.2 y 6.3: los 4 campos de la tab "Project Brief". "Contribution" se eliminó
-   del schema. */
+   del schema. "Project Type" son las practices del proyecto separadas por ". "
+   (feedback 2026-10-09); sin ninguna, el filtro saca el ítem con su label. */
 const details: { label: string; value?: string }[] = [
-  { label: 'Project Type', value: work.projectType },
+  { label: 'Project Type', value: practiceNames(work.practices).join('. ') },
   { label: 'Agency Role', value: work.agencyRole },
   { label: 'Location', value: work.location },
   { label: 'Year', value: work.year ? String(work.year) : undefined },
