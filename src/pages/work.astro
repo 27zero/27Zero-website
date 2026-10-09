@@ -28,7 +28,7 @@ import { sanityClient } from '../lib/sanity/client';
 import { workListQuery } from '../lib/sanity/queries';
 import { SHOW_WORK_SLIDERS } from '../lib/utils/displayFlags';
 import WorkCard from '../components/ui/WorkCard.astro';
-import type { WorkCardData, WorkGroup } from '../types/ui';
+import type { WorkGroup } from '../types/ui';
 
 const { featuredCategories, categories, works, hero } = await sanityClient.fetch<{
   featuredCategories: FeaturedWorkCategoryProjection[];
@@ -69,18 +69,17 @@ const WORK_BY_CATEGORY: WorkGroup[] = [...FEATURED_GROUPS, ...CATEGORY_GROUPS];
 const WORK_FILTER_CATEGORIES = CATEGORY_GROUPS.map(({ id, label }) => ({ id, label }));
 
 /* Grilla que reemplaza a los sliders mientras `SHOW_WORK_SLIDERS` es `false` (feedback
-   2026-10-09): todos los works, una vez cada uno, ordenados por el `order` de su
-   categoría y después por el suyo y el título — `works` ya viene en `order asc, title
-   asc` y el `sort` es estable, así que alcanza con ordenar por la posición de la
-   categoría. Los pills la filtran por `data-category` (`FilterPills` → `filterGridId`). */
-const WORK_GRID_ID = 'workGrid';
-const categoryRank = new Map(categories.map((category, index) => [category.slug, index]));
-const WORK_GRID: WorkCardData[] = [...works]
-  .sort(
-    (a, b) =>
-      (categoryRank.get(a.categorySlug ?? '') ?? Infinity) - (categoryRank.get(b.categorySlug ?? '') ?? Infinity)
-  )
-  .map((work) => toWorkCard(work, { box: IMAGE_BOXES.cardGrid }));
+   2026-10-09). Fix temporal (ronda 2): un bloque por categoría, con su título y su
+   anchor, en el `order` de las categorías — cada work aparece una sola vez, en la suya,
+   en el orden de `works` (`order asc, title asc`). Los pills scrollean al bloque con el
+   mismo JS que usaban con los sliders: el `id` del bloque es el slug de su pill. */
+const GRID_GROUPS: WorkGroup[] = categories.flatMap((category) => {
+  const items = works
+    .filter((work) => work.categorySlug === category.slug)
+    .map((work) => toWorkCard(work, { box: IMAGE_BOXES.cardGrid }));
+
+  return items.length > 0 ? [{ id: category.slug, label: category.title, items }] : [];
+});
 
 /* `.container` con el `padding-left` propio del hero/pills de Work (13em desktop,
    2em mobile — el doble de la indentación del container base en desktop). Va como
@@ -116,7 +115,7 @@ const { seo, siteSettings } = await getPageSeo('work');
   </section>
 
   <!-- FILTER PILLS -->
-  <FilterPills categories={WORK_FILTER_CATEGORIES} filterGridId={SHOW_WORK_SLIDERS ? undefined : WORK_GRID_ID} />
+  <FilterPills categories={WORK_FILTER_CATEGORIES} />
 
   <!-- MARQUEE LOGOS -->
   <section class="section section--marquee pt-0 pb-[clamp(4.0162rem,3.3787rem_+_3.1875vw,6.2475rem)]">
@@ -124,21 +123,26 @@ const { seo, siteSettings } = await getPageSeo('work');
   </section>
 
   <!-- CATEGORY SLIDERS o WORK GRID (SHOW_WORK_SLIDERS) -->
-  {/* La grilla sigue el patrón de `resources-grid` (3 columnas; 1 en mobile). La card
+  {/* Cada grilla sigue el patrón de `resources-grid` (3 columnas; 1 en mobile). La card
       llena su columna con la imagen cuadrada vía overrides desde el padre, como
-      `ServiceCategoryBlock`, para no tocar su tamaño en los sliders. */}
+      `ServiceCategoryBlock`, para no tocar su tamaño en los sliders. El título, el gap
+      entre bloques y el `scroll-margin-top` son los de `CardsSlider` / `CategorySliders`. */}
   {
     SHOW_WORK_SLIDERS ? (
       <CategorySliders categories={WORK_BY_CATEGORY} />
     ) : (
       <section class="section section--work-grid pt-0 pb-[clamp(5.8275rem,4.9025rem_+_4.625vw,9.065rem)]">
-        <div class="container mx-auto flex w-full max-w-(--container-max-width) flex-col px-container-x">
-          <div
-            id={WORK_GRID_ID}
-            class="work-grid grid grid-cols-3 gap-x-[clamp(0.5223rem,0.4394rem_+_0.4146vw,0.8125rem)] gap-y-[clamp(3.6161rem,3.0421rem_+_2.8699vw,5.625rem)] max-md:grid-cols-1 max-md:gap-[1.125rem] [&_.card--work]:w-full [&_.card-work-bg]:aspect-square [&_.card-work-bg]:h-auto"
-          >
-            {WORK_GRID.map((work) => <WorkCard {...work} />)}
-          </div>
+        <div class="container mx-auto flex w-full max-w-(--container-max-width) flex-col gap-[clamp(1.6087rem,1.3534rem_+_1.2768vw,2.5025rem)] px-container-x">
+          {GRID_GROUPS.map((group) => (
+            <div id={group.id} class="category-anchor flex scroll-mt-[clamp(4.5rem,3.7857rem_+_3.5714vw,7rem)] flex-col gap-sm">
+              <h2 class="work-grid-title font-inter text-[clamp(1.25rem,1.2321rem_+_0.0893vw,1.3125rem)] leading-[1.5] font-medium tracking-normal">
+                {group.label}
+              </h2>
+              <div class="work-grid grid grid-cols-3 gap-x-[clamp(0.5223rem,0.4394rem_+_0.4146vw,0.8125rem)] gap-y-[clamp(3.6161rem,3.0421rem_+_2.8699vw,5.625rem)] max-md:grid-cols-1 max-md:gap-[1.125rem] [&_.card--work]:w-full [&_.card-work-bg]:aspect-square [&_.card-work-bg]:h-auto">
+                {group.items.map((work) => <WorkCard {...work} />)}
+              </div>
+            </div>
+          ))}
         </div>
       </section>
     )
