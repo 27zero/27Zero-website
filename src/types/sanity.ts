@@ -329,7 +329,13 @@ export interface Work extends SanityDocument {
   headline: string;
   /** Fallback de la meta description, truncado a 160 caracteres en el sitio. */
   briefParagraph?: string;
-  projectType?: string;
+  /**
+   * Practices del proyecto (feedback 2026-10-09: antes `string`). `Rule.unique()` en el
+   * schema. Las queries proyectan `projectType[]->practiceName` — nunca `title`, que es
+   * el titular largo de la card de Practice. `SanityReference` sin `->`,
+   * `EdtechMarketingPractice` con `->`.
+   */
+  projectType?: ((SanityReference & { _key: string }) | EdtechMarketingPractice)[];
   agencyRole?: string;
   location?: string;
   year?: number;
@@ -337,11 +343,15 @@ export interface Work extends SanityDocument {
   // Metadata
   order?: number;
 
-  // Media
+  // Media — el tab ya no existe en el Studio: estos campos viven en Overview.
   thumbnail?: SanityImage;
   heroImage?: SanityImage;
   heroVideo?: string;
   gallery?: SanityImage[];
+  /** Mismo union que `heightVariant` del Case Study. Vacío → `medium` (initialValue del schema). */
+  galleryHeightVariant?: ImageHeightVariant;
+  /** px del diseño desktop, 80–1200. Solo cuando `galleryHeightVariant === 'custom'`. */
+  galleryCustomHeight?: number;
 
   // Case study
   results?: { _key: string; number?: string; description?: string }[];
