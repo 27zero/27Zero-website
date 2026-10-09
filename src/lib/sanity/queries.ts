@@ -102,9 +102,11 @@ const TESTIMONIAL_FIELDS = `
 /**
  * Home — works destacados, la sección EdTech Mentor y los testimonios.
  *
- * `featuredWorkCategories` alimenta el slider de works destacados: desde el feedback de
+ * `featuredWorkCategory` alimenta el slider de works destacados: desde el feedback de
  * Work (Nota 9) la selección vive en las categorías marcadas como destacadas, no en
- * `work.isFeatured`, que se eliminó del schema.
+ * `work.isFeatured`, que se eliminó del schema. Feedback 2026-10-09: Home muestra UNA
+ * sola — la de menor `order` (`[0]` sobre el mismo orden de `FEATURED_WORK_CATEGORIES`)
+ * —, con su `title` como título del slider. `null` si no hay ninguna marcada.
  *
  * `testimonials` es la lista general ordenada por `order`, no la filtrada por
  * proyecto: Home muestra todos los testimonios destacados, sin importar a qué `work`
@@ -160,7 +162,7 @@ export const siteSettingsSeoQuery = `
 `;
 
 export const homeQuery = `{
-  "featuredWorkCategories": ${FEATURED_WORK_CATEGORIES},
+  "featuredWorkCategory": ${FEATURED_WORK_CATEGORIES}[0],
 
   "featuredMentor": *[_type == "edtechMentor" && isFeatured == true && defined(slug.current)]
     | order(publishedAt desc)[0] {${MENTOR_CARD_FIELDS}, bannerPost},

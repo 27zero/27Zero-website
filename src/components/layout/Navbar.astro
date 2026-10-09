@@ -51,7 +51,9 @@ const LINK_BASE =
   <div
     class="nav-container flex flex-row items-center justify-between gap-gap rounded-[clamp(0.7031rem,0.5915rem_+_0.558vw,1.0938rem)] px-[clamp(1.8281rem,1.5379rem_+_1.4509vw,2.8438rem)] py-[clamp(0.6469rem,0.5442rem_+_0.5134vw,1.0062rem)] transition-[background-color,color] duration-200 ease-in-out group-[.nav--black]/nav:bg-transparent group-[.nav--black]/nav:text-white group-[.nav--scrolled]/nav:bg-indigo group-[.nav--scrolled]/nav:text-white group-[.nav--white]/nav:bg-transparent group-[.nav--white]/nav:text-black"
   >
-    <a href="/" class="nav-logo group-[.nav--scrolled]/nav:invert">
+    {/* `nav--black` también invierte el logo (#101010): el vanilla documenta esa variante
+        como "texto/logo blanco", pero solo lo invertía en `nav--scrolled`. */}
+    <a href="/" class="nav-logo group-[.nav--black]/nav:invert group-[.nav--scrolled]/nav:invert">
       {/* `width`/`height` = las dimensiones intrínsecas del SVG (230×45). No pisan el
           tamaño fluido: el `h-[clamp()]` de CSS gana sobre el atributo y el `w-auto` sale
           del ratio. Solo le dan al navegador el aspect-ratio ANTES de descargar el

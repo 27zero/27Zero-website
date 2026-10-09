@@ -30,25 +30,25 @@ import { sanityClient } from '../lib/sanity/client';
 import { toFixedImage } from '../lib/sanity/image';
 import { IMAGE_BOXES } from '../lib/utils/imageBoxes';
 import { homeQuery } from '../lib/sanity/queries';
+import { SHOW_HOME_SHAPES_SLIDER } from '../lib/utils/displayFlags';
 import { accentMarkComponents } from '../lib/utils/portableText';
 import type { MentorCardData, WorkCardData } from '../types/ui';
 
 /* Una sola query para las 3 secciones que consumen CMS (CLAUDE.md §10). */
-const { featuredWorkCategories, featuredMentor, mentorPosts, testimonials } = await sanityClient.fetch<{
-  featuredWorkCategories: FeaturedWorkCategoryProjection[];
+const { featuredWorkCategory, featuredMentor, mentorPosts, testimonials } = await sanityClient.fetch<{
+  featuredWorkCategory: FeaturedWorkCategoryProjection | null;
   featuredMentor: MentorCardProjection | null;
   mentorPosts: MentorCardProjection[];
   testimonials: TestimonialProjection[];
 }>(homeQuery);
 
-/* Slider "Los mejores": la selección curada de las categorías destacadas de Work, en el
-   `order` de las categorías y el orden de cada selección (feedback Work, Nota 9 —
-   `work.isFeatured` se eliminó del schema). Un mismo `work` elegido en dos categorías
-   se muestra una sola vez. Las cards van en su tamaño base: la variante alta es propia
-   del índice de Work. */
-const FEATURED_WORKS: WorkCardData[] = [
-  ...new Map(featuredWorkCategories.flatMap(featuredWorksOf).map((work) => [work._id, work])).values(),
-].map((work) => toWorkCard(work));
+/* Slider de la Intro (feedback 2026-10-09): UNA categoría destacada — la de menor
+   `order` — con su `title` como título del slider y sus `featuredWorks` en el orden del
+   array. Sin categoría destacada o sin works resolubles, la sección no se renderiza. Las
+   cards van en su tamaño base: la variante alta es propia del índice de Work. */
+const FEATURED_WORKS: WorkCardData[] = featuredWorkCategory
+  ? featuredWorksOf(featuredWorkCategory).map((work) => toWorkCard(work))
+  : [];
 
 /* La `FeaturedCard` de la sección EdTech Mentor: la entrevista destacada más reciente. */
 const FEATURED_MENTOR_POST: MentorCardData | null = featuredMentor
@@ -92,10 +92,13 @@ const { seo, siteSettings } = await getPageSeo('home');
 const homeContent = await getHomeContent();
 ---
 
-<Page seo={seo} siteSettings={siteSettings} navVariant="white">
+{/* `navVariant="black"`: el navbar (fijo) queda transparente y con texto/logo blanco
+    encima del video del hero; al scrollear pasa a `nav--scrolled` (indigo). Por eso el
+    hero ya no lleva `mt-page-offset`. */}
+<Page seo={seo} siteSettings={siteSettings} navVariant="black">
   <!-- HERO -->
   <section
-    class="section section--hero-home relative mt-page-offset overflow-hidden bg-gray py-[clamp(10.125rem,9.9829rem_+_0.7107vw,10.6225rem)]"
+    class="section section--hero-home relative overflow-hidden bg-gray py-[clamp(10.125rem,9.9829rem_+_0.7107vw,10.6225rem)]"
   >
     {/* Fondo del hero: el video si está cargado, el poster si no. `bg-gray` de la
         sección queda de fallback cuando no hay ninguno de los dos. */}
@@ -173,9 +176,11 @@ const homeContent = await getHomeContent();
           <Button href="/work" variant="dark">See all work</Button>
         </div>
 
+        {/* `[&_.card-featured-title]`: título de la featured card a 2rem solo en esta
+            instancia (feedback 2026-10-09). `FeaturedCard` no cambia en ningún otro lado. */}
         {
           homeContent.work.featuredWork ? (
-            <div class="intro-home-media h-[clamp(19.125rem,16.0893rem_+_15.1786vw,29.75rem)] flex-1 max-md:w-full">
+            <div class="intro-home-media h-[clamp(19.125rem,16.0893rem_+_15.1786vw,29.75rem)] flex-1 max-md:w-full [&_.card-featured-title]:text-[2rem]">
               <FeaturedCard {...toFeaturedWorkCard(homeContent.work.featuredWork)} />
             </div>
           ) : (
@@ -189,20 +194,32 @@ const homeContent = await getHomeContent();
       </div>
     </div>
 
-    <div class={SLIDERS_CONTAINER}>
-      <CardsSlider title="Los mejores">
-        {FEATURED_WORKS.map((work) => <WorkCard {...work} />)}
-      </CardsSlider>
-    </div>
+    {
+      featuredWorkCategory && FEATURED_WORKS.length > 0 && (
+        <div class={SLIDERS_CONTAINER}>
+          <CardsSlider title={featuredWorkCategory.title}>
+            {FEATURED_WORKS.map((work) => <WorkCard {...work} />)}
+          </CardsSlider>
+        </div>
+      )
+    }
   </section>
 
   {/* El copy sigue hardcodeado en el componente, con lorem ipsum en 2 de las 3 shapes.
       El schema editable ya existe (`settings.apartSection`, Etapa 10) — conectarlo es
       una sesión aparte, porque el componente se comparte con About y EdTech Marketing. */}
-  <ShapesSlider />
+  {SHOW_HOME_SHAPES_SLIDER && <ShapesSlider />}
 
   <!-- LOGOS -->
-  <section class="section section--logos-home pt-0 pb-[clamp(5.0231rem,4.2258rem_+_3.9866vw,7.8137rem)]">
+  {/* Sin el ShapesSlider arriba, el `padding-top` iguala al `padding-bottom`. */}
+  <section
+    class:list={[
+      'section section--logos-home',
+      SHOW_HOME_SHAPES_SLIDER
+        ? 'pt-0 pb-[clamp(5.0231rem,4.2258rem_+_3.9866vw,7.8137rem)]'
+        : 'py-[clamp(5.0231rem,4.2258rem_+_3.9866vw,7.8137rem)]',
+    ]}
+  >
     <MarqueeLogos />
   </section>
 
