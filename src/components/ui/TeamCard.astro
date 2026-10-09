@@ -13,6 +13,10 @@
  * `max-width` del overlay pasa de `em` (desktop) a `%` (mobile) en el vanilla — no es
  * una escala lineal, así que va como valor fijo + override en `max-md:`, no como
  * `clamp()` (CLAUDE.md §5, regla de desvío 4).
+ *
+ * Overlay oscuro (hotfix, oct 2026): `::after` `bg-black/25` sobre la foto para que el
+ * texto blanco se lea sobre cualquier imagen — mismo patrón que FeaturedCard. El
+ * bloque de texto lleva `z-[1]` para quedar por encima del overlay.
  */
 import { imgAttrs } from '../../lib/sanity/image';
 import type { ImageData } from '../../types/ui';
@@ -26,11 +30,11 @@ interface Props {
 const { image, name, position } = Astro.props;
 ---
 
-<div class="team-card relative aspect-square w-full overflow-hidden">
+<div class="team-card relative aspect-square w-full overflow-hidden after:pointer-events-none after:absolute after:inset-0 after:z-0 after:bg-black/25 after:content-['']">
   <img {...imgAttrs(image)} class="absolute inset-0 size-full object-cover" />
 
   <div
-    class="team-card-info absolute top-0 right-0 flex max-w-[13.125rem] flex-col items-end gap-[clamp(0.2025rem,0.1704rem_+_0.1607vw,0.315rem)] px-[clamp(0.8438rem,0.7098rem_+_0.6696vw,1.3125rem)] pt-[clamp(2.4919rem,2.0963rem_+_1.9777vw,3.8762rem)] pb-[clamp(0.8438rem,0.7098rem_+_0.6696vw,1.3125rem)] text-right max-md:max-w-[75%]"
+    class="team-card-info absolute top-0 right-0 z-[1] flex max-w-[18.5rem] flex-col items-end gap-[clamp(0.2025rem,0.1704rem_+_0.1607vw,0.315rem)] p-[clamp(0.8438rem,0.7098rem_+_0.6696vw,1.3125rem)] text-right max-md:max-w-[75%]"
   >
     <p class="team-card-name m-0 font-lora text-[clamp(1.75rem,1.6875rem_+_0.3125vw,1.9688rem)] leading-[1.05] font-medium tracking-normal text-white">
       {name}
