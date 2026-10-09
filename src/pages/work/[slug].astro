@@ -128,10 +128,10 @@ const clientLogo =
     : undefined;
 
 /* Notas 6.2 y 6.3: los 4 campos de la tab "Project Brief". "Contribution" se eliminó
-   del schema. "Project Type" son las practices del proyecto separadas por ". "
+   del schema. "Project Type" son las practices del proyecto separadas por ", "
    (feedback 2026-10-09); sin ninguna, el filtro saca el ítem con su label. */
 const details: { label: string; value?: string }[] = [
-  { label: 'Project Type', value: practiceNames(work.practices).join('. ') },
+  { label: 'Project Type', value: practiceNames(work.practices).join(', ') },
   { label: 'Agency Role', value: work.agencyRole },
   { label: 'Location', value: work.location },
   { label: 'Year', value: work.year ? String(work.year) : undefined },
