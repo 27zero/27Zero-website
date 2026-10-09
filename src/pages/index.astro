@@ -161,6 +161,15 @@ const homeContent = await getHomeContent();
     </div>
   </section>
 
+  <!-- LOGOS -->
+  {/* Justo debajo del hero (feedback 2026-10-09, ronda 2), con el padding vertical un 20%
+      menor que antes (7.8137rem → ~6.25rem en desktop): es el mismo `clamp()` que ya usa
+      `section--marquee` en Work y Clientes. Ya no depende de `SHOW_HOME_SHAPES_SLIDER`:
+      el slider quedó más abajo, después de la Intro. */}
+  <section class="section section--logos-home py-[clamp(4.0162rem,3.3787rem_+_3.1875vw,6.2475rem)]">
+    <MarqueeLogos />
+  </section>
+
   <!-- INTRO -->
   <section class="section section--intro-home bg-purple py-[clamp(3.375rem,2.8218rem_+_2.7661vw,5.3113rem)]">
     <div class:list={[CONTAINER, 'intro-home-container gap-gap']}>
@@ -208,19 +217,6 @@ const homeContent = await getHomeContent();
       El schema editable ya existe (`settings.apartSection`, Etapa 10) — conectarlo es
       una sesión aparte, porque el componente se comparte con About y EdTech Marketing. */}
   {SHOW_HOME_SHAPES_SLIDER && <ShapesSlider />}
-
-  <!-- LOGOS -->
-  {/* Sin el ShapesSlider arriba, el `padding-top` iguala al `padding-bottom`. */}
-  <section
-    class:list={[
-      'section section--logos-home',
-      SHOW_HOME_SHAPES_SLIDER
-        ? 'pt-0 pb-[clamp(5.0231rem,4.2258rem_+_3.9866vw,7.8137rem)]'
-        : 'py-[clamp(5.0231rem,4.2258rem_+_3.9866vw,7.8137rem)]',
-    ]}
-  >
-    <MarqueeLogos />
-  </section>
 
   <!-- THE EDTECH MENTOR -->
   <section
