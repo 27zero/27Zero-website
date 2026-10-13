@@ -1,0 +1,52 @@
+---
+/**
+ * Google Tag Manager — 27zero
+ * Snippet oficial de GTM en dos partes: el `<script>` va lo más arriba posible del
+ * `<head>` y el `<noscript>` justo después de abrir el `<body>`. `Base.astro` es el
+ * único layout que emite `<html>`, así que montándolo ahí cubre las 28 páginas.
+ *
+ * GA4 (G-ZRY0MBJDHK), Google Ads, los eventos y los listeners de HubSpot viven DENTRO
+ * del contenedor (GTM-MCCHQQKV), no en el código. No agregar un `gtag.js` directo:
+ * GA4 contaría cada visita dos veces.
+ *
+ * El ID sale de `PUBLIC_GTM_ID` (CLAUDE.md §2: keys de analytics por env, no en el
+ * repo). Sin la variable no se emite nada — así local y Deploy Previews no ensucian
+ * los datos de producción si la variable solo se define en el contexto Production.
+ */
+interface Props {
+  /** `head` emite el script; `body` emite el iframe de fallback sin JS. */
+  part: 'head' | 'body';
+}
+
+const { part } = Astro.props;
+const gtmId = import.meta.env.PUBLIC_GTM_ID;
+---
+
+{
+  gtmId && part === 'head' && (
+    <script is:inline define:vars={{ gtmId }}>
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != 'dataLayer' ? '&l=' + l : '';
+        j.async = true;
+        j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, 'script', 'dataLayer', gtmId);
+    </script>
+  )
+}
+{
+  gtmId && part === 'body' && (
+    <noscript>
+      <iframe
+        src={`https://www.googletagmanager.com/ns.html?id=${gtmId}`}
+        height="0"
+        width="0"
+        style="display:none;visibility:hidden"
+      />
+    </noscript>
+  )
+}
