@@ -41,6 +41,11 @@
 /es/edtech-mentor-interviews               /edtech-mentor/  301
 /es/edtech-mentor-interviews/*             /edtech-mentor/  301
 
+# Categorías de resources → listado (el sitio nuevo no tiene páginas de categoría;
+# `/categories` no es prefijo de ninguna ruta actual, así que el comodín es seguro)
+/categories                                /resources/  301
+/categories/*                              /resources/  301
+
 # Páginas sueltas → Home
 /lets-talk                                 /  301
 /edtech-marketing-agency                   /  301
