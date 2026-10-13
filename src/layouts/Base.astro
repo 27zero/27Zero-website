@@ -18,6 +18,7 @@
  * página, justo lo que CLAUDE.md §8 prohíbe. Las páginas pasan un objeto `seo` y el
  * `siteSettings` que resuelve el fallback, y nada más.
  */
+import GoogleTagManager from '../components/analytics/GoogleTagManager.astro';
 import JsonLd from '../components/seo/JsonLd.astro';
 import Metadata from '../components/seo/Metadata.astro';
 import type { SiteSeoSettings } from '../lib/sanity/settings';
@@ -45,6 +46,7 @@ const { seo, siteSettings, ogType, article, breadcrumb } = Astro.props;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <GoogleTagManager part="head" />
     <meta name="generator" content={Astro.generator} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" href="/favicon.ico" />
@@ -52,6 +54,7 @@ const { seo, siteSettings, ogType, article, breadcrumb } = Astro.props;
     <JsonLd siteSettings={siteSettings} article={article} breadcrumb={breadcrumb} />
   </head>
   <body class="bg-white font-inter text-black antialiased">
+    <GoogleTagManager part="body" />
     <slot />
   </body>
 </html>
