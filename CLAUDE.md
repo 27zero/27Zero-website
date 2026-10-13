@@ -339,7 +339,7 @@ Cuando se defina o modifique un schema en el Studio, se actualiza `src/types/san
 - **Repo sitio:** `https://github.com/27zero/27Zero-website.git`
 - **Repo studio:** `https://github.com/27zero/27zero-sanity.git` (ya existe, admin access)
 - **Repo vanilla (referencia read-only):** `https://github.com/SantiagoLopez0/27zero.git`
-- **Dominio producción:** `www.27zero.agency` — destino final confirmado, **aún en Webflow**; el swap a Netlify es Etapa 9, condicionado a que el DNS apunte primero a Netlify.
+- **Dominio producción:** `https://www.27zero.agency` (con `www`) — dominio primario en Netlify; el apex `27zero.agency` redirige ahí con 301. Debe coincidir en tres lugares: `site` (`astro.config.mjs`), `siteUrl` de siteSettings (Sanity) y el primary domain de Netlify.
 - **URL staging:** `https://27zero-web.netlify.app/`
 - **Netlify site ID:** `___` (sin confirmar)
 - **Sanity project ID / dataset:** `u9sntfl9` / `production`
