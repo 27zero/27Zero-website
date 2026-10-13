@@ -371,7 +371,7 @@ export const mentorCategoryPagesQuery = `{
  *
  * `services` viene plano y ordenado por título; el agrupado por categoría lo hace la
  * página siguiendo `SERVICE_CATEGORY_ORDER` (el orden del Figma), porque el orden de
- * las 8 categorías es de diseño y no un dato del CMS.
+ * las categorías es de diseño y no un dato del CMS.
  *
  * `practices` es una lista abierta (hoy 9, va a crecer): sin slice ni límite, el orden
  * lo decide `order`. NO trae `iconId` ni `description`: los dos se borraron del schema.

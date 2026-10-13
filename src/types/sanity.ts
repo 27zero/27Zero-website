@@ -79,7 +79,7 @@ export interface Seo {
 
 /**
  * `edtechMarketingService.category` — espejo de `SERVICE_CATEGORIES` del schema
- * (taxonomía del RFC de oferta, feedback Practices sept 2026). Es la ÚNICA fuente de
+ * (taxonomía del RFC de oferta, 10 categorías desde oct 2026). Es la ÚNICA fuente de
  * verdad de categoría: `edtechMarketingPractice` ya no declara categoría propia, elige
  * servicios sueltos vía `relatedServices`.
  *
@@ -87,37 +87,65 @@ export interface Seo {
  * aunque algunos nombres coincidan ("Content Marketing" existe en las dos).
  */
 export type ServiceCategoryId =
-  | 'strategic-services'
+  | 'strategic-foundations'
   | 'brand-identity'
   | 'ux-ui-web-design'
-  | 'content-marketing'
+  | 'brand-salience-reputation'
   | 'demand-generation'
   | 'marketing-operations'
-  | 'sales-enablement'
-  | 'events-experiences';
+  | 'events-experiences'
+  | 'account-based-marketing'
+  | 'thought-leadership-programs'
+  | 'seo-aeo-geo'
+  | LegacyServiceCategoryId;
+
+/**
+ * Valores de la taxonomía anterior (8 categorías). Siguen acá SOLO mientras dura la
+ * migración de contenido (`27zero-sanity/scripts/import-content-spec.ts`): antes del
+ * import hay servicios con estos valores, después ninguno. Una vez corrido el import,
+ * borrar este tipo y sus 3 entradas en `SERVICE_CATEGORY_LABELS` y
+ * `SERVICE_CATEGORY_ORDER`, junto con las del schema.
+ */
+type LegacyServiceCategoryId = 'strategic-services' | 'content-marketing' | 'sales-enablement';
 
 /** Labels de `ServiceCategoryId` — mismos `title` que el schema. */
 export const SERVICE_CATEGORY_LABELS: Record<ServiceCategoryId, string> = {
-  'strategic-services': 'Strategic Services',
+  'strategic-foundations': 'Strategic Foundations',
   'brand-identity': 'Brand & Identity',
   'ux-ui-web-design': 'UX/UI & Web Design',
-  'content-marketing': 'Content Marketing',
+  'brand-salience-reputation': 'Brand Salience and Reputation',
   'demand-generation': 'Demand Generation',
   'marketing-operations': 'Marketing Operations',
-  'sales-enablement': 'Sales Enablement',
   'events-experiences': 'Events & Experiences',
+  'account-based-marketing': 'Account-Based Marketing',
+  'thought-leadership-programs': 'Thought Leadership Programs',
+  'seo-aeo-geo': 'SEO, AEO & GEO',
+  // Legacy — ver `LegacyServiceCategoryId`.
+  'strategic-services': 'Strategic Services',
+  'content-marketing': 'Content Marketing',
+  'sales-enablement': 'Sales Enablement',
 };
 
-/** Orden de aparición de las categorías en el menú de servicios (orden del RFC). */
+/**
+ * Orden de aparición de las categorías en el menú de servicios (orden del RFC).
+ * Cada valor legacy va pegado a la categoría que lo reemplaza, así el menú se ve
+ * igual que antes mientras el contenido no se migró, y queda en el orden nuevo
+ * después (las categorías sin servicios no se renderizan).
+ */
 export const SERVICE_CATEGORY_ORDER: ServiceCategoryId[] = [
+  'strategic-foundations',
   'strategic-services',
   'brand-identity',
   'ux-ui-web-design',
+  'brand-salience-reputation',
   'content-marketing',
   'demand-generation',
   'marketing-operations',
   'sales-enablement',
   'events-experiences',
+  'account-based-marketing',
+  'thought-leadership-programs',
+  'seo-aeo-geo',
 ];
 
 /** Íconos de `ServiceIcon.astro` — espejo de `ICON_OPTIONS` del schema. */
