@@ -1,3 +1,48 @@
 # Astro genera el sitemap como /sitemap-index.xml (@astrojs/sitemap); /sitemap.xml es
 # la ruta que muchos crawlers y herramientas prueban por defecto.
 /sitemap.xml  /sitemap-index.xml  301
+
+# ── URLs del sitio anterior (Webflow) ────────────────────────────────────────
+# Siguen enlazadas desde el body de entrevistas y resources en Sanity, y Google las
+# tiene indexadas. Netlify aplica la PRIMERA regla que coincide: las específicas van
+# antes que los comodines de /en y /es. Matchea con o sin barra final.
+#
+# Work: slugs uno por uno y no `/work/*`, para que un comodín nunca pueda tapar un
+# caso que sí existe en /work/<slug>/.
+
+# Work → listado
+/work/anthology-legacy-conversations       /work/  301
+/work/anthology-marketing-programs         /work/  301
+/work/atomic-jolt-marketing-programs       /work/  301
+/work/busuu                                /work/  301
+/work/d2l-connection-cdmx                  /work/  301
+/work/d2l-edtech-sessions                  /work/  301
+/work/doctums                              /work/  301
+/work/ellucian-edtech-sessions-experience  /work/  301
+/work/student-first                        /work/  301
+/work/uplanner-brand                       /work/  301
+/work/uplanner-customer-spotlight          /work/  301
+/en/work/*                                 /work/  301
+/es/work/*                                 /work/  301
+
+# Services → EdTech Marketing
+/services                                  /edtech-marketing/  301
+/services/*                                /edtech-marketing/  301
+/en/services/*                             /edtech-marketing/  301
+/es/services/*                             /edtech-marketing/  301
+
+# EdTech Mentor → listado
+/edtech-mentor-interviews                  /edtech-mentor/  301
+/edtech-mentor-interviews/*                /edtech-mentor/  301
+/edtech-mentor-interviews-series           /edtech-mentor/  301
+/the-edtech-mentor-at-a-glance             /edtech-mentor/  301
+/en/edtech-mentor-interviews               /edtech-mentor/  301
+/en/edtech-mentor-interviews/*             /edtech-mentor/  301
+/es/edtech-mentor-interviews               /edtech-mentor/  301
+/es/edtech-mentor-interviews/*             /edtech-mentor/  301
+
+# Páginas sueltas → Home
+/lets-talk                                 /  301
+/edtech-marketing-agency                   /  301
+/en/*                                      /  301
+/es/*                                      /  301
