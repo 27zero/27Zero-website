@@ -1,0 +1,3 @@
+# Astro genera el sitemap como /sitemap-index.xml (@astrojs/sitemap); /sitemap.xml es
+# la ruta que muchos crawlers y herramientas prueban por defecto.
+/sitemap.xml  /sitemap-index.xml  301

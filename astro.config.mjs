@@ -62,12 +62,13 @@ const noIndexRoutes = {
 
 // https://astro.build/config
 export default defineConfig({
-  /* Placeholder de Netlify, no el dominio final. `site` es obligatorio para que
-     `@astrojs/sitemap` emita URLs absolutas (sin él tira warning y no genera nada),
-     y es la base del `canonical` cuando `settings.siteUrl` está vacío en Sanity.
-     TODO (Etapa 9): cambiar a 'https://27zero.agency' al hacer el swap de dominio
-     desde Webflow — ver PLANNING.md §3, "Etapa 9 flags". */
-  site: 'https://27zero-web.netlify.app',
+  /* Dominio final, con `www`: tiene que ser el dominio primario en Netlify (el apex
+     `27zero.agency` redirige acá con 301). `site` es obligatorio para que
+     `@astrojs/sitemap` emita URLs absolutas (sin él tira warning y no genera nada), es
+     la base del `Sitemap:` de `robots.txt` y del `canonical` cuando `settings.siteUrl`
+     está vacío en Sanity. Si se cambia, cambiar también `siteUrl` en siteSettings y el
+     primario de Netlify: las tres fuentes tienen que coincidir. */
+  site: 'https://www.27zero.agency',
   integrations: [
     /* Antes de `sitemap()`: llena el Set en `build:start`, que corre antes del
        `build:done` donde sitemap emite los archivos. */
