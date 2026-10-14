@@ -248,7 +248,7 @@ const mentorContent = await getMentorContent();
       <div class="cta-mentor-actions flex flex-wrap gap-[clamp(0.4219rem,0.3549rem_+_0.3348vw,0.6563rem)] max-md:flex-col max-md:items-baseline">
         {/* Ruta interna fija, no campo de Sanity — mismo criterio que los "Book a
             strategy session" de Etapa 10. */}
-        <Button href="/contact" variant="purple">Let's Talk</Button>
+        <Button href="/contact/" variant="purple">Let's Talk</Button>
         {
           mentorContent.cta.secondaryCtaLink && (
             <Button href={mentorContent.cta.secondaryCtaLink} variant="white">

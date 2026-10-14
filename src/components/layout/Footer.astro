@@ -36,15 +36,15 @@ interface FooterLink {
 const LINK_COLUMNS: FooterLink[][] = [
   [
     { href: '/', label: 'Home' },
-    { href: '/work', label: 'Work' },
-    { href: '/edtech-marketing', label: 'Services' },
-    { href: '/about', label: 'About' },
+    { href: '/work/', label: 'Work' },
+    { href: '/edtech-marketing/', label: 'Services' },
+    { href: '/about/', label: 'About' },
   ],
   [
-    { href: '/edtech-mentor', label: 'The EdTech Mentor' },
+    { href: '/edtech-mentor/', label: 'The EdTech Mentor' },
     /* TODO: /careers — restaurar cuando la página exista, ver PLANNING.md Etapa 8 */
-    // { href: '/careers', label: 'Careers' },
-    { href: '/contact', label: "Let's Talk!" },
+    // { href: '/careers/', label: 'Careers' },
+    { href: '/contact/', label: "Let's Talk!" },
   ],
 ];
 
@@ -57,8 +57,8 @@ const COLUMNS: FooterLink[][] = linkedinUrl
 /* Dos links, no uno: el vanilla traía "Privacy Security Policy" apuntando a un solo
    `/privacy`, que además no existía. */
 const LEGAL_LINKS: FooterLink[] = [
-  { href: '/privacy', label: 'Privacy Policy' },
-  { href: '/security-policy', label: 'Security Policy' },
+  { href: '/privacy/', label: 'Privacy Policy' },
+  { href: '/security-policy/', label: 'Security Policy' },
 ];
 
 /* Año dinámico, resuelto en build. No contradice la nota de `lib/sanity/client.ts`
