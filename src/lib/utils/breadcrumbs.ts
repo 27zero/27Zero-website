@@ -32,11 +32,11 @@ const HOME: Crumb = { label: 'Home', href: '/' };
  * breadcrumb visible de EdTech Mentor, para no introducir un segundo naming.
  */
 const LISTINGS = {
-  work: { label: 'Work', href: '/work' },
-  edtechMentor: { label: 'Edtech mentor interviews', href: '/edtech-mentor' },
-  resource: { label: 'Resources', href: '/resources' },
-  edtechMarketingPractice: { label: 'EdTech Marketing', href: '/edtech-marketing' },
-  edtechMarketingService: { label: 'EdTech Marketing', href: '/edtech-marketing' },
+  work: { label: 'Work', href: '/work/' },
+  edtechMentor: { label: 'Edtech mentor interviews', href: '/edtech-mentor/' },
+  resource: { label: 'Resources', href: '/resources/' },
+  edtechMarketingPractice: { label: 'EdTech Marketing', href: '/edtech-marketing/' },
+  edtechMarketingService: { label: 'EdTech Marketing', href: '/edtech-marketing/' },
 } as const;
 
 /** Los 5 documentTypes con página de detalle. */

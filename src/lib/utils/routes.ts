@@ -21,6 +21,11 @@
  * slugify completo reescribiría URLs que hoy son válidas y ya están indexadas.
  *
  * El fix de fondo es corregir esos documentos en el Studio — ver reporte de entrega.
+ *
+ * Todas las rutas terminan en `/`: Astro publica cada página como `<ruta>/index.html`
+ * y Netlify responde `/work/busuu` con un 301 a `/work/busuu/`. Sin la barra, cada link
+ * interno pasaba por esa redirección (182 en el crawl de octubre 2026). Los links fijos
+ * del resto del sitio (navbar, footer, breadcrumbs, botones) siguen la misma regla.
  */
 
 /**
@@ -43,11 +48,11 @@ export function normalizeSlug(slug: string | null | undefined): string {
     .replace(/^-+|-+$/g, '');
 }
 
-export const workUrl = (slug: string): string => `/work/${normalizeSlug(slug)}`;
+export const workUrl = (slug: string): string => `/work/${normalizeSlug(slug)}/`;
 
-export const resourceUrl = (slug: string): string => `/resources/${normalizeSlug(slug)}`;
+export const resourceUrl = (slug: string): string => `/resources/${normalizeSlug(slug)}/`;
 
-export const mentorUrl = (slug: string): string => `/edtech-mentor/${normalizeSlug(slug)}`;
+export const mentorUrl = (slug: string): string => `/edtech-mentor/${normalizeSlug(slug)}/`;
 
 /**
  * Página de categoría de EdTech Mentor (feedback cliente, Nota 3.2). Comparte prefijo
@@ -55,13 +60,13 @@ export const mentorUrl = (slug: string): string => `/edtech-mentor/${normalizeSl
  * `mentorCategory` y de `edtechMentor` viven en el mismo espacio de nombres. La
  * colisión la resuelve `edtech-mentor/[category].astro`: gana la entrevista.
  */
-export const mentorCategoryUrl = (slug: string): string => `/edtech-mentor/${normalizeSlug(slug)}`;
+export const mentorCategoryUrl = (slug: string): string => `/edtech-mentor/${normalizeSlug(slug)}/`;
 
 /** Práctica y servicio cuelgan de `/edtech-marketing` en subcarpetas distintas: sus
  *  slugs se solapan por nombre (ej. "Project Management" existe en ambas taxonomías). */
-export const practiceUrl = (slug: string): string => `/edtech-marketing/practices/${normalizeSlug(slug)}`;
+export const practiceUrl = (slug: string): string => `/edtech-marketing/practices/${normalizeSlug(slug)}/`;
 
-export const serviceUrl = (slug: string): string => `/edtech-marketing/services/${normalizeSlug(slug)}`;
+export const serviceUrl = (slug: string): string => `/edtech-marketing/services/${normalizeSlug(slug)}/`;
 
 /**
  * `true` si el href sale del sitio. Solo http(s): un `mailto:` o `tel:` abre su app igual,
