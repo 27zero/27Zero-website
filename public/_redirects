@@ -76,6 +76,8 @@ https://www.27zero.co/*  https://www.27zero.agency/:splat  301!
 # Resources
 # Pillar viejo de Webflow sin equivalente directo; lo más cercano es la página de servicios.
 /resources/edtech-marketing-agency  /edtech-marketing/  301
+# Slug viejo con "ed-tech"; sigue enlazado desde el body de dos resources en Sanity.
+/resources/best-ed-tech-marketing-agency  /resources/best-edtech-marketing-agency/  301
 /categories/*  /resources/  301
 
 # Páginas sueltas
