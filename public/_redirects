@@ -74,6 +74,8 @@ https://www.27zero.co/*  https://www.27zero.agency/:splat  301!
 /work/anthology-legacy-conversations  /work/  301
 
 # Resources
+# Pillar viejo de Webflow sin equivalente directo; lo más cercano es la página de servicios.
+/resources/edtech-marketing-agency  /edtech-marketing/  301
 /categories/*  /resources/  301
 
 # Páginas sueltas
@@ -84,3 +86,4 @@ https://www.27zero.co/*  https://www.27zero.agency/:splat  301!
 /poadcast-test  /  301
 /sandboxes/*  /  301
 /quotes/*  /  301
+
