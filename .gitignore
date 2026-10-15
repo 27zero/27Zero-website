@@ -25,3 +25,6 @@ pnpm-debug.log*
 
 # client revision docs (local only)
 revs/
+
+# Copias de seguridad de scripts/fix-content-links.mjs (contenido de Sanity)
+scripts/backups/
