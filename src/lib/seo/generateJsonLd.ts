@@ -104,9 +104,8 @@ export function generateJsonLd({
      agencia B2B, y es subtipo suyo, así que hereda address/telephone.
 
      La dirección va entera en `streetAddress` en vez de partirse en locality /
-     region / postalCode: en Sanity es un solo campo de texto libre y las dos
-     oficinas ya tienen formatos distintos (la de US trae estado y ZIP, la de CO
-     no). Un parser por comas emitiría structured data incorrecto en silencio en
+     region / postalCode: en Sanity es un solo campo de texto libre y su formato
+     no está garantizado (hoy trae estado y ZIP, pero nada lo valida). Un parser por comas emitiría structured data incorrecto en silencio en
      cuanto alguien edite el campo. `addressCountry` sí es seguro: lo sabemos por
      cuál campo de settings es, no por leer el texto. */
   for (const office of siteSettings.offices ?? []) {

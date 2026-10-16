@@ -34,7 +34,7 @@ const BODY = 'text-body font-inter leading-[1.6] font-normal tracking-normal';
 
 /* La bandera no es contenido editable: sale de `office.country`, que es un código
    ISO fijo que pone el schema, no texto suelto que el editor pueda romper. */
-const OFFICE_FLAGS: Record<'US' | 'CO', string> = { US: '🇺🇸', CO: '🇨🇴' };
+const OFFICE_FLAGS: Record<'US', string> = { US: '🇺🇸' };
 
 /* Ícono decorativo de las contact-card: idéntico en ambas, `fill="black"` fijo (no
    currentColor) — el hover de la card solo afecta a `.contact-card-arrow`, tal cual
