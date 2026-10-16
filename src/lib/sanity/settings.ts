@@ -26,7 +26,7 @@ import { siteSettingsSeoQuery } from './queries';
 /** Una oficina, para el nodo `ProfessionalService` del JSON-LD. */
 export interface Office {
   /** Código ISO del país — lo sabemos por el campo, no se parsea de la dirección. */
-  country: 'US' | 'CO';
+  country: 'US';
   label: string;
   address?: string;
   phone?: string;
@@ -209,7 +209,6 @@ interface SettingsSeoProjection {
   linkedinUrl?: string;
   twitterUrl?: string;
   officeUSNew?: { address?: string; phone?: string; email?: string };
-  officeCONew?: { address?: string; phone?: string; email?: string };
   homeSeo?: Seo;
   aboutSeo?: Seo;
   workSeo?: Seo;

@@ -141,7 +141,6 @@ export const siteSettingsSeoQuery = `
     linkedinUrl,
     twitterUrl,
     officeUSNew,
-    officeCONew,
     homeSeo,
     aboutSeo,
     workSeo,
