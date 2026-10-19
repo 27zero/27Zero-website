@@ -38,7 +38,7 @@ https://www.27zero.co/*  https://www.27zero.agency/:splat  301!
 /edtech-mentor-interviews/natalia-pereldik  /edtech-mentor/  301
 /edtech-mentor-interviews/unlocking-edtech-growth-in-2024-and-beyond-expert-insights-from-tiago-mateus-on-ai-partnerships-and-gtm-strategies  /edtech-mentor/tiago-mateus/  301
 /edtech-mentor-interviews/beyond-the-buzzwords-jeff-rubenstein-on-the-real-impact-of-ai-in-education  /edtech-mentor/jeff-rubenstein/  301
-/edtech-mentor-interviews/marketing-at-the-c-level-brian-finnerty-on-edtech  /edtech-mentor/brian-finnerty/  301
+/edtech-mentor-interviews/marketing-at-the-c-level-brian-finnerty-on-edtech  /edtech-mentor/marketing-at-the-c-level-brian-finnerty-on-edtech/  301
 /edtech-mentor-interviews/a-market-first-mindset-in-edtech-julie-kellehers-blueprint-for-success  /edtech-mentor/julie-kelleher/  301
 /edtech-mentor-interviews/empowerlys-lydia-winn-on-shaping-edtech-one-step-at-a-time  /edtech-mentor/lydia-winn/  301
 /edtech-mentor-interviews/the-heart-of-edtech-marketing-joe-fisher-on-the-power-of-human-connection  /edtech-mentor/joe-fisher/  301
@@ -50,12 +50,19 @@ https://www.27zero.co/*  https://www.27zero.agency/:splat  301!
 /edtech-mentor-interviews/better-data-better-higher-education-inside-times-higher-educations-obsession-with-data-quality-for-global-impact  /edtech-mentor/dominic-garcia/  301
 /edtech-mentor-interviews/building-a-category-from-scratch-christine-lee-on-elseviers-game-changing-moves-in-the-faculty-information-system-market  /edtech-mentor/christine-lee/  301
 /edtech-mentor-interviews/closer-to-the-customer-intels-global-director-of-system-integrations-rick-herrmann-on-leading-global-teams  /edtech-mentor/richard-herrmann/  301
-/edtech-mentor-interviews/achieving-seamless-worldwide-marketing-rob-sparks-strategy-to-adapt-across-territories  /edtech-mentor/rob-sparks/  301
+/edtech-mentor-interviews/achieving-seamless-worldwide-marketing-rob-sparks-strategy-to-adapt-across-territories  /edtech-mentor/achieving-seamless-worldwide-marketing-rob-sparks-strategy-to-adapt-across-territories/  301
 /edtech-mentor-interviews/against-solutionism-in-edtech-on-edtechs-glenda-morgan-on-addressing-student-success-challenges-at-the-roots  /edtech-mentor/glenda-morgan/  301
-/edtech-mentor-interviews/ready-educations-ceo-jim-brigadier-explains-how-authentic-leadership-fuels-edtech-and-growth  /edtech-mentor/jim-brigadier/  301
-/edtech-mentor-interviews/from-alignment-to-vision-unicons-kate-valenti-on-her-journey-from-coo-to-ceo  /edtech-mentor/kate-valenti/  301
+/edtech-mentor-interviews/ready-educations-ceo-jim-brigadier-explains-how-authentic-leadership-fuels-edtech-and-growth  /edtech-mentor/ready-educations-ceo-jim-brigadier-explains-how-authentic-leadership-fuels-edtech-and-growth/  301
+/edtech-mentor-interviews/from-alignment-to-vision-unicons-kate-valenti-on-her-journey-from-coo-to-ceo  /edtech-mentor/from-alignment-to-vision-unicons-kate-valenti-on-her-journey-from-coo-to-ceo/  301
 /edtech-mentor-interviews/do-students-succeed-because-of-us--or-in-spite-of-us--nicolas-elton-brings-global-higher-ed-expertise-to-his-new-role-at-qs  /edtech-mentor/nicolas-elton/  301
 /edtech-mentor-interviews/from-help-desk-to-cio-what-every-marketer-should-know-about-campus-it-in-the-us  /edtech-mentor/from-help-desk-to-cio/  301
+# Slugs cortos de Webflow → slug actual en Sanity (el largo). Van antes del comodín de
+# abajo, que los mandaría a /edtech-mentor/<slug-corto>, que da 404.
+/edtech-mentor-interviews/kate-valenti  /edtech-mentor/from-alignment-to-vision-unicons-kate-valenti-on-her-journey-from-coo-to-ceo/  301
+/edtech-mentor-interviews/rob-sparks  /edtech-mentor/achieving-seamless-worldwide-marketing-rob-sparks-strategy-to-adapt-across-territories/  301
+/edtech-mentor-interviews/brian-finnerty  /edtech-mentor/marketing-at-the-c-level-brian-finnerty-on-edtech/  301
+/edtech-mentor-interviews/marcela-marquez  /edtech-mentor/curiosity-as-a-method-forging-great-ideas-with-empathy-and-ai/  301
+/edtech-mentor-interviews/jim-brigadier  /edtech-mentor/ready-educations-ceo-jim-brigadier-explains-how-authentic-leadership-fuels-edtech-and-growth/  301
 /edtech-mentor-interviews/*  /edtech-mentor/:splat  301
 
 # Work
@@ -74,8 +81,6 @@ https://www.27zero.co/*  https://www.27zero.agency/:splat  301!
 /work/anthology-legacy-conversations  /work/  301
 
 # Resources
-# Pillar viejo de Webflow sin equivalente directo; lo más cercano es la página de servicios.
-/resources/edtech-marketing-agency  /edtech-marketing/  301
 # Slug viejo con "ed-tech"; sigue enlazado desde el body de dos resources en Sanity.
 /resources/best-ed-tech-marketing-agency  /resources/best-edtech-marketing-agency/  301
 /categories/*  /resources/  301
