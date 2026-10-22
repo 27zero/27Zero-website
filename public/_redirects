@@ -40,7 +40,7 @@ https://www.27zero.co/*  https://www.27zero.agency/:splat  301!
 /edtech-mentor-interviews/beyond-the-buzzwords-jeff-rubenstein-on-the-real-impact-of-ai-in-education  /edtech-mentor/jeff-rubenstein/  301
 /edtech-mentor-interviews/marketing-at-the-c-level-brian-finnerty-on-edtech  /edtech-mentor/marketing-at-the-c-level-brian-finnerty-on-edtech/  301
 /edtech-mentor-interviews/a-market-first-mindset-in-edtech-julie-kellehers-blueprint-for-success  /edtech-mentor/a-market-first-mindset-in-edtech-julie-kellehers-blueprint-for-success/  301
-/edtech-mentor-interviews/empowerlys-lydia-winn-on-shaping-edtech-one-step-at-a-time  /edtech-mentor/lydia-winn/  301
+/edtech-mentor-interviews/empowerlys-lydia-winn-on-shaping-edtech-one-step-at-a-time  /edtech-mentor/empowerlys-lydia-winn-on-shaping-edtech-one-step-at-a-time/  301
 /edtech-mentor-interviews/the-heart-of-edtech-marketing-joe-fisher-on-the-power-of-human-connection  /edtech-mentor/joe-fisher/  301
 /edtech-mentor-interviews/classroom-to-career-alumlys-plan-for-bridging-the-experience-gap  /edtech-mentor/david-yip/  301
 /edtech-mentor-interviews/crackin-the-sis-code-vp-of-sales-justin-vondra-on-driving-meaningful-impact-in-higher-education  /edtech-mentor/cracking-the-sis-code-vp-of-sales-justin-vondra-on-driving-meaningful-impact-in-higher-education/  301
@@ -68,7 +68,10 @@ https://www.27zero.co/*  https://www.27zero.agency/:splat  301!
 /edtech-mentor-interviews/glenda-morgan  /edtech-mentor/against-solutionism-in-edtech-on-edtechs-glenda-morgan-on-addressing-student-success-challenges-at-the-roots/  301
 /edtech-mentor-interviews/justin-vondra  /edtech-mentor/cracking-the-sis-code-vp-of-sales-justin-vondra-on-driving-meaningful-impact-in-higher-education/  301
 /edtech-mentor-interviews/chad-a-stevens  /edtech-mentor/chad-stevens-of-tinkrworks-on-expanding-the-boundaries-of-inclusive-stemsteam-education/  301
+/edtech-mentor-interviews/lydia-winn  /edtech-mentor/empowerlys-lydia-winn-on-shaping-edtech-one-step-at-a-time/  301
 /edtech-mentor-interviews/*  /edtech-mentor/:splat  301
+# Slug corto que fue destino de los redirects desde el 13 de octubre: puede estar indexado.
+/edtech-mentor/lydia-winn  /edtech-mentor/empowerlys-lydia-winn-on-shaping-edtech-one-step-at-a-time/  301
 
 # Work
 /work/busuu  /work/busuu-video-spotlights/  301
