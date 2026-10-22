@@ -42,20 +42,20 @@ https://www.27zero.co/*  https://www.27zero.agency/:splat  301!
 /edtech-mentor-interviews/a-market-first-mindset-in-edtech-julie-kellehers-blueprint-for-success  /edtech-mentor/a-market-first-mindset-in-edtech-julie-kellehers-blueprint-for-success/  301
 /edtech-mentor-interviews/empowerlys-lydia-winn-on-shaping-edtech-one-step-at-a-time  /edtech-mentor/empowerlys-lydia-winn-on-shaping-edtech-one-step-at-a-time/  301
 /edtech-mentor-interviews/the-heart-of-edtech-marketing-joe-fisher-on-the-power-of-human-connection  /edtech-mentor/joe-fisher/  301
-/edtech-mentor-interviews/classroom-to-career-alumlys-plan-for-bridging-the-experience-gap  /edtech-mentor/david-yip/  301
+/edtech-mentor-interviews/classroom-to-career-alumlys-plan-for-bridging-the-experience-gap  /edtech-mentor/classroom-to-career-alumlys-plan-for-bridging-the-experience-gap/  301
 /edtech-mentor-interviews/crackin-the-sis-code-vp-of-sales-justin-vondra-on-driving-meaningful-impact-in-higher-education  /edtech-mentor/cracking-the-sis-code-vp-of-sales-justin-vondra-on-driving-meaningful-impact-in-higher-education/  301
-/edtech-mentor-interviews/from-standards-to-global-impact--1edtechs-ceo-curtiss-barnes-on-the-vision-of-a-trusted-education-ecosystem  /edtech-mentor/curtiss-barnes/  301
+/edtech-mentor-interviews/from-standards-to-global-impact--1edtechs-ceo-curtiss-barnes-on-the-vision-of-a-trusted-education-ecosystem  /edtech-mentor/from-standards-to-global-impact-1edtechs-ceo-curtiss-barnes-on-the-vision-of-a-trusted-education-ecosystem/  301
 /edtech-mentor-interviews/chad-stevens-of-tinkrworks-on-expanding-the-boundaries-of-inclusive-stem-steam-education  /edtech-mentor/chad-stevens-of-tinkrworks-on-expanding-the-boundaries-of-inclusive-stemsteam-education/  301
 /edtech-mentor-interviews/gardener-or-chess-player--reinhold-lange-on-adapting-to-grow-as-a-product-manager-in-edtech  /edtech-mentor/reinhold-lange/  301
 /edtech-mentor-interviews/better-data-better-higher-education-inside-times-higher-educations-obsession-with-data-quality-for-global-impact  /edtech-mentor/dominic-garcia/  301
 /edtech-mentor-interviews/building-a-category-from-scratch-christine-lee-on-elseviers-game-changing-moves-in-the-faculty-information-system-market  /edtech-mentor/christine-lee/  301
-/edtech-mentor-interviews/closer-to-the-customer-intels-global-director-of-system-integrations-rick-herrmann-on-leading-global-teams  /edtech-mentor/richard-herrmann/  301
+/edtech-mentor-interviews/closer-to-the-customer-intels-global-director-of-system-integrations-rick-herrmann-on-leading-global-teams  /edtech-mentor/closer-to-the-customer-intels-global-director-of-system-integrations-rick-herrmann-on-leading-global-teams/  301
 /edtech-mentor-interviews/achieving-seamless-worldwide-marketing-rob-sparks-strategy-to-adapt-across-territories  /edtech-mentor/achieving-seamless-worldwide-marketing-rob-sparks-strategy-to-adapt-across-territories/  301
 /edtech-mentor-interviews/against-solutionism-in-edtech-on-edtechs-glenda-morgan-on-addressing-student-success-challenges-at-the-roots  /edtech-mentor/against-solutionism-in-edtech-on-edtechs-glenda-morgan-on-addressing-student-success-challenges-at-the-roots/  301
 /edtech-mentor-interviews/ready-educations-ceo-jim-brigadier-explains-how-authentic-leadership-fuels-edtech-and-growth  /edtech-mentor/ready-educations-ceo-jim-brigadier-explains-how-authentic-leadership-fuels-edtech-and-growth/  301
 /edtech-mentor-interviews/from-alignment-to-vision-unicons-kate-valenti-on-her-journey-from-coo-to-ceo  /edtech-mentor/from-alignment-to-vision-unicons-kate-valenti-on-her-journey-from-coo-to-ceo/  301
 /edtech-mentor-interviews/do-students-succeed-because-of-us--or-in-spite-of-us--nicolas-elton-brings-global-higher-ed-expertise-to-his-new-role-at-qs  /edtech-mentor/nicolas-elton/  301
-/edtech-mentor-interviews/from-help-desk-to-cio-what-every-marketer-should-know-about-campus-it-in-the-us  /edtech-mentor/from-help-desk-to-cio/  301
+/edtech-mentor-interviews/from-help-desk-to-cio-what-every-marketer-should-know-about-campus-it-in-the-us  /edtech-mentor/from-help-desk-to-cio-what-every-marketer-should-know-about-campus-it-in-the-us/  301
 # Slugs cortos de Webflow → slug actual en Sanity (el largo). Van antes del comodín de
 # abajo, que los mandaría a /edtech-mentor/<slug-corto>, que da 404.
 /edtech-mentor-interviews/kate-valenti  /edtech-mentor/from-alignment-to-vision-unicons-kate-valenti-on-her-journey-from-coo-to-ceo/  301
@@ -70,8 +70,26 @@ https://www.27zero.co/*  https://www.27zero.agency/:splat  301!
 /edtech-mentor-interviews/chad-a-stevens  /edtech-mentor/chad-stevens-of-tinkrworks-on-expanding-the-boundaries-of-inclusive-stemsteam-education/  301
 /edtech-mentor-interviews/lydia-winn  /edtech-mentor/empowerlys-lydia-winn-on-shaping-edtech-one-step-at-a-time/  301
 /edtech-mentor-interviews/*  /edtech-mentor/:splat  301
-# Slug corto que fue destino de los redirects desde el 13 de octubre: puede estar indexado.
+# Slugs cortos de /edtech-mentor/ que estuvieron publicados (Search Console los rastreó
+# hasta el 16 de octubre) y que Sanity cambió por el slug largo: hoy darían 404.
 /edtech-mentor/lydia-winn  /edtech-mentor/empowerlys-lydia-winn-on-shaping-edtech-one-step-at-a-time/  301
+/edtech-mentor/tiago-mateus  /edtech-mentor/unlocking-edtech-growth-in-2024-and-beyond-expert-insights-from-tiago-mateus-on-ai-partnerships-and-gtm-strategies/  301
+/edtech-mentor/jimmy-mathew  /edtech-mentor/zip-code-shouldnt-define-student-success-jimmy-mathew-on-bridging-the-k-12-learning-gap/  301
+/edtech-mentor/julie-kelleher  /edtech-mentor/a-market-first-mindset-in-edtech-julie-kellehers-blueprint-for-success/  301
+/edtech-mentor/carlos-marquez  /edtech-mentor/from-zero-to-hero-building-powerful-edtech-brands-with-carlos-marquez/  301
+/edtech-mentor/sebastian-pulido  /edtech-mentor/modelling-content-for-edtech-27zeros-customer-stories-lead-sebastin-pulido-on-writing-strategically-with-ai/  301
+/edtech-mentor/rob-sparks  /edtech-mentor/achieving-seamless-worldwide-marketing-rob-sparks-strategy-to-adapt-across-territories/  301
+/edtech-mentor/from-help-desk-to-cio  /edtech-mentor/from-help-desk-to-cio-what-every-marketer-should-know-about-campus-it-in-the-us/  301
+/edtech-mentor/jon-aleckson  /edtech-mentor/how-to-bootstrap-and-run-and-exit-an-edtech-business-insights-by-jon-aleckson/  301
+/edtech-mentor/richard-herrmann  /edtech-mentor/closer-to-the-customer-intels-global-director-of-system-integrations-rick-herrmann-on-leading-global-teams/  301
+/edtech-mentor/david-yip  /edtech-mentor/classroom-to-career-alumlys-plan-for-bridging-the-experience-gap/  301
+/edtech-mentor/noel-capacho  /edtech-mentor/ads-mails-campaigns-the-a-z-of-performance-marketing-by-noel-capacho-of-27zero/  301
+/edtech-mentor/carolina-suarez  /edtech-mentor/building-brands-that-live-and-breathecarolina-surez-shares-her-guide-for-great-design/  301
+/edtech-mentor/lisa-sacchetti  /edtech-mentor/dont-hire-a-salesperson-and-expect-sales-lisa-sacchetti-warns-edtech-founders-to-focus-on-fit-and-culture/  301
+/edtech-mentor/arunabh-varma  /edtech-mentor/one-on-one-mentoring-at-scale-how-intercell-is-revolutionizing-indias-career-landscape/  301
+/edtech-mentor/phill-miller-laureano-diaz  /edtech-mentor/we-want-to-desmystify-edtech-investment-and-we-got-investors-to-do-it-for-us/  301
+/edtech-mentor/curtiss-barnes  /edtech-mentor/from-standards-to-global-impact-1edtechs-ceo-curtiss-barnes-on-the-vision-of-a-trusted-education-ecosystem/  301
+/edtech-mentor/chad-a-stevens  /edtech-mentor/chad-stevens-of-tinkrworks-on-expanding-the-boundaries-of-inclusive-stemsteam-education/  301
 
 # Work
 /work/busuu  /work/busuu-video-spotlights/  301
