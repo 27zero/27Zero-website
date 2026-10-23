@@ -24,7 +24,14 @@ import EdtechMentorCard from '../components/ui/EdtechMentorCard.astro';
 import FeaturedCard from '../components/ui/FeaturedCard.astro';
 import PortableText from '../components/ui/PortableText.astro';
 import WorkCard from '../components/ui/WorkCard.astro';
-import { featuredWorksOf, testimonialAvatar, toFeaturedWorkCard, toMentorCard, toWorkCard } from '../lib/sanity/cards';
+import {
+  featuredWorksOf,
+  mentorPostsWithoutFeatured,
+  testimonialAvatar,
+  toFeaturedWorkCard,
+  toMentorCard,
+  toWorkCard,
+} from '../lib/sanity/cards';
 import type { FeaturedWorkCategoryProjection, MentorCardProjection, TestimonialProjection } from '../lib/sanity/cards';
 import { sanityClient } from '../lib/sanity/client';
 import { IMAGE_BOXES } from '../lib/utils/imageBoxes';
@@ -54,7 +61,9 @@ const FEATURED_MENTOR_POST: MentorCardData | null = featuredMentor
   ? toMentorCard(featuredMentor, { image: 'bannerPost', box: IMAGE_BOXES.featuredHalf })
   : null;
 
-const MENTOR_POSTS: MentorCardData[] = mentorPosts.map((mentor) => toMentorCard(mentor));
+const MENTOR_POSTS: MentorCardData[] = mentorPostsWithoutFeatured(mentorPosts, featuredMentor).map((mentor) =>
+  toMentorCard(mentor)
+);
 
 /* `avatarPhoto` se pasa como `{ src, alt }` o `null` (`testimonialAvatar`): sin foto,
    `TestimonialsSlider` deriva las iniciales del nombre, igual que el placeholder del vanilla. */
