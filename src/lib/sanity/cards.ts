@@ -179,6 +179,21 @@ export function featuredWorksOf(category: FeaturedWorkCategoryProjection): WorkC
   return (category.works ?? []).filter((work): work is WorkCardProjection => Boolean(work?.slug));
 }
 
+/** Cuántas cards de entrevista van debajo de la destacada en Home y About. */
+export const MENTOR_POSTS_LIMIT = 6;
+
+/**
+ * Las últimas entrevistas sin la destacada, que ya ocupa la `FeaturedCard` de arriba.
+ * Sin esto la entrevista destacada más reciente salía dos veces en la misma sección.
+ *
+ * Se filtra acá y no en GROQ porque excluirla ahí obliga a repetir la subquery del
+ * destacado dentro del filtro. La query trae `MENTOR_POSTS_LIMIT + 1` para que, al
+ * descartar la destacada, sigan quedando seis.
+ */
+export function mentorPostsWithoutFeatured<T extends { _id: string }>(posts: T[], featured: T | null): T[] {
+  return posts.filter((post) => post._id !== featured?._id).slice(0, MENTOR_POSTS_LIMIT);
+}
+
 /**
  * `edtechMentor` → props de `EdtechMentorCard` / `FeaturedCard`.
  *

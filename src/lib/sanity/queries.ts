@@ -167,6 +167,9 @@ export const siteSettingsSeoQuery = `
   }
 `;
 
+/* `mentorPosts` trae 7 (MENTOR_POSTS_LIMIT + 1) y no 6: la página descarta la
+   destacada con `mentorPostsWithoutFeatured` (cards.ts) y se queda con 6. Igual en
+   `aboutQuery`. */
 export const homeQuery = `{
   "featuredWorkCategory": ${FEATURED_WORK_CATEGORIES}[0],
 
@@ -174,7 +177,7 @@ export const homeQuery = `{
     | order(publishedAt desc)[0] {${MENTOR_CARD_FIELDS}, bannerPost},
 
   "mentorPosts": *[_type == "edtechMentor" && defined(slug.current)]
-    | order(publishedAt desc)[0...6] {${MENTOR_CARD_FIELDS}},
+    | order(publishedAt desc)[0...7] {${MENTOR_CARD_FIELDS}},
 
   "testimonials": *[_type == "testimonial"
       && isFeatured == true
@@ -200,6 +203,8 @@ export const testimonialsByWorkQuery = `
  * `isActive` filtra bajas sin borrarlas del Studio (ese es el motivo del campo).
  * `aboutProofPoint` sale de `settings`: hoy está vacío, así que la página aplica su
  * copy actual como default (ver nota de fallback en `about.astro`).
+ *
+ * `mentorPosts` trae 7 por el mismo motivo que en `homeQuery`.
  */
 export const aboutQuery = `{
   "team": *[_type == "team" && isActive == true]
@@ -212,7 +217,7 @@ export const aboutQuery = `{
     | order(publishedAt desc)[0] {${MENTOR_CARD_FIELDS}, bannerPost},
 
   "mentorPosts": *[_type == "edtechMentor" && defined(slug.current)]
-    | order(publishedAt desc)[0...6] {${MENTOR_CARD_FIELDS}},
+    | order(publishedAt desc)[0...7] {${MENTOR_CARD_FIELDS}},
 
   "proofPoint": *[_type == "settings"][0].aboutProofPoint {title, text, image},
   "aboutHero": *[_type == "settings"][0].aboutHero {headline, text, image, bgColor, textColor},
