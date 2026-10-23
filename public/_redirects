@@ -1,5 +1,6 @@
 # Netlify aplica la PRIMERA regla que coincide: el orden importa.
-# Solo las reglas de dominio llevan `!` (force); el resto nunca pisa una página real del build.
+# Solo las reglas de dominio y los duplicados `-2` llevan `!` (force); el resto nunca pisa
+# una página real del build.
 # Destinos con barra final: Netlify sirve /ruta/ y daría un 301 extra si faltara.
 
 # Dominio — el canónico es https://www.27zero.agency (primario en Netlify).
@@ -70,6 +71,9 @@ https://www.27zero.co/*  https://www.27zero.agency/:splat  301!
 /edtech-mentor-interviews/chad-a-stevens  /edtech-mentor/chad-stevens-of-tinkrworks-on-expanding-the-boundaries-of-inclusive-stemsteam-education/  301
 /edtech-mentor-interviews/lydia-winn  /edtech-mentor/empowerlys-lydia-winn-on-shaping-edtech-one-step-at-a-time/  301
 /edtech-mentor-interviews/*  /edtech-mentor/:splat  301
+# Duplicado de una importación vieja. Con `!` porque el documento `-2` puede seguir
+# publicado en Sanity, y sin force Netlify serviría la página en vez de redirigir.
+/edtech-mentor/democracy-truth-courage-and-the-magic-five-2  /edtech-mentor/democracy-truth-courage-and-the-magic-five/  301!
 # Slugs cortos de /edtech-mentor/ que estuvieron publicados (Search Console los rastreó
 # hasta el 16 de octubre) y que Sanity cambió por el slug largo: hoy darían 404.
 /edtech-mentor/lydia-winn  /edtech-mentor/empowerlys-lydia-winn-on-shaping-edtech-one-step-at-a-time/  301
@@ -113,6 +117,9 @@ https://www.27zero.co/*  https://www.27zero.agency/:splat  301!
 /work/anthology-legacy-conversations  /work/  301
 
 # Resources
+# Duplicado de "What is EdTech marketing?" (canibalización, audit PBM). Con `!` por lo
+# mismo que el `-2` de EdTech Mentor.
+/resources/what-is-edtech-marketing-2  /resources/edtech-marketing-fundamentals/  301!
 # Resource viejo de Webflow sin equivalente; lo más cercano es el índice de EdTech Mentor.
 /resources/edtech-mentor  /edtech-mentor/  301
 # Slug viejo con "ed-tech"; sigue enlazado desde el body de dos resources en Sanity.
