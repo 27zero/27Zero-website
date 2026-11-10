@@ -28,7 +28,7 @@ import { toAbsoluteTrail } from '../utils/breadcrumbs';
  * dirección y teléfono reales cargados) porque cuelgan de su `@id`. Queda inerte
  * apenas se cargue `siteTitle` en Sanity.
  */
-const ORGANIZATION_NAME_FALLBACK = '27zero';
+const ORGANIZATION_NAME = '27zero';
 
 export interface ArticleInput {
   headline?: string;
@@ -83,7 +83,7 @@ export function generateJsonLd({
 }: JsonLdInput): { '@context': string; '@graph': Node[] } | null {
   const base = siteUrl.replace(/\/+$/, '');
   const organizationId = `${base}/#organization`;
-  const organizationName = siteSettings.siteTitle ?? ORGANIZATION_NAME_FALLBACK;
+  const organizationName = siteSettings.siteTitle ?? ORGANIZATION_NAME;
 
   const graph: Node[] = [];
 
