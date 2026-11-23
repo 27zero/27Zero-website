@@ -42,20 +42,20 @@ https://www.27zero.co/*  https://www.27zero.agency/:splat  301!
 /edtech-mentor-interviews/marketing-at-the-c-level-brian-finnerty-on-edtech  /edtech-mentor/marketing-at-the-c-level-brian-finnerty-on-edtech/  301
 /edtech-mentor-interviews/a-market-first-mindset-in-edtech-julie-kellehers-blueprint-for-success  /edtech-mentor/a-market-first-mindset-in-edtech-julie-kellehers-blueprint-for-success/  301
 /edtech-mentor-interviews/empowerlys-lydia-winn-on-shaping-edtech-one-step-at-a-time  /edtech-mentor/empowerlys-lydia-winn-on-shaping-edtech-one-step-at-a-time/  301
-/edtech-mentor-interviews/the-heart-of-edtech-marketing-joe-fisher-on-the-power-of-human-connection  /edtech-mentor/joe-fisher/  301
+/edtech-mentor-interviews/the-heart-of-edtech-marketing-joe-fisher-on-the-power-of-human-connection  /edtech-mentor/the-heart-of-edtech-marketing-joe-fisher-on-the-power-of-human-connection/  301
 /edtech-mentor-interviews/classroom-to-career-alumlys-plan-for-bridging-the-experience-gap  /edtech-mentor/classroom-to-career-alumlys-plan-for-bridging-the-experience-gap/  301
 /edtech-mentor-interviews/crackin-the-sis-code-vp-of-sales-justin-vondra-on-driving-meaningful-impact-in-higher-education  /edtech-mentor/cracking-the-sis-code-vp-of-sales-justin-vondra-on-driving-meaningful-impact-in-higher-education/  301
 /edtech-mentor-interviews/from-standards-to-global-impact--1edtechs-ceo-curtiss-barnes-on-the-vision-of-a-trusted-education-ecosystem  /edtech-mentor/from-standards-to-global-impact-1edtechs-ceo-curtiss-barnes-on-the-vision-of-a-trusted-education-ecosystem/  301
 /edtech-mentor-interviews/chad-stevens-of-tinkrworks-on-expanding-the-boundaries-of-inclusive-stem-steam-education  /edtech-mentor/chad-stevens-of-tinkrworks-on-expanding-the-boundaries-of-inclusive-stemsteam-education/  301
-/edtech-mentor-interviews/gardener-or-chess-player--reinhold-lange-on-adapting-to-grow-as-a-product-manager-in-edtech  /edtech-mentor/reinhold-lange/  301
-/edtech-mentor-interviews/better-data-better-higher-education-inside-times-higher-educations-obsession-with-data-quality-for-global-impact  /edtech-mentor/dominic-garcia/  301
-/edtech-mentor-interviews/building-a-category-from-scratch-christine-lee-on-elseviers-game-changing-moves-in-the-faculty-information-system-market  /edtech-mentor/christine-lee/  301
+/edtech-mentor-interviews/gardener-or-chess-player--reinhold-lange-on-adapting-to-grow-as-a-product-manager-in-edtech  /edtech-mentor/gardener-or-chess-player-reinhold-lange-on-adapting-to-grow-as-a-product-manager-in-edtech/  301
+/edtech-mentor-interviews/better-data-better-higher-education-inside-times-higher-educations-obsession-with-data-quality-for-global-impact  /edtech-mentor/better-data-better-higher-education-inside-times-higher-educations-obsession-with-data-quality-for-global-impact/  301
+/edtech-mentor-interviews/building-a-category-from-scratch-christine-lee-on-elseviers-game-changing-moves-in-the-faculty-information-system-market  /edtech-mentor/building-a-category-from-scratch-christine-lee-on-elseviers-game-changing-moves-in-the-faculty-information-system-market/  301
 /edtech-mentor-interviews/closer-to-the-customer-intels-global-director-of-system-integrations-rick-herrmann-on-leading-global-teams  /edtech-mentor/closer-to-the-customer-intels-global-director-of-system-integrations-rick-herrmann-on-leading-global-teams/  301
 /edtech-mentor-interviews/achieving-seamless-worldwide-marketing-rob-sparks-strategy-to-adapt-across-territories  /edtech-mentor/achieving-seamless-worldwide-marketing-rob-sparks-strategy-to-adapt-across-territories/  301
 /edtech-mentor-interviews/against-solutionism-in-edtech-on-edtechs-glenda-morgan-on-addressing-student-success-challenges-at-the-roots  /edtech-mentor/against-solutionism-in-edtech-on-edtechs-glenda-morgan-on-addressing-student-success-challenges-at-the-roots/  301
 /edtech-mentor-interviews/ready-educations-ceo-jim-brigadier-explains-how-authentic-leadership-fuels-edtech-and-growth  /edtech-mentor/ready-educations-ceo-jim-brigadier-explains-how-authentic-leadership-fuels-edtech-and-growth/  301
 /edtech-mentor-interviews/from-alignment-to-vision-unicons-kate-valenti-on-her-journey-from-coo-to-ceo  /edtech-mentor/from-alignment-to-vision-unicons-kate-valenti-on-her-journey-from-coo-to-ceo/  301
-/edtech-mentor-interviews/do-students-succeed-because-of-us--or-in-spite-of-us--nicolas-elton-brings-global-higher-ed-expertise-to-his-new-role-at-qs  /edtech-mentor/nicolas-elton/  301
+/edtech-mentor-interviews/do-students-succeed-because-of-us--or-in-spite-of-us--nicolas-elton-brings-global-higher-ed-expertise-to-his-new-role-at-qs  /edtech-mentor/do-students-succeed-because-of-usor-in-spite-of-us-nicols-elton-brings-global-higher-ed-expertise-to-his-new-role-at-qs/  301
 /edtech-mentor-interviews/from-help-desk-to-cio-what-every-marketer-should-know-about-campus-it-in-the-us  /edtech-mentor/from-help-desk-to-cio-what-every-marketer-should-know-about-campus-it-in-the-us/  301
 # Slugs cortos de Webflow → slug actual en Sanity (el largo). Van antes del comodín de
 # abajo, que los mandaría a /edtech-mentor/<slug-corto>, que da 404.
@@ -72,6 +72,16 @@ https://www.27zero.co/*  https://www.27zero.agency/:splat  301!
 /edtech-mentor-interviews/lydia-winn  /edtech-mentor/empowerlys-lydia-winn-on-shaping-edtech-one-step-at-a-time/  301
 /edtech-mentor-interviews/jeff-rubenstein  /edtech-mentor/beyond-the-buzzwords-jeff-rubenstein-on-the-real-impact-of-ai-in-education/  301
 /edtech-mentor-interviews/darcy-hardy  /edtech-mentor/doing-online-learning-right-darcy-hardy-on-the-details-some-institutions-may-be-ignoring/  301
+/edtech-mentor-interviews/maria-medrano  /edtech-mentor/building-with-purpose-the-marathon-of-product-development-with-insprames-ceo-mara-medrano/  301
+/edtech-mentor-interviews/building-with-purpose-the-marathon-of-product-development-with-inspirames-ceo-maria-medrano  /edtech-mentor/building-with-purpose-the-marathon-of-product-development-with-insprames-ceo-mara-medrano/  301
+/edtech-mentor-interviews/frederico-bello  /edtech-mentor/breaking-the-textbook-monopoly-with-luca-frederico-bellos-mission-to-redefine-k-12-education-for-latin-america/  301
+/edtech-mentor-interviews/luca-frederico-bello  /edtech-mentor/breaking-the-textbook-monopoly-with-luca-frederico-bellos-mission-to-redefine-k-12-education-for-latin-america/  301
+/edtech-mentor-interviews/sven-fund  /edtech-mentor/sowing-the-seeds-of-profound-impact-sven-fund-on-loving-what-you-do-nurturing-relationships-and-scaling-in-edtech/  301
+/edtech-mentor-interviews/christine-lee  /edtech-mentor/building-a-category-from-scratch-christine-lee-on-elseviers-game-changing-moves-in-the-faculty-information-system-market/  301
+/edtech-mentor-interviews/joe-fisher  /edtech-mentor/the-heart-of-edtech-marketing-joe-fisher-on-the-power-of-human-connection/  301
+/edtech-mentor-interviews/reinhold-lange  /edtech-mentor/gardener-or-chess-player-reinhold-lange-on-adapting-to-grow-as-a-product-manager-in-edtech/  301
+/edtech-mentor-interviews/dominic-garcia  /edtech-mentor/better-data-better-higher-education-inside-times-higher-educations-obsession-with-data-quality-for-global-impact/  301
+/edtech-mentor-interviews/nicolas-elton  /edtech-mentor/do-students-succeed-because-of-usor-in-spite-of-us-nicols-elton-brings-global-higher-ed-expertise-to-his-new-role-at-qs/  301
 /edtech-mentor-interviews/*  /edtech-mentor/:splat  301
 # Duplicado de una importación vieja. Con `!` porque el documento `-2` puede seguir
 # publicado en Sanity, y sin force Netlify serviría la página en vez de redirigir.
@@ -104,6 +114,23 @@ https://www.27zero.co/*  https://www.27zero.agency/:splat  301!
 /edtech-mentor/justin-vondra  /edtech-mentor/cracking-the-sis-code-vp-of-sales-justin-vondra-on-driving-meaningful-impact-in-higher-education/  301
 /edtech-mentor/jeff-rubenstein  /edtech-mentor/beyond-the-buzzwords-jeff-rubenstein-on-the-real-impact-of-ai-in-education/  301
 /edtech-mentor/darcy-hardy  /edtech-mentor/doing-online-learning-right-darcy-hardy-on-the-details-some-institutions-may-be-ignoring/  301
+/edtech-mentor/maria-medrano  /edtech-mentor/building-with-purpose-the-marathon-of-product-development-with-insprames-ceo-mara-medrano/  301
+/edtech-mentor/building-with-purpose-the-marathon-of-product-development-with-inspirames-ceo-maria-medrano  /edtech-mentor/building-with-purpose-the-marathon-of-product-development-with-insprames-ceo-mara-medrano/  301
+/edtech-mentor/frederico-bello  /edtech-mentor/breaking-the-textbook-monopoly-with-luca-frederico-bellos-mission-to-redefine-k-12-education-for-latin-america/  301
+/edtech-mentor/luca-frederico-bello  /edtech-mentor/breaking-the-textbook-monopoly-with-luca-frederico-bellos-mission-to-redefine-k-12-education-for-latin-america/  301
+/edtech-mentor/sven-fund  /edtech-mentor/sowing-the-seeds-of-profound-impact-sven-fund-on-loving-what-you-do-nurturing-relationships-and-scaling-in-edtech/  301
+/edtech-mentor/christine-lee  /edtech-mentor/building-a-category-from-scratch-christine-lee-on-elseviers-game-changing-moves-in-the-faculty-information-system-market/  301
+/edtech-mentor/joe-fisher  /edtech-mentor/the-heart-of-edtech-marketing-joe-fisher-on-the-power-of-human-connection/  301
+/edtech-mentor/reinhold-lange  /edtech-mentor/gardener-or-chess-player-reinhold-lange-on-adapting-to-grow-as-a-product-manager-in-edtech/  301
+/edtech-mentor/dominic-garcia  /edtech-mentor/better-data-better-higher-education-inside-times-higher-educations-obsession-with-data-quality-for-global-impact/  301
+/edtech-mentor/nicolas-elton  /edtech-mentor/do-students-succeed-because-of-usor-in-spite-of-us-nicols-elton-brings-global-higher-ed-expertise-to-his-new-role-at-qs/  301
+# Red de seguridad: cualquier /edtech-mentor/<algo> que NO exista en el build (entrevista
+# despublicada, borrada o con un slug viejo de Webflow que no está listado arriba) va al
+# índice en vez de dar 404. SIN `!` a propósito: Netlify solo aplica una regla sin force
+# cuando no hay un archivo en esa ruta, así que nunca pisa una entrevista o categoría
+# publicada. Va AL FINAL del bloque: la primera regla que coincide gana, y las de arriba
+# mandan cada slug conocido a su entrevista exacta.
+/edtech-mentor/*  /edtech-mentor/  301
 
 # Work
 /work/busuu  /work/busuu-video-spotlights/  301
