@@ -18,6 +18,7 @@
  * `components` queda para lo que de verdad es estructura nueva — el bloque
  * `pearlOfWisdom` de `edtechMentor`, por ejemplo.
  */
+import { resolveInternalHref } from '../../lib/utils/internalHref';
 import { escapeHTML, toHTML, type PortableTextComponents } from '@portabletext/to-html';
 import { headingId } from '../../lib/utils/portableText';
 
@@ -106,7 +107,9 @@ const baseComponents: PortableTextComponents = {
      * `window.opener` al destino.
      */
     link: ({ children, value: mark }) => {
-      const href = (mark as { href?: string })?.href ?? '';
+      /* Links viejos o sin barra final del CMS → URL final (ver `internalHref.ts`). Un
+         absoluto al dominio propio sale relativo, así que deja de abrir en pestaña nueva. */
+      const href = resolveInternalHref((mark as { href?: string })?.href);
       const isExternal = /^https?:\/\//i.test(href);
       const target = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
       return `<a href="${escapeHTML(href)}"${target}${attr('class', classes.link)}>${children}</a>`;
