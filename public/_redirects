@@ -82,6 +82,48 @@ https://www.27zero.co/*  https://www.27zero.agency/:splat  301!
 /edtech-mentor-interviews/reinhold-lange  /edtech-mentor/gardener-or-chess-player-reinhold-lange-on-adapting-to-grow-as-a-product-manager-in-edtech/  301
 /edtech-mentor-interviews/dominic-garcia  /edtech-mentor/better-data-better-higher-education-inside-times-higher-educations-obsession-with-data-quality-for-global-impact/  301
 /edtech-mentor-interviews/nicolas-elton  /edtech-mentor/do-students-succeed-because-of-usor-in-spite-of-us-nicols-elton-brings-global-higher-ed-expertise-to-his-new-role-at-qs/  301
+# Variantes de slug de Webflow → slug actual en Sanity. Webflow transliteraba tildes
+# ("maria", "suarez") y convertía la puntuación en guiones ("us--or"); el sitio nuevo
+# descarta esos caracteres (normalizeSlug, utils/routes.ts). Generadas a partir de los
+# slugs publicados en Sanity (nov 2026), ambos prefijos. Van antes del comodín.
+/edtech-mentor/chad-stevens-of-tinkrworks-on-expanding-the-boundaries-of-inclusive-stem-steam-education  /edtech-mentor/chad-stevens-of-tinkrworks-on-expanding-the-boundaries-of-inclusive-stemsteam-education/  301
+/edtech-mentor/gardener-or-chess-player--reinhold-lange-on-adapting-to-grow-as-a-product-manager-in-edtech  /edtech-mentor/gardener-or-chess-player-reinhold-lange-on-adapting-to-grow-as-a-product-manager-in-edtech/  301
+/edtech-mentor-interviews/the-soft-skills-wave-is-here--and-most-arent-surfing-yet--re-skilling-ais-juan-pablo-delacroix-exposes-an-unseen-gap  /edtech-mentor/the-soft-skills-wave-is-here-and-most-arent-surfing-yet-re-skilling.ais-juan-pablo-delacroix-exposes-an-unseen-gap/  301
+/edtech-mentor/the-soft-skills-wave-is-here--and-most-arent-surfing-yet--re-skilling-ais-juan-pablo-delacroix-exposes-an-unseen-gap  /edtech-mentor/the-soft-skills-wave-is-here-and-most-arent-surfing-yet-re-skilling.ais-juan-pablo-delacroix-exposes-an-unseen-gap/  301
+/edtech-mentor-interviews/the-soft-skills-wave-is-here-and-most-arent-surfing-yet-re-skilling-ais-juan-pablo-delacroix-exposes-an-unseen-gap  /edtech-mentor/the-soft-skills-wave-is-here-and-most-arent-surfing-yet-re-skilling.ais-juan-pablo-delacroix-exposes-an-unseen-gap/  301
+/edtech-mentor/the-soft-skills-wave-is-here-and-most-arent-surfing-yet-re-skilling-ais-juan-pablo-delacroix-exposes-an-unseen-gap  /edtech-mentor/the-soft-skills-wave-is-here-and-most-arent-surfing-yet-re-skilling.ais-juan-pablo-delacroix-exposes-an-unseen-gap/  301
+/edtech-mentor-interviews/the-soft-skills-wave-is-here-and-most-arent-surfing-yet-re-skillingais-juan-pablo-delacroix-exposes-an-unseen-gap  /edtech-mentor/the-soft-skills-wave-is-here-and-most-arent-surfing-yet-re-skilling.ais-juan-pablo-delacroix-exposes-an-unseen-gap/  301
+/edtech-mentor/the-soft-skills-wave-is-here-and-most-arent-surfing-yet-re-skillingais-juan-pablo-delacroix-exposes-an-unseen-gap  /edtech-mentor/the-soft-skills-wave-is-here-and-most-arent-surfing-yet-re-skilling.ais-juan-pablo-delacroix-exposes-an-unseen-gap/  301
+/edtech-mentor-interviews/mark-miller-counselor-to-edtech-entrepreneurs---investors  /edtech-mentor/mark-miller-counselor-to-edtech-entrepreneurs--investors/  301
+/edtech-mentor/mark-miller-counselor-to-edtech-entrepreneurs---investors  /edtech-mentor/mark-miller-counselor-to-edtech-entrepreneurs--investors/  301
+/edtech-mentor-interviews/mark-miller-counselor-to-edtech-entrepreneurs-investors  /edtech-mentor/mark-miller-counselor-to-edtech-entrepreneurs--investors/  301
+/edtech-mentor/mark-miller-counselor-to-edtech-entrepreneurs-investors  /edtech-mentor/mark-miller-counselor-to-edtech-entrepreneurs--investors/  301
+/edtech-mentor-interviews/modelling-content-for-edtech-27zeros-customer-stories-lead-sebastian-pulido-on-writing-strategically--with-ai  /edtech-mentor/modelling-content-for-edtech-27zeros-customer-stories-lead-sebastin-pulido-on-writing-strategically-with-ai/  301
+/edtech-mentor/modelling-content-for-edtech-27zeros-customer-stories-lead-sebastian-pulido-on-writing-strategically--with-ai  /edtech-mentor/modelling-content-for-edtech-27zeros-customer-stories-lead-sebastin-pulido-on-writing-strategically-with-ai/  301
+/edtech-mentor-interviews/modelling-content-for-edtech-27zeros-customer-stories-lead-sebastian-pulido-on-writing-strategically-with-ai  /edtech-mentor/modelling-content-for-edtech-27zeros-customer-stories-lead-sebastin-pulido-on-writing-strategically-with-ai/  301
+/edtech-mentor/modelling-content-for-edtech-27zeros-customer-stories-lead-sebastian-pulido-on-writing-strategically-with-ai  /edtech-mentor/modelling-content-for-edtech-27zeros-customer-stories-lead-sebastin-pulido-on-writing-strategically-with-ai/  301
+/edtech-mentor-interviews/building-brands-that-live-and-breathe-carolina-suarez-shares-her-guide-for-great-design  /edtech-mentor/building-brands-that-live-and-breathecarolina-surez-shares-her-guide-for-great-design/  301
+/edtech-mentor/building-brands-that-live-and-breathe-carolina-suarez-shares-her-guide-for-great-design  /edtech-mentor/building-brands-that-live-and-breathecarolina-surez-shares-her-guide-for-great-design/  301
+/edtech-mentor-interviews/building-brands-that-live-and-breathecarolina-suarez-shares-her-guide-for-great-design  /edtech-mentor/building-brands-that-live-and-breathecarolina-surez-shares-her-guide-for-great-design/  301
+/edtech-mentor/building-brands-that-live-and-breathecarolina-suarez-shares-her-guide-for-great-design  /edtech-mentor/building-brands-that-live-and-breathecarolina-surez-shares-her-guide-for-great-design/  301
+/edtech-mentor-interviews/we-want-to-desmystify-edtech-investment--and-we-got-investors-to-do-it-for-us  /edtech-mentor/we-want-to-desmystify-edtech-investment-and-we-got-investors-to-do-it-for-us/  301
+/edtech-mentor/we-want-to-desmystify-edtech-investment--and-we-got-investors-to-do-it-for-us  /edtech-mentor/we-want-to-desmystify-edtech-investment-and-we-got-investors-to-do-it-for-us/  301
+/edtech-mentor-interviews/do-students-succeed-because-of-us-or-in-spite-of-us--nicolas-elton-brings-global-higher-ed-expertise-to-his-new-role-at-qs  /edtech-mentor/do-students-succeed-because-of-usor-in-spite-of-us-nicols-elton-brings-global-higher-ed-expertise-to-his-new-role-at-qs/  301
+/edtech-mentor/do-students-succeed-because-of-us-or-in-spite-of-us--nicolas-elton-brings-global-higher-ed-expertise-to-his-new-role-at-qs  /edtech-mentor/do-students-succeed-because-of-usor-in-spite-of-us-nicols-elton-brings-global-higher-ed-expertise-to-his-new-role-at-qs/  301
+/edtech-mentor-interviews/do-students-succeed-because-of-us-or-in-spite-of-us-nicolas-elton-brings-global-higher-ed-expertise-to-his-new-role-at-qs  /edtech-mentor/do-students-succeed-because-of-usor-in-spite-of-us-nicols-elton-brings-global-higher-ed-expertise-to-his-new-role-at-qs/  301
+/edtech-mentor/do-students-succeed-because-of-us-or-in-spite-of-us-nicolas-elton-brings-global-higher-ed-expertise-to-his-new-role-at-qs  /edtech-mentor/do-students-succeed-because-of-usor-in-spite-of-us-nicols-elton-brings-global-higher-ed-expertise-to-his-new-role-at-qs/  301
+/edtech-mentor-interviews/do-students-succeed-because-of-usor-in-spite-of-us-nicolas-elton-brings-global-higher-ed-expertise-to-his-new-role-at-qs  /edtech-mentor/do-students-succeed-because-of-usor-in-spite-of-us-nicols-elton-brings-global-higher-ed-expertise-to-his-new-role-at-qs/  301
+/edtech-mentor/do-students-succeed-because-of-usor-in-spite-of-us-nicolas-elton-brings-global-higher-ed-expertise-to-his-new-role-at-qs  /edtech-mentor/do-students-succeed-because-of-usor-in-spite-of-us-nicols-elton-brings-global-higher-ed-expertise-to-his-new-role-at-qs/  301
+/edtech-mentor-interviews/how-to-bootstrap-and-run--and-exit--an-edtech-business-insights-by-jon-aleckson  /edtech-mentor/how-to-bootstrap-and-run-and-exit-an-edtech-business-insights-by-jon-aleckson/  301
+/edtech-mentor/how-to-bootstrap-and-run--and-exit--an-edtech-business-insights-by-jon-aleckson  /edtech-mentor/how-to-bootstrap-and-run-and-exit-an-edtech-business-insights-by-jon-aleckson/  301
+/edtech-mentor-interviews/scalability-beats-star-power-every-time-adam-stedhams-edtech-m-a-strategy  /edtech-mentor/scalability-beats-star-power-every-time-adam-stedhams-edtech-ma-strategy/  301
+/edtech-mentor/scalability-beats-star-power-every-time-adam-stedhams-edtech-m-a-strategy  /edtech-mentor/scalability-beats-star-power-every-time-adam-stedhams-edtech-ma-strategy/  301
+/edtech-mentor-interviews/college-for--300-a-month-sasha-thackaberry-voinovichs-on-demand-blueprint-at-newstate-university  /edtech-mentor/college-for-300-a-monthsasha-thackaberry-voinovichs-on-demand-blueprint-at-newstate-university/  301
+/edtech-mentor/college-for--300-a-month-sasha-thackaberry-voinovichs-on-demand-blueprint-at-newstate-university  /edtech-mentor/college-for-300-a-monthsasha-thackaberry-voinovichs-on-demand-blueprint-at-newstate-university/  301
+/edtech-mentor-interviews/college-for-300-a-month-sasha-thackaberry-voinovichs-on-demand-blueprint-at-newstate-university  /edtech-mentor/college-for-300-a-monthsasha-thackaberry-voinovichs-on-demand-blueprint-at-newstate-university/  301
+/edtech-mentor/college-for-300-a-month-sasha-thackaberry-voinovichs-on-demand-blueprint-at-newstate-university  /edtech-mentor/college-for-300-a-monthsasha-thackaberry-voinovichs-on-demand-blueprint-at-newstate-university/  301
+# Resto: mismo slug en el sitio nuevo. Si no existe, lo atrapa la red de seguridad de
+# /edtech-mentor/* más abajo y termina en el índice.
 /edtech-mentor-interviews/*  /edtech-mentor/:splat  301
 # Duplicado de una importación vieja. Con `!` porque el documento `-2` puede seguir
 # publicado en Sanity, y sin force Netlify serviría la página en vez de redirigir.
