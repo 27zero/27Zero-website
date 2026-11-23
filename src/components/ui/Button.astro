@@ -53,6 +53,8 @@
  * `<form>` (Contact), donde un link no cumple la semántica ni dispara el evento
  * `submit`. `type` solo aplica en este segundo caso.
  */
+import { resolveInternalHref } from '../../lib/utils/internalHref';
+
 interface Props {
   variant: 'nav' | 'dark' | 'outline' | 'white' | 'whiteOnDark' | 'whiteIndigo' | 'purple' | 'purpleOnDark' | 'blackWhite';
   /** Con `href` renderiza `<a>`. Sin `href`, renderiza `<button>` (ver `type`). */
@@ -75,7 +77,7 @@ interface Props {
   class?: string;
 }
 
-const { href, type = 'button', variant, size = 'base', class: className, target, rel } = Astro.props;
+const { href: rawHref, type = 'button', variant, size = 'base', class: className, target, rel } = Astro.props;
 
 /* Sin font-size: lo aporta SIZES, para que solo haya una utilidad de font-size. */
 const BASE =
@@ -104,6 +106,10 @@ const VARIANTS = {
   purpleOnDark: 'border-purple bg-purple text-black hover:border-purple hover:bg-transparent hover:text-purple',
   blackWhite: 'border-black bg-black text-white hover:border-black hover:bg-transparent hover:text-black',
 } as const;
+
+/* Los `href` del CMS (`ctaHref`, `ctaLink`) pueden traer links viejos o sin barra final:
+   se resuelven a la URL final para no pasar por un 301 (ver `internalHref.ts`). */
+const href = rawHref ? resolveInternalHref(rawHref) : rawHref;
 
 const CLASSES = ['btn', `btn-${variant}`, BASE, SIZES[size], VARIANTS[variant], className];
 ---
